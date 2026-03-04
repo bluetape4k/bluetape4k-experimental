@@ -103,10 +103,16 @@ class LettuceNearCache<K : Any, V : Any>(
     /**
      * key-value를 저장한다 (write-through).
      * front cache + Redis SET (TTL 있으면 SETEX).
+     *
+     * write-through 후 async Redis GET을 fire-and-forget으로 실행해 CLIENT TRACKING을 활성화한다.
+     * 이로써 local cache가 front hit 상태라도 다른 인스턴스가 같은 키를 수정하면
+     * invalidation push를 수신할 수 있다.
      */
     fun put(key: K, value: V) {
         localCache.put(key, value)
         setRedis(key, value)
+        // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
+        connection.async().get(key)
     }
 
     /**
@@ -114,7 +120,11 @@ class LettuceNearCache<K : Any, V : Any>(
      */
     fun putAll(map: Map<out K, V>) {
         localCache.putAll(map)
-        map.forEach { (key, value) -> setRedis(key, value) }
+        val async = connection.async()
+        map.forEach { (key, value) ->
+            setRedis(key, value)
+            async.get(key)  // CLIENT TRACKING 활성화
+        }
     }
 
     /**
