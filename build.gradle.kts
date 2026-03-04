@@ -252,7 +252,7 @@ subprojects {
             dependency(Libs.findbugs)
             dependency(Libs.guava)
 
-            dependency(Libs.kryo)
+            dependency(Libs.kryo5)
             dependency(Libs.fory_kotlin)
 
             dependency(Libs.caffeine)
