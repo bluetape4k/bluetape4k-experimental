@@ -110,7 +110,7 @@ class LettuceNearSuspendCache<K : Any, V : Any>(
         localCache.put(key, value)
         setRedis(key, value)
         // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
-        connection.async().get(key)
+        commands.get(key)
     }
 
     /**
@@ -118,10 +118,9 @@ class LettuceNearSuspendCache<K : Any, V : Any>(
      */
     suspend fun putAll(map: Map<out K, V>) {
         localCache.putAll(map)
-        val async = connection.async()
         map.forEach { (key, value) ->
             setRedis(key, value)
-            async.get(key)  // CLIENT TRACKING 활성화
+            commands.get(key)  // CLIENT TRACKING 활성화
         }
     }
 
