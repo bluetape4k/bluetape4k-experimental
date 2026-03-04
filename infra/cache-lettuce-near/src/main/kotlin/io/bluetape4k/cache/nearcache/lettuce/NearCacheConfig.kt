@@ -15,6 +15,7 @@ data class NearCacheConfig<K : Any, V : Any>(
     val localExpireAfterAccess: Duration? = null,
     val redisTtl: Duration? = null,
     val useRespProtocol3: Boolean = true,
+    val recordStats: Boolean = false,
 )
 
 /**
@@ -32,6 +33,7 @@ class NearCacheConfigBuilder<K : Any, V : Any> {
     var localExpireAfterAccess: Duration? = null
     var redisTtl: Duration? = null
     var useRespProtocol3: Boolean = true
+    var recordStats: Boolean = false
 
     fun build(): NearCacheConfig<K, V> = NearCacheConfig(
         cacheName = cacheName,
@@ -40,5 +42,6 @@ class NearCacheConfigBuilder<K : Any, V : Any> {
         localExpireAfterAccess = localExpireAfterAccess,
         redisTtl = redisTtl,
         useRespProtocol3 = useRespProtocol3,
+        recordStats = recordStats,
     )
 }

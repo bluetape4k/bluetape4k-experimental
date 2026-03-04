@@ -234,6 +234,11 @@ class LettuceNearCache<K : Any, V : Any>(
     fun localSize(): Long = localCache.estimatedSize()
 
     /**
+     * 로컬 캐시(Caffeine) 통계. [NearCacheConfig.recordStats]가 true일 때만 유효한 값을 반환한다.
+     */
+    fun localStats(): com.github.benmanes.caffeine.cache.stats.CacheStats? = localCache.stats()
+
+    /**
      * 모든 리소스를 정리하고 연결을 닫는다.
      */
     override fun close() {

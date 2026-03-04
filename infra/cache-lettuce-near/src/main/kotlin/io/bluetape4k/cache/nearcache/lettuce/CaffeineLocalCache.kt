@@ -2,17 +2,19 @@ package io.bluetape4k.cache.nearcache.lettuce
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.stats.CacheStats
 
 /**
  * Caffeine 기반 [LocalCache] 구현.
  */
-class CaffeineLocalCache<K : Any, V : Any>(config: NearCacheConfig<K, V>) : LocalCache<K, V> {
+class CaffeineLocalCache<K : Any, V : Any>(private val config: NearCacheConfig<K, V>) : LocalCache<K, V> {
 
     private val cache: Cache<K, V> = Caffeine.newBuilder()
         .maximumSize(config.maxLocalSize)
         .expireAfterWrite(config.localExpireAfterWrite)
         .also { builder ->
             config.localExpireAfterAccess?.let { builder.expireAfterAccess(it) }
+            if (config.recordStats) builder.recordStats()
         }
         .build()
 
@@ -37,6 +39,8 @@ class CaffeineLocalCache<K : Any, V : Any>(config: NearCacheConfig<K, V>) : Loca
     override fun clear() = cache.invalidateAll()
 
     override fun estimatedSize(): Long = cache.estimatedSize()
+
+    override fun stats(): CacheStats? = if (config.recordStats) cache.stats() else null
 
     override fun close() {
         cache.invalidateAll()

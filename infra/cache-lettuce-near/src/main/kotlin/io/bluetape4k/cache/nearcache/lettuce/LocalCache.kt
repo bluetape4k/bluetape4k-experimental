@@ -31,5 +31,7 @@ interface LocalCache<K : Any, V : Any> : AutoCloseable {
 
     fun estimatedSize(): Long
 
+    fun stats(): com.github.benmanes.caffeine.cache.stats.CacheStats? = null
+
     override fun close() {}
 }

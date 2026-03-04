@@ -24,6 +24,7 @@ includeModules("ai", false, true)
 includeModules("data", false, true)
 includeModules("io", false, false)
 includeModules("infra", false, true)
+includeModules("examples", false, true)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
     files("$rootDir/$baseDir").files
