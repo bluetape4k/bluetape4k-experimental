@@ -17,7 +17,7 @@ Hibernate Second Level Cache가 자동으로 활성화된다.
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation(project(":spring-boot-hibernate-cache-lettuce-near"))
+    implementation(project(":hibernate-redis-near"))
 
     // Spring Boot Starters
     implementation(Libs.springBootStarter("data-jpa"))
@@ -193,7 +193,7 @@ bluetape4k:
 ## 테스트 실행
 
 ```bash
-./gradlew :spring-boot-hibernate-cache-lettuce-near:test
+./gradlew :hibernate-redis-near:test
 ```
 
 단위 테스트는 `ApplicationContextRunner`로 실제 Redis/DB 없이 실행된다.

@@ -34,7 +34,7 @@ Hibernate ORM
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation(project(":infra-hibernate-cache-lettuce-near"))
+    implementation(project(":hibernate-cache-lettuce-near"))
 
     // 런타임 직렬화 (필수 - bluetape4k-io의 optional 의존성이므로 명시 필요)
     implementation(Libs.fory_kotlin)  // Apache Fory
@@ -150,7 +150,7 @@ val products: MutableList<Product> = mutableListOf()
 ## 테스트 실행
 
 ```bash
-./gradlew :infra-hibernate-cache-lettuce-near:test
+./gradlew :hibernate-cache-lettuce-near:test
 ```
 
 Testcontainers로 Redis 7+를 자동 실행하며 H2 인메모리 DB를 사용한다.

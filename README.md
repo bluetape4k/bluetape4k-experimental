@@ -57,9 +57,9 @@ Near Cache를 활용한 Spring Boot REST API 데모 애플리케이션.
 ./gradlew :<module-name>:test
 
 # Near Cache 관련 모듈 테스트
-./gradlew :infra-cache-lettuce-near:test
-./gradlew :infra-hibernate-cache-lettuce-near:test
-./gradlew :spring-boot-hibernate-cache-lettuce-near:test
+./gradlew :cache-lettuce-near:test
+./gradlew :hibernate-cache-lettuce-near:test
+./gradlew :hibernate-redis-near:test
 
 # 사용 가능한 태스크 목록
 ./gradlew tasks

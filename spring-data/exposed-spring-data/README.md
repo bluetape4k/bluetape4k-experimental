@@ -97,5 +97,5 @@ spring:
 ## 테스트
 
 ```bash
-./gradlew :spring-data-exposed-spring-data:test
+./gradlew :exposed-spring-data:test
 ```

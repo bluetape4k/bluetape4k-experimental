@@ -66,13 +66,13 @@ class ProductController(
 ## 실행
 
 ```bash
-./gradlew :examples-exposed-r2dbc-spring-data-webflux-demo:bootRun
+./gradlew :exposed-r2dbc-spring-data-webflux-demo:bootRun
 ```
 
 ## 테스트
 
 ```bash
-./gradlew :examples-exposed-r2dbc-spring-data-webflux-demo:test
+./gradlew :exposed-r2dbc-spring-data-webflux-demo:test
 ```
 
 테스트는 `@SpringBootTest(RANDOM_PORT)` + `WebTestClient`로 실제 HTTP 요청을 검증합니다.

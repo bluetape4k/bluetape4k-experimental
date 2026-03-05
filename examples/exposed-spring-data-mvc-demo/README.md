@@ -46,13 +46,13 @@ interface ProductRepository : ExposedRepository<ProductEntity, Long> {
 ## 실행
 
 ```bash
-./gradlew :examples-exposed-spring-data-mvc-demo:bootRun
+./gradlew :exposed-spring-data-mvc-demo:bootRun
 ```
 
 ## 테스트
 
 ```bash
-./gradlew :examples-exposed-spring-data-mvc-demo:test
+./gradlew :exposed-spring-data-mvc-demo:test
 ```
 
 테스트는 `@SpringBootTest(RANDOM_PORT)` + `RestClient`로 실제 HTTP 요청을 검증합니다.

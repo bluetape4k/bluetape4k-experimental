@@ -102,5 +102,5 @@ private suspend fun <T> io(block: () -> T): T =
 ## 테스트
 
 ```bash
-./gradlew :spring-data-exposed-r2dbc-spring-data:test
+./gradlew :exposed-r2dbc-spring-data:test
 ```
