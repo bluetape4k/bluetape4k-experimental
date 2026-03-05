@@ -1,36 +1,41 @@
 package io.bluetape4k.examples.exposed.webflux.config
 
-import io.bluetape4k.examples.exposed.webflux.domain.ProductEntity
 import io.bluetape4k.examples.exposed.webflux.domain.Products
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.insert
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
-class DataInitializer : ApplicationRunner {
+class DataInitializer(
+    private val r2dbcDatabase: R2dbcDatabase,
+) : ApplicationRunner {
 
-    override fun run(args: ApplicationArguments) {
-        transaction {
+    override fun run(args: ApplicationArguments): Unit = runBlocking {
+        suspendTransaction(r2dbcDatabase) {
             SchemaUtils.create(Products)
 
-            if (ProductEntity.count() == 0L) {
-                ProductEntity.new {
-                    name = "Kotlin Coroutines Book"
-                    price = BigDecimal("39.99")
-                    stock = 100
+            if (Products.selectAll().count() == 0L) {
+                Products.insert {
+                    it[name] = "Kotlin Coroutines Book"
+                    it[price] = BigDecimal("39.99")
+                    it[stock] = 100
                 }
-                ProductEntity.new {
-                    name = "Spring WebFlux Guide"
-                    price = BigDecimal("49.99")
-                    stock = 50
+                Products.insert {
+                    it[name] = "Spring WebFlux Guide"
+                    it[price] = BigDecimal("49.99")
+                    it[stock] = 50
                 }
-                ProductEntity.new {
-                    name = "Reactive Programming"
-                    price = BigDecimal("29.99")
-                    stock = 200
+                Products.insert {
+                    it[name] = "Reactive Programming"
+                    it[price] = BigDecimal("29.99")
+                    it[stock] = 200
                 }
             }
         }

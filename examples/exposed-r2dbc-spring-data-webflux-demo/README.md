@@ -1,67 +1,46 @@
 # exposed-r2dbc-spring-data-webflux-demo
 
-`spring-data-exposed-r2dbc-spring-data` 모듈을 사용한 Spring WebFlux + Coroutine REST API 예제입니다.
+`spring-data-exposed-r2dbc-spring-data`를 사용한 Spring WebFlux + Coroutine REST API 예제입니다.
 
 ## 기술 스택
 
-- **Spring Boot 4** + **Spring WebFlux**
-- **JetBrains Exposed 1.x** DAO 모드
-- **`CoroutineExposedRepository`** — Coroutine 기반 CRUD
-- **Kotlin Coroutines** (`suspend` 함수, `Flow`)
-- **H2** 인메모리 데이터베이스
+- Spring Boot 4 + Spring WebFlux
+- Exposed R2DBC (`suspendTransaction`)
+- CoroutineExposedRepository (`IdTable + Domain DTO`)
+- H2 (JDBC 초기화 + R2DBC 트랜잭션 경로)
+
+## 최근 변경
+
+- 컨트롤러에서 `suspendTransaction(r2dbcDatabase)`로 트랜잭션 경계 명시
+- `R2dbcDatabase` 빈(`ExposedR2dbcConfig`) 추가
+- `DataInitializer`를 R2DBC DSL 기반 초기화로 전환
+- `spring.r2dbc.*` 설정 및 `r2dbc-h2` 런타임 의존성 보강
 
 ## 프로젝트 구조
 
-```
+```text
 src/main/kotlin/.../
-├── WebfluxDemoApplication.kt   # @SpringBootApplication + @EnableCoroutineExposedRepositories
+├── WebfluxDemoApplication.kt
+├── config/
+│   ├── DataInitializer.kt
+│   └── ExposedR2dbcConfig.kt
 ├── domain/
-│   └── ProductEntity.kt        # Products 테이블 + ProductEntity + ProductDto
+│   └── ProductEntity.kt
 ├── repository/
-│   └── ProductCoroutineRepository.kt  # CoroutineExposedRepository<ProductEntity, Long>
-├── controller/
-│   └── ProductController.kt    # suspend fun + Flow 기반 REST 엔드포인트
-└── config/
-    └── DataInitializer.kt      # 초기 샘플 데이터 삽입
+│   └── ProductCoroutineRepository.kt
+└── controller/
+    └── ProductController.kt
 ```
 
-## API 엔드포인트
+## API
 
-| Method | Path | 반환 타입 | 설명 |
-|--------|------|----------|------|
-| `GET` | `/products` | `Flow<ProductDto>` | 전체 목록 조회 |
-| `GET` | `/products/{id}` | `ProductDto` | ID로 단건 조회 |
-| `POST` | `/products` | `ProductDto` | 새 상품 생성 |
-| `PUT` | `/products/{id}` | `ProductDto` | 상품 수정 |
-| `DELETE` | `/products/{id}` | `204 No Content` | 상품 삭제 |
-
-## Controller 예시
-
-```kotlin
-@RestController
-@RequestMapping("/products")
-class ProductController(
-    private val productRepository: ProductCoroutineRepository,
-) {
-    @GetMapping
-    fun findAll(): Flow<ProductDto> =
-        productRepository.findAll().map { transaction { it.toDto() } }
-
-    @GetMapping("/{id}")
-    suspend fun findById(@PathVariable id: Long): ProductDto =
-        productRepository.findByIdOrNull(id)?.let { transaction { it.toDto() } }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    suspend fun create(@RequestBody dto: ProductDto): ProductDto {
-        val entity = transaction {
-            ProductEntity.new { name = dto.name; price = dto.price; stock = dto.stock }
-        }
-        return transaction { entity.toDto() }
-    }
-}
-```
+| Method | Path | 설명 |
+|---|---|---|
+| `GET` | `/products` | 상품 목록 조회 |
+| `GET` | `/products/{id}` | 상품 단건 조회 |
+| `POST` | `/products` | 상품 생성 |
+| `PUT` | `/products/{id}` | 상품 수정 |
+| `DELETE` | `/products/{id}` | 상품 삭제 |
 
 ## 실행
 
@@ -74,6 +53,3 @@ class ProductController(
 ```bash
 ./gradlew :exposed-r2dbc-spring-data-webflux-demo:test
 ```
-
-테스트는 `@SpringBootTest(RANDOM_PORT)` + `WebTestClient`로 실제 HTTP 요청을 검증합니다.
-`@TestMethodOrder` + `@Order(1)`로 초기 데이터 검증 테스트(`hasSize(3)`)가 가장 먼저 실행됩니다.

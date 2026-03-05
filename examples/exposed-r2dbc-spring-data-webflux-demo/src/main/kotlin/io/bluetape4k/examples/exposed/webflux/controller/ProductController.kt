@@ -1,12 +1,10 @@
 package io.bluetape4k.examples.exposed.webflux.controller
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
-import io.bluetape4k.examples.exposed.webflux.domain.ProductEntity
-import io.bluetape4k.examples.exposed.webflux.domain.toDto
 import io.bluetape4k.examples.exposed.webflux.repository.ProductCoroutineRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,48 +21,45 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/products")
 class ProductController(
     private val productRepository: ProductCoroutineRepository,
+    private val r2dbcDatabase: R2dbcDatabase,
 ) {
 
     @GetMapping
-    fun findAll(): Flow<ProductDto> =
-        productRepository.findAll().map { transaction { it.toDto() } }
+    suspend fun findAll(): List<ProductDto> =
+        suspendTransaction(r2dbcDatabase) {
+            productRepository.findAll(Pageable.unpaged()).content
+        }
 
     @GetMapping("/{id}")
-    suspend fun findById(@PathVariable id: Long): ProductDto {
-        return productRepository.findByIdOrNull(id)?.let { transaction { it.toDto() } }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
-    }
+    suspend fun findById(@PathVariable id: Long): ProductDto =
+        suspendTransaction(r2dbcDatabase) {
+            productRepository.findByIdOrNull(id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
+        }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    suspend fun create(@RequestBody dto: ProductDto): ProductDto {
-        val entity = transaction {
-            ProductEntity.new {
-                name = dto.name
-                price = dto.price
-                stock = dto.stock
-            }
+    suspend fun create(@RequestBody dto: ProductDto): ProductDto =
+        suspendTransaction(r2dbcDatabase) {
+            productRepository.save(dto.copy(id = null))
         }
-        return transaction { entity.toDto() }
-    }
 
     @PutMapping("/{id}")
     suspend fun update(@PathVariable id: Long, @RequestBody dto: ProductDto): ProductDto {
-        val entity = productRepository.findByIdOrNull(id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
-        transaction {
-            entity.name = dto.name
-            entity.price = dto.price
-            entity.stock = dto.stock
+        return suspendTransaction(r2dbcDatabase) {
+            val existing = productRepository.findByIdOrNull(id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
+            productRepository.save(dto.copy(id = existing.id ?: id))
         }
-        return transaction { entity.toDto() }
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun delete(@PathVariable id: Long) {
-        val entity = productRepository.findByIdOrNull(id)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
-        productRepository.delete(entity)
+        suspendTransaction(r2dbcDatabase) {
+            val existing = productRepository.findByIdOrNull(id)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
+            productRepository.deleteById(existing.id ?: id)
+        }
     }
 }

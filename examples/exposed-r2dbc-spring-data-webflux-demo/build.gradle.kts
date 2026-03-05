@@ -5,16 +5,19 @@ plugins {
 
 dependencies {
     implementation(project(":exposed-r2dbc-spring-data"))
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.exposed_spring_boot4_starter)
-    implementation(Libs.exposed_jdbc)
-    implementation(Libs.exposed_dao)
+
+    implementation(Libs.exposed_r2dbc)
     implementation(Libs.exposed_java_time)
+    implementation(Libs.bluetape4k_r2dbc)
+
+    runtimeOnly(Libs.r2dbc_h2)
+
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("test"))
+
+    implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)
     implementation(Libs.kotlinx_coroutines_reactor)
-    runtimeOnly(Libs.h2_v2)
-
-    testImplementation(Libs.springBootStarter("test"))
     testImplementation(Libs.kotlinx_coroutines_test)
 }
 

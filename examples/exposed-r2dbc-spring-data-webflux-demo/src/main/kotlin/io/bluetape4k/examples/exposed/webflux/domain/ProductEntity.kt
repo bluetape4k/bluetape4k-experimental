@@ -1,6 +1,7 @@
 package io.bluetape4k.examples.exposed.webflux.domain
 
 import io.bluetape4k.spring.data.exposed.annotation.ExposedEntity
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.dao.LongEntity
@@ -22,10 +23,10 @@ class ProductEntity(id: EntityID<Long>) : LongEntity(id) {
 }
 
 data class ProductDto(
-    val id: Long? = null,
+    override val id: Long? = null,
     val name: String,
     val price: java.math.BigDecimal,
     val stock: Int = 0,
-)
+) : HasIdentifier<Long>
 
 fun ProductEntity.toDto() = ProductDto(id.value, name, price, stock)
