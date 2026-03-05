@@ -16,7 +16,6 @@ import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.flow.collect
 
 /**
  * Lettuce 기반 Near Cache (2-tier cache) - Coroutine(Suspend) 구현.
@@ -128,7 +127,8 @@ class LettuceNearSuspendCache<V: Any>(
         frontCache.put(key, value)
         setRedis(key, value)
         // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
-        commands.get(config.redisKey(key))
+        // write 경로 지연을 줄이기 위해 fire-and-forget으로 등록한다.
+        connection.async().get(config.redisKey(key))
     }
 
     /**
@@ -136,11 +136,11 @@ class LettuceNearSuspendCache<V: Any>(
      */
     suspend fun putAll(map: Map<String, V>) {
         frontCache.putAll(map)
+        val async = connection.async()
         map.forEach { (key, value) ->
             setRedis(key, value)
+            async.get(config.redisKey(key))
         }
-        val keys = map.map { config.redisKey(it.key) }.toTypedArray()
-        commands.mget(*keys).collect()  // CLIENT TRACKING 활성화
     }
 
     /**

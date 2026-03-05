@@ -20,6 +20,11 @@ Invalidation:
 Redis → CLIENT TRACKING (RESP3 push) → CaffeineLocalCache.invalidate()
 ```
 
+## 최근 변경
+
+- `TrackingInvalidationListener`가 `ByteBuffer`, `ByteArray`, `String` payload를 모두 해석하도록 보강
+- 코루틴 캐시 `put/putAll`의 tracking 등록 경로를 `async().get(...)` fire-and-forget으로 최적화
+
 ### 읽기 전략 (Read-Through)
 1. L1(Caffeine) 히트 → 즉시 반환
 2. L1 미스 → Redis GET (`{cacheName}:{key}`) → L1 populate → 반환

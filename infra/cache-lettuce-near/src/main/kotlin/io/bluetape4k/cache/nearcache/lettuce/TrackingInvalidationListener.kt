@@ -50,7 +50,6 @@ class TrackingInvalidationListener<V: Any>(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun handleInvalidation(content: List<Any?>) {
         // content[0] = type string as ByteBuffer (already matched "invalidate")
         // content[1] = null (flush all) or List<ByteBuffer> (key bytes)
@@ -64,12 +63,9 @@ class TrackingInvalidationListener<V: Any>(
 
         val prefix = "${cacheName}:"
         val keys = when (keysRaw) {
-            is List<*>    -> (keysRaw as List<ByteBuffer?>)
-                .filterNotNull()
-                .mapNotNull { buf ->
-                    val fullKey = StringCodec.UTF8.decodeKey(buf.duplicate())
-                    if (fullKey.startsWith(prefix)) fullKey.removePrefix(prefix) else null
-                }
+            is List<*>    -> keysRaw.mapNotNull { rawKey ->
+                decodeKey(rawKey)?.takeIf { it.startsWith(prefix) }?.removePrefix(prefix)
+            }
             is ByteBuffer -> {
                 val fullKey = StringCodec.UTF8.decodeKey(keysRaw.duplicate())
                 if (fullKey.startsWith(prefix)) listOf(fullKey.removePrefix(prefix)) else emptyList()
@@ -81,6 +77,17 @@ class TrackingInvalidationListener<V: Any>(
             log.debug { "Invalidating ${keys.size} keys from local cache: $keys" }
             frontCache.invalidateAll(keys)
         }
+    }
+
+    private fun decodeKey(rawKey: Any?): String? = when (rawKey) {
+        is ByteBuffer -> runCatching { StringCodec.UTF8.decodeKey(rawKey.duplicate()) }
+            .onFailure { e -> log.warn(e) { "Failed to decode invalidation key payload type=ByteBuffer" } }
+            .getOrNull()
+        is ByteArray  -> runCatching { StringCodec.UTF8.decodeKey(ByteBuffer.wrap(rawKey)) }
+            .onFailure { e -> log.warn(e) { "Failed to decode invalidation key payload type=ByteArray" } }
+            .getOrNull()
+        is String     -> rawKey
+        else          -> null
     }
 
     /**
