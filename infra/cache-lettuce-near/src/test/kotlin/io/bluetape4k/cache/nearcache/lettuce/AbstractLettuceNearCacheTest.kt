@@ -1,10 +1,10 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.sync.RedisCommands
-import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.ProtocolVersion
 import org.amshove.kluent.shouldBeEqualTo
@@ -18,22 +18,22 @@ import org.junit.jupiter.api.BeforeEach
  */
 abstract class AbstractLettuceNearCacheTest {
 
-    companion object {
+    companion object: KLogging() {
         const val REPEAT_SIZE = 3
 
         /** 테스트 전역 Redis 서버 (Testcontainers) */
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
+
+        val clientRESP3Protocol: ClientOptions = ClientOptions.builder()
+            .protocolVersion(ProtocolVersion.RESP3)
+            .build()
 
         /** RESP3 활성화된 RedisClient */
         val resp3Client: RedisClient by lazy {
             RedisClient.create(
                 RedisServer.Launcher.LettuceLib.getRedisURI(redis.host, redis.port)
             ).also { client ->
-                client.setOptions(
-                    ClientOptions.builder()
-                        .protocolVersion(ProtocolVersion.RESP3)
-                        .build()
-                )
+                client.options = clientRESP3Protocol
             }
         }
 
@@ -156,13 +156,14 @@ abstract class AbstractLettuceNearCacheTest {
         put: (String, String) -> Unit,
         clearLocal: () -> Unit,
         localSize: () -> Long,
+        getFromRedis: (String) -> String? = { directCommands.get(it) },
     ) {
         put("k1", "v1")
         put("k2", "v2")
         localSize() shouldBeEqualTo 2L
         clearLocal()
         localSize() shouldBeEqualTo 0L
-        // Redis still has the data
-        directCommands.get("k1").shouldNotBeNull()
+        // Redis still has the data (prefix key로 확인)
+        getFromRedis("k1").shouldNotBeNull()
     }
 }

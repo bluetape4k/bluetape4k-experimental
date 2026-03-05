@@ -13,7 +13,7 @@ import org.hibernate.cache.spi.support.DomainDataStorageAccess
 import org.hibernate.cache.spi.support.RegionFactoryTemplate
 import org.hibernate.cache.spi.support.StorageAccess
 import org.hibernate.engine.spi.SessionFactoryImplementor
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -42,7 +42,7 @@ class LettuceNearCacheRegionFactory : RegionFactoryTemplate() {
     private lateinit var redisClient: RedisClient
     private lateinit var properties: LettuceNearCacheProperties
     private lateinit var codec: LettuceBinaryCodec<Any>
-    private val cacheMap = ConcurrentHashMap<String, LettuceNearCache<String, Any>>()
+    private val cacheMap = ConcurrentHashMap<String, LettuceNearCache<Any>>()
 
     override fun prepareForUse(settings: SessionFactoryOptions, configValues: Map<String, Any>) {
         properties = LettuceNearCacheProperties.from(configValues)
@@ -71,7 +71,7 @@ class LettuceNearCacheRegionFactory : RegionFactoryTemplate() {
      * 현재 관리 중인 모든 region의 [LettuceNearCache] 인스턴스 맵을 반환한다.
      * Spring Boot Auto-Configuration에서 Metrics/Actuator 연동 시 사용된다.
      */
-    fun getCaches(): Map<String, LettuceNearCache<String, Any>> =
+    fun getCaches(): Map<String, LettuceNearCache<Any>> =
         Collections.unmodifiableMap(cacheMap)
 
     override fun createDomainDataStorageAccess(

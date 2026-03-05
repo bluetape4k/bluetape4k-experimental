@@ -1,5 +1,7 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
 
 /**
@@ -8,7 +10,7 @@ import java.time.Duration
  * @param K 키 타입
  * @param V 값 타입
  */
-data class NearCacheConfig<K : Any, V : Any>(
+data class NearCacheConfig<K: Any, V: Any>(
     val cacheName: String = "lettuce-near-cache",
     val maxLocalSize: Long = 10_000,
     val localExpireAfterWrite: Duration = Duration.ofMinutes(30),
@@ -16,17 +18,34 @@ data class NearCacheConfig<K : Any, V : Any>(
     val redisTtl: Duration? = null,
     val useRespProtocol3: Boolean = true,
     val recordStats: Boolean = false,
-)
+) {
+    init {
+        require(cacheName.isNotBlank()) { "cacheName must not be blank" }
+        require(':' !in cacheName) {
+            "cacheName must not contain ':' to avoid Redis key prefix collision, but was: '$cacheName'. " +
+                "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
+        }
+    }
+
+    /**
+     * cacheName prefix를 포함한 Redis key를 생성한다.
+     * 예: cacheName="orders", key="user:123" → "orders:user:123"
+     *
+     * key에는 ':'를 포함할 수 있다. invalidation 수신 시 startsWith + removePrefix 방식으로
+     * cacheName prefix만 제거하므로 key의 ':' 문자는 그대로 보존된다.
+     */
+    fun redisKey(key: String): String = "${cacheName}:${key}"
+}
 
 /**
  * [NearCacheConfig] DSL 빌더.
  */
-fun <K : Any, V : Any> nearCacheConfig(
-    block: NearCacheConfigBuilder<K, V>.() -> Unit,
+inline fun <K: Any, V: Any> nearCacheConfig(
+    @BuilderInference block: NearCacheConfigBuilder<K, V>.() -> Unit,
 ): NearCacheConfig<K, V> =
     NearCacheConfigBuilder<K, V>().apply(block).build()
 
-class NearCacheConfigBuilder<K : Any, V : Any> {
+class NearCacheConfigBuilder<K: Any, V: Any> {
     var cacheName: String = "lettuce-near-cache"
     var maxLocalSize: Long = 10_000
     var localExpireAfterWrite: Duration = Duration.ofMinutes(30)
@@ -36,8 +55,8 @@ class NearCacheConfigBuilder<K : Any, V : Any> {
     var recordStats: Boolean = false
 
     fun build(): NearCacheConfig<K, V> = NearCacheConfig(
-        cacheName = cacheName,
-        maxLocalSize = maxLocalSize,
+        cacheName = cacheName.requireNotBlank("cacheName"),
+        maxLocalSize = maxLocalSize.requirePositiveNumber("maxLocalSize"),
         localExpireAfterWrite = localExpireAfterWrite,
         localExpireAfterAccess = localExpireAfterAccess,
         redisTtl = redisTtl,

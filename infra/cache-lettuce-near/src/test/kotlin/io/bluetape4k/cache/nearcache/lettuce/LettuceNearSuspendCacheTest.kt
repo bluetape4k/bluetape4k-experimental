@@ -1,6 +1,5 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
-import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -11,11 +10,12 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.testcontainers.utility.Base58
 import java.time.Duration
 
 class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
 
-    private lateinit var cache: LettuceNearSuspendCache<String, String>
+    private lateinit var cache: LettuceNearSuspendCache<String>
 
     @BeforeEach
     fun createCache() {
@@ -48,12 +48,14 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
     @Test
     fun `put - Redis에도 반영됨`() = runTest {
         cache.put("k", "v")
-        directCommands.get("k") shouldBeEqualTo "v"
+        // prefix key로 확인
+        directCommands.get("${cache.cacheName}:k") shouldBeEqualTo "v"
     }
 
     @Test
     fun `get - front miss 시 Redis에서 읽어 front populate`() = runTest {
-        directCommands.set("remote-key", "remote-val")
+        // prefix key로 직접 설정
+        directCommands.set("${cache.cacheName}:remote-key", "remote-val")
         cache.localSize() shouldBeEqualTo 0L
 
         cache.get("remote-key") shouldBeEqualTo "remote-val"
@@ -146,7 +148,8 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
         cache.localSize() shouldBeEqualTo 2L
         cache.clearLocal()
         cache.localSize() shouldBeEqualTo 0L
-        directCommands.get("k1").shouldNotBeNull()
+        // prefix key로 Redis 데이터 유지 확인
+        directCommands.get("${cache.cacheName}:k1").shouldNotBeNull()
     }
 
     @Test
@@ -155,35 +158,68 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
         cache.put("k2", "v2")
         cache.clearAll()
         cache.localSize() shouldBeEqualTo 0L
-        directCommands.get("k1").shouldBeNull()
-        directCommands.get("k2").shouldBeNull()
+        // prefix key로 삭제 확인
+        directCommands.get("${cache.cacheName}:k1").shouldBeNull()
+        directCommands.get("${cache.cacheName}:k2").shouldBeNull()
+    }
+
+    @Test
+    fun `clearAll - 다른 cacheName의 데이터는 유지됨`() = runTest {
+        val otherCache = LettuceNearSuspendCache(
+            redisClient = resp3Client,
+            codec = StringCodec.UTF8,
+            config = NearCacheConfig(cacheName = "other-suspend-cache-" + Base58.randomString(6)),
+        )
+        otherCache.use { other ->
+            cache.put("shared-key", "from-main")
+            other.put("shared-key", "from-other")
+
+            cache.clearAll()
+
+            cache.get("shared-key").shouldBeNull()
+            other.get("shared-key") shouldBeEqualTo "from-other"
+        }
     }
 
     // ---- TTL ----
 
     @Test
     fun `Redis TTL - TTL이 있는 캐시 설정`() = runTest {
+        val ttlCacheName = "ttl-suspend-test-" + Base58.randomString(6)
         val ttlCache = LettuceNearSuspendCache(
             redisClient = resp3Client,
             codec = StringCodec.UTF8,
             config = NearCacheConfig(
-                cacheName = "ttl-test",
+                cacheName = ttlCacheName,
                 redisTtl = Duration.ofSeconds(2),
             ),
         )
         ttlCache.use { c ->
             c.put("ttl-key", "ttl-val")
             c.get("ttl-key") shouldBeEqualTo "ttl-val"
-            val ttl = directCommands.ttl("ttl-key")
+            // prefix key로 TTL 확인
+            val ttl = directCommands.ttl("${ttlCacheName}:ttl-key")
             (ttl > 0L).shouldBeTrue()
         }
+    }
+
+    // ---- redisSize ----
+
+    @Test
+    fun `redisSize - cacheName에 속한 Redis key 개수`() = runTest {
+        cache.put("s1", "v1")
+        cache.put("s2", "v2")
+        cache.put("s3", "v3")
+        cache.redisSize() shouldBeEqualTo 3L
+        cache.remove("s2")
+        cache.redisSize() shouldBeEqualTo 2L
     }
 
     // ---- lifecycle ----
 
     @Test
     fun `close - 중복 close 시 예외 없음`() {
-        val c = LettuceNearSuspendCache.create(resp3Client)
+        val c = LettuceNearSuspendCache(resp3Client)
         c.close()
         c.close()
     }
