@@ -1,6 +1,9 @@
 package io.bluetape4k.spring.boot.autoconfigure.cache.lettuce
 
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer
@@ -16,7 +19,7 @@ class LettuceNearCacheAutoConfigurationTest {
     @Test
     fun `HibernatePropertiesCustomizer가 기본 설정으로 등록된다`() {
         contextRunner.run { context ->
-            assertThat(context).hasSingleBean(HibernatePropertiesCustomizer::class.java)
+            context.getBeansOfType(HibernatePropertiesCustomizer::class.java) shouldHaveSize 1
         }
     }
 
@@ -25,7 +28,7 @@ class LettuceNearCacheAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.cache.lettuce-near.enabled=false")
             .run { context ->
-                assertThat(context).doesNotHaveBean(HibernatePropertiesCustomizer::class.java)
+                context.getBeansOfType(HibernatePropertiesCustomizer::class.java).shouldBeEmpty()
             }
     }
 
@@ -38,12 +41,10 @@ class LettuceNearCacheAutoConfigurationTest {
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
-                assertThat(props["hibernate.cache.lettuce.redis_uri"])
-                    .isEqualTo("redis://myredis:6380")
-                assertThat(props["hibernate.cache.region.factory_class"])
-                    .isEqualTo("io.bluetape4k.hibernate.cache.lettuce.LettuceNearCacheRegionFactory")
-                assertThat(props["hibernate.cache.use_second_level_cache"])
-                    .isEqualTo("true")
+                props["hibernate.cache.lettuce.redis_uri"] shouldBeEqualTo "redis://myredis:6380"
+                props["hibernate.cache.region.factory_class"] shouldBeEqualTo
+                    "io.bluetape4k.hibernate.cache.lettuce.LettuceNearCacheRegionFactory"
+                props["hibernate.cache.use_second_level_cache"] shouldBeEqualTo "true"
             }
     }
 
@@ -59,8 +60,8 @@ class LettuceNearCacheAutoConfigurationTest {
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
-                assertThat(props["hibernate.generate_statistics"]).isEqualTo("true")
-                assertThat(props["hibernate.cache.lettuce.local.record_stats"]).isEqualTo("true")
+                props["hibernate.generate_statistics"] shouldBeEqualTo "true"
+                props["hibernate.cache.lettuce.local.record_stats"] shouldBeEqualTo "true"
             }
     }
 
@@ -77,8 +78,8 @@ class LettuceNearCacheAutoConfigurationTest {
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
-                assertThat(props["hibernate.cache.lettuce.redis_ttl.default"]).isEqualTo("60s")
-                assertThat(props["hibernate.cache.lettuce.redis_ttl.product"]).isEqualTo("300s")
+                props["hibernate.cache.lettuce.redis_ttl.default"] shouldBeEqualTo "60s"
+                props["hibernate.cache.lettuce.redis_ttl.product"] shouldBeEqualTo "300s"
             }
     }
 
@@ -86,12 +87,12 @@ class LettuceNearCacheAutoConfigurationTest {
     fun `LettuceNearCacheSpringProperties 기본값이 올바르게 설정된다`() {
         contextRunner.run { context ->
             val props = context.getBean(LettuceNearCacheSpringProperties::class.java)
-            assertThat(props.enabled).isTrue()
-            assertThat(props.redisUri).isEqualTo("redis://localhost:6379")
-            assertThat(props.codec).isEqualTo("lz4fory")
-            assertThat(props.useResp3).isTrue()
-            assertThat(props.local.maxSize).isEqualTo(10_000L)
-            assertThat(props.metrics.enabled).isTrue()
+            props.enabled.shouldBeTrue()
+            props.redisUri shouldBeEqualTo "redis://localhost:6379"
+            props.codec shouldBeEqualTo "lz4fory"
+            props.useResp3.shouldBeTrue()
+            props.local.maxSize shouldBeEqualTo 10_000L
+            props.metrics.enabled.shouldBeTrue()
         }
     }
 }

@@ -1,7 +1,9 @@
 package io.bluetape4k.examples.exposed.mvc
 
 import io.bluetape4k.examples.exposed.mvc.domain.ProductDto
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -38,8 +40,8 @@ class ProductControllerTest {
             .uri("/products")
             .retrieve()
             .toEntity<List<ProductDto>>()
-        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body).isNotNull
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body.shouldNotBeNull()
     }
 
     @Test
@@ -51,9 +53,9 @@ class ProductControllerTest {
             .body(dto)
             .retrieve()
             .toEntity<ProductDto>()
-        assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
-        assertThat(response.body?.id).isNotNull()
-        assertThat(response.body?.name).isEqualTo("Test Product")
+        response.statusCode shouldBeEqualTo HttpStatus.CREATED
+        response.body?.id.shouldNotBeNull()
+        response.body?.name shouldBeEqualTo "Test Product"
     }
 
     @Test
@@ -67,8 +69,8 @@ class ProductControllerTest {
             .uri("/products/${created.id}")
             .retrieve()
             .toEntity<ProductDto>()
-        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body?.name).isEqualTo("Find Me")
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body?.name shouldBeEqualTo "Find Me"
     }
 
     @Test
@@ -85,8 +87,8 @@ class ProductControllerTest {
             .body(updated)
             .retrieve()
             .toEntity<ProductDto>()
-        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body?.name).isEqualTo("Updated")
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body?.name shouldBeEqualTo "Updated"
     }
 
     @Test
@@ -100,7 +102,7 @@ class ProductControllerTest {
             .uri("/products/${created.id}")
             .retrieve()
             .toBodilessEntity()
-        assertThat(deleteResponse.statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+        deleteResponse.statusCode shouldBeEqualTo HttpStatus.NO_CONTENT
     }
 
     @Test
@@ -114,7 +116,7 @@ class ProductControllerTest {
             .uri("/products/search?name=SearchableProduct")
             .retrieve()
             .toEntity<List<ProductDto>>()
-        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-        assertThat(response.body?.any { it.name == "SearchableProduct" }).isTrue()
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body?.any { it.name == "SearchableProduct" }.shouldBeTrue()
     }
 }

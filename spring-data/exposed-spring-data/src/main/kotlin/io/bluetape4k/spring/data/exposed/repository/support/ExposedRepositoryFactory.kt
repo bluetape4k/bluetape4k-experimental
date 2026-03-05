@@ -19,6 +19,7 @@ class ExposedRepositoryFactory(
     private val mappingContext: ExposedMappingContext,
 ) : RepositoryFactorySupport() {
 
+    @Deprecated("Spring 4.0부터 Deprecated 됩니다.")
     override fun <T : Any, ID : Any> getEntityInformation(domainClass: Class<T>): EntityInformation<T, ID> =
         ExposedEntityInformationImpl.of(domainClass as Class<Entity<Any>>) as EntityInformation<T, ID>
 

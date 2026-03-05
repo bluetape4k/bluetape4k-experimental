@@ -3,15 +3,22 @@ package io.bluetape4k.spring.data.exposed
 import io.bluetape4k.spring.data.exposed.domain.UserEntity
 import io.bluetape4k.spring.data.exposed.domain.Users
 import io.bluetape4k.spring.data.exposed.repository.UserRepository
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeEmpty
+import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.jdbc.deleteAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.transaction.annotation.Transactional
 
+@Transactional
 class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
 
     @Autowired
@@ -19,112 +26,103 @@ class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
 
     @AfterEach
     fun tearDown() {
-        transaction { Users.deleteAll() }
+        Users.deleteAll()
     }
 
     private fun createUsers() {
-        transaction {
-            UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
-            UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
-            UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 35 }
-            UserEntity.new { name = "Alice"; email = "alice2@example.com"; age = 20 }
-        }
+        UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
+        UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
+        UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 35 }
+        UserEntity.new { name = "Alice"; email = "alice2@example.com"; age = 20 }
     }
 
     @Test
     fun `findByName returns matching entities`() {
         createUsers()
-        val results = transaction { userRepository.findByName("Alice") }
-        assertThat(results).hasSize(2)
-        assertThat(results.map { it.name }).allMatch { it == "Alice" }
+        val results = userRepository.findByName("Alice")
+        results shouldHaveSize 2
+        results.all { it.name == "Alice" }.shouldBeTrue()
     }
 
     @Test
     fun `findByAgeGreaterThan filters correctly`() {
         createUsers()
-        val results = transaction { userRepository.findByAgeGreaterThan(25) }
-        assertThat(results.map { it.age }).allMatch { it > 25 }
+        val results = userRepository.findByAgeGreaterThan(25)
+        results.all { it.age > 25 }.shouldBeTrue()
     }
 
     @Test
     fun `findByEmailContaining filters by substring`() {
         createUsers()
-        val results = transaction { userRepository.findByEmailContaining("alice") }
-        assertThat(results).hasSize(2)
+        val results = userRepository.findByEmailContaining("alice")
+        results shouldHaveSize 2
     }
 
     @Test
     fun `findByNameAndAge returns single result`() {
         createUsers()
-        val user = transaction { userRepository.findByNameAndAge("Alice", 30) }
-        assertThat(user).isNotNull
-        assertThat(user!!.email).isEqualTo("alice@example.com")
+        val user = userRepository.findByNameAndAge("Alice", 30)
+        user.shouldNotBeNull()
+        user!!.email shouldBeEqualTo "alice@example.com"
     }
 
     @Test
     fun `countByAge returns correct count`() {
         createUsers()
-        val count = transaction { userRepository.countByAge(30) }
-        assertThat(count).isEqualTo(1L)
+        val count = userRepository.countByAge(30)
+        count shouldBeEqualTo 1L
     }
 
     @Test
     fun `existsByEmail returns true when found`() {
         createUsers()
-        val exists = transaction { userRepository.existsByEmail("alice@example.com") }
-        assertThat(exists).isTrue()
+        userRepository.existsByEmail("alice@example.com").shouldBeTrue()
     }
 
     @Test
     fun `existsByEmail returns false when not found`() {
         createUsers()
-        val exists = transaction { userRepository.existsByEmail("notexist@example.com") }
-        assertThat(exists).isFalse()
+        userRepository.existsByEmail("notexist@example.com").shouldBeFalse()
     }
 
     @Test
     fun `deleteByName removes matching entities`() {
         createUsers()
-        val deleted = transaction { userRepository.deleteByName("Alice") }
-        assertThat(deleted).isEqualTo(2L)
-        val remaining = transaction { userRepository.findByName("Alice") }
-        assertThat(remaining).isEmpty()
+        val deleted = userRepository.deleteByName("Alice")
+        deleted shouldBeEqualTo 2L
+        userRepository.findByName("Alice").shouldBeEmpty()
     }
 
     @Test
     fun `findByAgeBetween returns entities in range`() {
         createUsers()
-        val results = transaction { userRepository.findByAgeBetween(25, 35) }
-        assertThat(results.map { it.age }).allMatch { it in 25..35 }
+        val results = userRepository.findByAgeBetween(25, 35)
+        results.all { it.age in 25..35 }.shouldBeTrue()
     }
 
     @Test
     fun `findTop3ByOrderByAgeDesc returns top 3 oldest`() {
         createUsers()
-        val results = transaction { userRepository.findTop3ByOrderByAgeDesc() }
-        assertThat(results).hasSize(3)
-        assertThat(results[0].age).isGreaterThanOrEqualTo(results[1].age)
+        val results = userRepository.findTop3ByOrderByAgeDesc()
+        results shouldHaveSize 3
+        (results[0].age >= results[1].age).shouldBeTrue()
     }
 
     @Test
     fun `findAll with Sort`() {
         createUsers()
-        val results = transaction {
-            userRepository.findAll(Sort.by(Sort.Direction.ASC, "age"))
-        }
-        assertThat(results).isNotEmpty
+        val results = userRepository.findAll(Sort.by(Sort.Direction.ASC, "age"))
+        results.shouldNotBeEmpty()
         val ages = results.map { it.age }
-        assertThat(ages).isSortedAccordingTo(Comparator.naturalOrder())
+        ages shouldBeEqualTo ages.sorted()
     }
 
     @Test
     fun `findAll with Pageable and Sort`() {
         createUsers()
-        val page = transaction {
-            userRepository.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "age")))
-        }
-        assertThat(page.content).hasSize(2)
-        assertThat(page.totalElements).isEqualTo(4L)
-        assertThat(page.content[0].age).isGreaterThanOrEqualTo(page.content[1].age)
+        val page = userRepository.findAll(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "age")))
+        page.content shouldHaveSize 2
+        page.totalElements shouldBeEqualTo 4L
+        (page.content[0].age >= page.content[1].age).shouldBeTrue()
     }
 }

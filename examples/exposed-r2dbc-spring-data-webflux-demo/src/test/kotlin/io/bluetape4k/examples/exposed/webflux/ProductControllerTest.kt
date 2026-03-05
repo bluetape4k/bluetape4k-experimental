@@ -1,7 +1,8 @@
 package io.bluetape4k.examples.exposed.webflux
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -49,8 +50,8 @@ class ProductControllerTest {
             .expectStatus().isCreated
             .expectBody<ProductDto>()
             .consumeWith { result ->
-                assertThat(result.responseBody?.id).isNotNull()
-                assertThat(result.responseBody?.name).isEqualTo("New Product")
+                result.responseBody?.id.shouldNotBeNull()
+                result.responseBody?.name shouldBeEqualTo "New Product"
             }
     }
 
@@ -67,7 +68,7 @@ class ProductControllerTest {
             .expectStatus().isOk
             .expectBody<ProductDto>()
             .consumeWith { result ->
-                assertThat(result.responseBody?.name).isEqualTo("Findable")
+                result.responseBody?.name shouldBeEqualTo "Findable"
             }
     }
 
@@ -85,7 +86,7 @@ class ProductControllerTest {
             .expectStatus().isOk
             .expectBody<ProductDto>()
             .consumeWith { result ->
-                assertThat(result.responseBody?.name).isEqualTo("After Update")
+                result.responseBody?.name shouldBeEqualTo "After Update"
             }
     }
 

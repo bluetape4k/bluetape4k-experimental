@@ -3,14 +3,18 @@ package io.bluetape4k.spring.data.exposed
 import io.bluetape4k.spring.data.exposed.domain.UserEntity
 import io.bluetape4k.spring.data.exposed.domain.Users
 import io.bluetape4k.spring.data.exposed.repository.UserRepository
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.transaction.annotation.Transactional
 
+@Transactional
 class QueryByExampleTest : AbstractExposedRepositoryTest() {
 
     @Autowired
@@ -18,41 +22,33 @@ class QueryByExampleTest : AbstractExposedRepositoryTest() {
 
     @AfterEach
     fun tearDown() {
-        transaction { Users.deleteAll() }
+        Users.deleteAll()
     }
 
     @Test
     fun `findAll with DSL op for age 30`() {
-        transaction {
-            UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
-            UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 30 }
-            UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 25 }
-        }
+        UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
+        UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 30 }
+        UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 25 }
 
-        val results = transaction {
-            userRepository.findAll { Users.age eq 30 }
-        }
-        assertThat(results).hasSize(2)
+        val results = userRepository.findAll { Users.age eq 30 }
+        results shouldHaveSize 2
     }
 
     @Test
     fun `count with DSL op`() {
-        transaction {
-            UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
-            UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
-        }
-        val count = transaction {
-            userRepository.count { Users.age eq 30 }
-        }
-        assertThat(count).isEqualTo(1L)
+        UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
+        UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
+
+        val count = userRepository.count { Users.age eq 30 }
+        count shouldBeEqualTo 1L
     }
 
     @Test
     fun `exists with DSL op`() {
-        transaction {
-            UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
-        }
-        assertThat(transaction { userRepository.exists { Users.name eq "Alice" } }).isTrue()
-        assertThat(transaction { userRepository.exists { Users.name eq "Nobody" } }).isFalse()
+        UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
+
+        userRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
+        userRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
     }
 }

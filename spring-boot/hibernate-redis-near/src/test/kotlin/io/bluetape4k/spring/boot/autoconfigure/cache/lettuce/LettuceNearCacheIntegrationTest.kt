@@ -6,7 +6,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import org.junit.jupiter.api.Test
@@ -55,8 +56,8 @@ class LettuceNearCacheIntegrationTest {
     fun `엔티티가 저장되고 조회된다`() {
         val item = itemRepository.save(TestItem(name = "TestItem"))
         val found = itemRepository.findById(item.id!!).orElse(null)
-        assertThat(found).isNotNull()
-        assertThat(found.name).isEqualTo("TestItem")
+        found.shouldNotBeNull()
+        found.name shouldBeEqualTo "TestItem"
     }
 }
 

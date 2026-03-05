@@ -3,7 +3,9 @@ package io.bluetape4k.examples.cache.lettuce
 import io.bluetape4k.examples.cache.lettuce.domain.Product
 import io.bluetape4k.examples.cache.lettuce.repository.ProductRepository
 import io.bluetape4k.testcontainers.storage.RedisServer
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,9 +51,9 @@ class DemoApplicationTest {
         )
 
         val found = productRepository.findById(product.id!!).orElse(null)
-        assertThat(found).isNotNull()
-        assertThat(found.name).isEqualTo("MacBook Pro")
-        assertThat(found.price).isEqualTo(2_499.0)
+        found.shouldNotBeNull()
+        found.name shouldBeEqualTo "MacBook Pro"
+        found.price shouldBeEqualTo 2_499.0
     }
 
     @Test
@@ -67,8 +69,8 @@ class DemoApplicationTest {
         // 두 번째 조회 (Cache hit)
         val second = productRepository.findById(id).orElseThrow()
 
-        assertThat(first.id).isEqualTo(second.id)
-        assertThat(first.name).isEqualTo(second.name)
+        first.id shouldBeEqualTo second.id
+        first.name shouldBeEqualTo second.name
     }
 
     @Test
@@ -82,6 +84,6 @@ class DemoApplicationTest {
         )
 
         val all = productRepository.findAll()
-        assertThat(all).hasSize(3)
+        all shouldHaveSize 3
     }
 }

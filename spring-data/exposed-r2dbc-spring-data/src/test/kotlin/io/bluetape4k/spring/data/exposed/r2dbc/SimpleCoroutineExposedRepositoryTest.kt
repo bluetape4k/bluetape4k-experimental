@@ -5,7 +5,12 @@ import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserCoroutineRepository
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -39,8 +44,8 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
     fun `findById returns entity`() = runTest {
         val user = createUser("Alice", "alice@example.com", 30)
         val found = userRepository.findByIdOrNull(user.id.value)
-        assertThat(found).isNotNull
-        assertThat(found!!.name).isEqualTo("Alice")
+        found.shouldNotBeNull()
+        found!!.name shouldBeEqualTo "Alice"
     }
 
     @Test
@@ -48,7 +53,7 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
         val all = userRepository.findAll().toList()
-        assertThat(all).hasSize(2)
+        all shouldHaveSize 2
     }
 
     @Test
@@ -56,32 +61,32 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
         val all = userRepository.findAllList()
-        assertThat(all).hasSize(2)
+        all shouldHaveSize 2
     }
 
     @Test
     fun `count returns correct total`() = runTest {
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
-        assertThat(userRepository.count()).isEqualTo(2L)
+        userRepository.count() shouldBeEqualTo 2L
     }
 
     @Test
     fun `existsById returns true when entity exists`() = runTest {
         val user = createUser("Alice", "alice@example.com", 30)
-        assertThat(userRepository.existsById(user.id.value)).isTrue()
+        userRepository.existsById(user.id.value).shouldBeTrue()
     }
 
     @Test
     fun `existsById returns false when entity does not exist`() = runTest {
-        assertThat(userRepository.existsById(-1L)).isFalse()
+        userRepository.existsById(-1L).shouldBeFalse()
     }
 
     @Test
     fun `deleteById removes entity`() = runTest {
         val user = createUser("Alice", "alice@example.com", 30)
         userRepository.deleteById(user.id.value)
-        assertThat(userRepository.findByIdOrNull(user.id.value)).isNull()
+        userRepository.findByIdOrNull(user.id.value).shouldBeNull()
     }
 
     @Test
@@ -89,7 +94,7 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
         userRepository.deleteAll()
-        assertThat(userRepository.count()).isEqualTo(0L)
+        userRepository.count() shouldBeEqualTo 0L
     }
 
     @Test
@@ -98,15 +103,16 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
         val results = userRepository.findAll(Sort.by(Sort.Direction.ASC, "age"))
-        assertThat(results.map { it.age }).isSortedAccordingTo(Comparator.naturalOrder())
+        val ages = results.map { it.age }
+        ages shouldBeEqualTo ages.sorted()
     }
 
     @Test
     fun `findAll with Pageable returns page`() = runTest {
         repeat(5) { i -> createUser("User$i", "user$i@example.com", 20 + i) }
         val page = userRepository.findAll(PageRequest.of(0, 3))
-        assertThat(page.content).hasSize(3)
-        assertThat(page.totalElements).isEqualTo(5L)
+        page.content shouldHaveSize 3
+        page.totalElements shouldBeEqualTo 5L
     }
 
     @Test
@@ -114,21 +120,21 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 17)
         val adults = userRepository.findAll { Users.age greaterEq 18 }
-        assertThat(adults).hasSize(1)
-        assertThat(adults[0].name).isEqualTo("Alice")
+        adults shouldHaveSize 1
+        adults[0].name shouldBeEqualTo "Alice"
     }
 
     @Test
     fun `count with DSL op returns correct count`() = runTest {
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 17)
-        assertThat(userRepository.count { Users.age greaterEq 18 }).isEqualTo(1L)
+        userRepository.count { Users.age greaterEq 18 } shouldBeEqualTo 1L
     }
 
     @Test
     fun `exists with DSL op returns true when found`() = runTest {
         createUser("Alice", "alice@example.com", 30)
-        assertThat(userRepository.exists { Users.name eq "Alice" }).isTrue()
-        assertThat(userRepository.exists { Users.name eq "Nobody" }).isFalse()
+        userRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
+        userRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
     }
 }
