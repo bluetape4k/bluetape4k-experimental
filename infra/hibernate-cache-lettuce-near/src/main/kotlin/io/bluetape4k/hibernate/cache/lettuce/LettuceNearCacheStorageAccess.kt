@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor
  *
  * - [getFromCache]: Caffeine(L1) → Redis(L2) 순서로 조회
  * - [putIntoCache]: write-through (L1 + L2 동시 저장)
- * - [evictData]: region 전체 evict 시 local cache만 clear (Redis는 TTL 만료)
+ * - [evictData]: region 전체 evict 시 local + Redis 모두 제거
  * - [evictData] with key: 특정 key만 L1+L2 제거
  */
 class LettuceNearCacheStorageAccess(
@@ -40,11 +40,10 @@ class LettuceNearCacheStorageAccess(
     }
 
     /**
-     * region 전체 evict: local cache만 clear한다.
-     * Redis 데이터는 TTL로 자연 만료되도록 유지.
+     * region 전체 evict: local + Redis 모두 제거한다.
      */
     override fun evictData() {
-        nearCache.clearLocal()
+        nearCache.clearAll()
     }
 
     override fun release() {

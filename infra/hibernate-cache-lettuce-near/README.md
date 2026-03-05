@@ -29,6 +29,12 @@ Hibernate ORM
 - **키 prefix**: `{regionName}::{key}` 형식으로 Redis 키 충돌 방지
 - **AccessType**: `NONSTRICT_READ_WRITE` 권장 (분산 캐시에서 soft-lock 불필요)
 
+## 최근 변경
+
+- `LettuceNearCacheStorageAccess.evictData()`를 region local-only clear에서 **local + Redis clearAll**로 변경
+- 테스트에서 `session.get()`을 `session.find()`로 교체해 Hibernate deprecated API 제거
+- One-To-Many / Many-To-One / Many-To-Many 관계 엔티티 캐시 시나리오 테스트 추가
+
 ## 의존성
 
 ```kotlin

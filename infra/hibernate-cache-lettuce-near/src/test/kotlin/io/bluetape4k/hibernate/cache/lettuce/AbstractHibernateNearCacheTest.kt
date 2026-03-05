@@ -1,6 +1,9 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
+import io.bluetape4k.hibernate.cache.lettuce.model.Department
+import io.bluetape4k.hibernate.cache.lettuce.model.Employee
+import io.bluetape4k.hibernate.cache.lettuce.model.Project
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.hibernate.SessionFactory
 import org.hibernate.boot.MetadataSources
@@ -47,6 +50,9 @@ abstract class AbstractHibernateNearCacheTest {
 
             sessionFactory = MetadataSources(registry)
                 .addAnnotatedClass(Person::class.java)
+                .addAnnotatedClass(Department::class.java)
+                .addAnnotatedClass(Employee::class.java)
+                .addAnnotatedClass(Project::class.java)
                 .buildMetadata()
                 .buildSessionFactory()
         }

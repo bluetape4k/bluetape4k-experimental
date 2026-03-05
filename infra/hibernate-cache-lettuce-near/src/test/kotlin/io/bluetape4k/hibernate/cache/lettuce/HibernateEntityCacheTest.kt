@@ -5,6 +5,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
+import org.hibernate.cache.spi.RegionFactory
+import org.hibernate.engine.spi.SessionFactoryImplementor
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -39,7 +41,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 2. Session 2: 1st level cache miss → 2nd level cache hit
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            val loaded = session.get(Person::class.java, personId)
+            val loaded = session.find(Person::class.java, personId)
             session.transaction.commit()
             loaded.shouldNotBeNull()
             loaded.name shouldBeEqualTo "Alice"
@@ -48,7 +50,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 3. Session 3: 또 조회 → 2nd level cache hit
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            session.get(Person::class.java, personId).shouldNotBeNull()
+            session.find(Person::class.java, personId).shouldNotBeNull()
             session.transaction.commit()
         }
 
@@ -62,7 +64,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
 
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            session.get(Person::class.java, Long.MAX_VALUE).shouldBeNull()
+            session.find(Person::class.java, Long.MAX_VALUE).shouldBeNull()
             session.transaction.commit()
         }
 
@@ -85,7 +87,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 2. Session 2: 2nd level cache에 올리기
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            session.get(Person::class.java, personId)
+            session.find(Person::class.java, personId)
             session.transaction.commit()
         }
 
@@ -96,7 +98,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 4. Session 3: 재조회 → cache miss → DB에서 로드
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            val loaded = session.get(Person::class.java, personId)
+            val loaded = session.find(Person::class.java, personId)
             session.transaction.commit()
             loaded.shouldNotBeNull()
             loaded.name shouldBeEqualTo "Bob"
@@ -120,7 +122,7 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 2. Entity 수정
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            val p = session.get(Person::class.java, personId)
+            val p = session.find(Person::class.java, personId)
             p!!.name = "Charlie Updated"
             session.transaction.commit()
         }
@@ -130,10 +132,41 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         // 3. 수정 후 재조회 → 최신 값 확인
         sessionFactory.openSession().use { session ->
             session.beginTransaction()
-            val loaded = session.get(Person::class.java, personId)
+            val loaded = session.find(Person::class.java, personId)
             session.transaction.commit()
             loaded.shouldNotBeNull()
             loaded.name shouldBeEqualTo "Charlie Updated"
         }
+    }
+
+    @Test
+    fun `region 전체 evict는 local 과 Redis 모두 제거한다`() {
+        val personId = sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            val p = Person().apply { name = "Eve"; age = 28 }
+            session.persist(p)
+            session.transaction.commit()
+            p.id!!
+        }
+
+        sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            session.find(Person::class.java, personId).shouldNotBeNull()
+            session.transaction.commit()
+        }
+
+        val regionFactory = (sessionFactory as SessionFactoryImplementor).serviceRegistry
+            .getService(RegionFactory::class.java) as LettuceNearCacheRegionFactory
+        val regionName = regionFactory.getCaches().keys.firstOrNull { it.contains("Person") }.also {
+            it.shouldNotBeNull()
+        }!!
+        regionFactory.getCaches()[regionName]!!.backCacheSize().shouldBeGreaterThan(0L)
+
+        sessionFactory.cache.evictEntityData(Person::class.java)
+
+        val cache = regionFactory.getCaches()[regionName]!!
+        cache.localCacheSize() shouldBeEqualTo 0L
+        cache.backCacheSize() shouldBeEqualTo 0L
+        cache.containsKey(personId.toString()) shouldBeEqualTo false
     }
 }
