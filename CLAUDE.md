@@ -53,23 +53,30 @@ bluetape4k-experimental/
 ├── templates/                # logback, junit-platform 설정 템플릿
 ├── kotlin/                   # Kotlin 언어 기능 실험
 ├── spring-boot/              # Spring Boot 4 실험
-│   └── hibernate-cache-lettuce-near/  # Hibernate Near Cache Spring Boot Auto-Configuration
+│   └── hibernate-redis-near/      # Hibernate Near Cache Spring Boot Auto-Configuration (:hibernate-redis-near)
 ├── spring-data/              # Spring Data 실험
+│   ├── exposed-spring-data/       # JetBrains Exposed DAO → Spring Data JDBC Repository (:exposed-spring-data)
+│   └── exposed-r2dbc-spring-data/ # JetBrains Exposed DAO → Spring Data Coroutine/Reactive Repository (:exposed-r2dbc-spring-data)
 ├── coroutines/               # Coroutines 실험
 ├── ai/                       # AI/LLM 통합 실험
 ├── data/                     # 데이터 계층 실험
 ├── io/                       # I/O, 직렬화 실험
 ├── infra/                    # 인프라(Redis, Kafka 등) 실험
-│   ├── cache-lettuce-near/       # Lettuce Near Cache (Caffeine L1 + Redis L2 + CLIENT TRACKING)
-│   └── hibernate-cache-lettuce-near/  # Hibernate 7 2nd Level Cache (Near Cache 기반)
+│   ├── cache-lettuce-near/        # Lettuce Near Cache (Caffeine L1 + Redis L2 + CLIENT TRACKING) (:cache-lettuce-near)
+│   └── hibernate-cache-lettuce-near/  # Hibernate 7 2nd Level Cache (Near Cache 기반) (:hibernate-cache-lettuce-near)
 └── examples/                 # 예제 애플리케이션
-    └── hibernate-cache-lettuce-near-demo/  # Near Cache Spring Boot 데모 앱
+    ├── hibernate-cache-lettuce-near-demo/    # Near Cache Spring Boot 데모 앱 (:hibernate-cache-lettuce-near-demo)
+    ├── exposed-spring-data-mvc-demo/         # Exposed Spring Data + MVC 예제 (:exposed-spring-data-mvc-demo)
+    └── exposed-r2dbc-spring-data-webflux-demo/ # Exposed Spring Data + WebFlux 예제 (:exposed-r2dbc-spring-data-webflux-demo)
 ```
 
-### 모듈 추가 방법
+### 모듈 명명 규칙
 
-카테고리 디렉토리 아래에 폴더를 만들면 자동으로 모듈로 인식됩니다:
-- `kotlin/context-parameters/` → `:context-parameters` 모듈
+`settings.gradle.kts`의 `includeModules(baseDir, withProjectName=false, withBaseDir=false)` 패턴:
+- 모든 카테고리에 `withBaseDir=false` 적용 → 폴더명이 그대로 모듈명이 됨
+- `kotlin/context-parameters/` → `:context-parameters`
+- `infra/cache-lettuce-near/` → `:cache-lettuce-near`
+- `spring-data/exposed-spring-data/` → `:exposed-spring-data`
 - 새 모듈의 `build.gradle.kts`에서 `Libs.*` 로 의존성 참조
 
 ### Key Conventions
@@ -98,10 +105,21 @@ bluetape4k-experimental/
 - **Map 키 바인딩**: `@ConfigurationProperties`에서 점(`.`)이 포함된 Map 키는 대괄호 표기법 사용.
   예: `redis-ttl.regions[io.example.Product]=300s`
 
+### spring-data 모듈 주의사항
+
+- **`@ExposedEntity`**: Exposed `Entity<ID>` 서브클래스에 필수. Spring Data 스캐닝 대상 지정.
+- **`@EnableExposedRepositories`**: Spring MVC 앱의 `@SpringBootApplication` 클래스에 선언.
+- **`@EnableCoroutineExposedRepositories`**: WebFlux/Coroutine 앱에서 사용.
+- **트랜잭션 필수**: 모든 DAO 연산은 `transaction {}` / `withContext(Dispatchers.IO) { transaction {} }` 내에서 실행.
+- **DB 초기화**: 테스트 `@BeforeEach`에서 `SchemaUtils.createMissingTablesAndColumns(Table)` + `Table.deleteAll()` 사용.
+  - `deleteAll()`은 `import org.jetbrains.exposed.v1.jdbc.deleteAll` 필요.
+
 ### examples 모듈 주의사항
 
-- `settings.gradle.kts`에서 `includeModules("examples", false, true)` 로 등록.
-- 예제 앱 실행: `docker-compose up -d && ./gradlew :examples-hibernate-cache-lettuce-near-demo:bootRun`
+- `settings.gradle.kts`에서 `includeModules("examples", false, false)` 로 등록.
+- Near Cache 예제 실행: `docker-compose up -d && ./gradlew :hibernate-cache-lettuce-near-demo:bootRun`
+- MVC 예제 실행: `./gradlew :exposed-spring-data-mvc-demo:bootRun`
+- WebFlux 예제 실행: `./gradlew :exposed-r2dbc-spring-data-webflux-demo:bootRun`
 
 ## Testing
 
