@@ -7,7 +7,6 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
@@ -63,10 +62,10 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
     fun `get - front miss 시 Redis에서 읽어 front populate`() {
         // prefix key로 직접 설정해야 cache.get()이 찾을 수 있음
         directCommands.set("${cache.cacheName}:remote-key", "remote-val")
-        cache.localSize() shouldBeEqualTo 0L
+        cache.localCacheSize() shouldBeEqualTo 0L
 
         cache.get("remote-key") shouldBeEqualTo "remote-val"
-        cache.localSize() shouldBeEqualTo 1L  // front populated
+        cache.localCacheSize() shouldBeEqualTo 1L  // front populated
     }
 
     @Test
@@ -154,7 +153,7 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         verifyClearLocal(
             put = { k, v -> cache.put(k, v) },
             clearLocal = { cache.clearLocal() },
-            localSize = { cache.localSize() },
+            localSize = { cache.localCacheSize() },
             // prefix key로 Redis 직접 확인
             getFromRedis = { directCommands.get("${cache.cacheName}:$it") },
         )
@@ -165,7 +164,7 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         cache.put("k1", "v1")
         cache.put("k2", "v2")
         cache.clearAll()
-        cache.localSize() shouldBeEqualTo 0L
+        cache.localCacheSize() shouldBeEqualTo 0L
         // prefix key로 삭제 확인
         directCommands.get("${cache.cacheName}:k1").shouldBeNull()
         directCommands.get("${cache.cacheName}:k2").shouldBeNull()
@@ -223,9 +222,9 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         cache.put("s1", "v1")
         cache.put("s2", "v2")
         cache.put("s3", "v3")
-        cache.redisSize() shouldBeEqualTo 3L
+        cache.backCacheSize() shouldBeEqualTo 3L
         cache.remove("s2")
-        cache.redisSize() shouldBeEqualTo 2L
+        cache.backCacheSize() shouldBeEqualTo 2L
     }
 
     // ---- lifecycle ----

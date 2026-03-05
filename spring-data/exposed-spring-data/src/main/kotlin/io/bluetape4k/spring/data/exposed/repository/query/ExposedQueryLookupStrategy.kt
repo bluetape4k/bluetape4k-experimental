@@ -1,6 +1,5 @@
 package io.bluetape4k.spring.data.exposed.repository.query
 
-import io.bluetape4k.spring.data.exposed.repository.support.ExposedEntityInformation
 import io.bluetape4k.spring.data.exposed.repository.support.ExposedEntityInformationImpl
 import org.jetbrains.exposed.v1.dao.Entity
 import org.springframework.data.projection.ProjectionFactory

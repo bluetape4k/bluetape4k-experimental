@@ -11,9 +11,9 @@ class CaffeineLocalCache<K : Any, V : Any>(private val config: NearCacheConfig<K
 
     private val cache: Cache<K, V> = Caffeine.newBuilder()
         .maximumSize(config.maxLocalSize)
-        .expireAfterWrite(config.localExpireAfterWrite)
+        .expireAfterWrite(config.frontExpireAfterWrite)
         .also { builder ->
-            config.localExpireAfterAccess?.let { builder.expireAfterAccess(it) }
+            config.frontExpireAfterAccess?.let { builder.expireAfterAccess(it) }
             if (config.recordStats) builder.recordStats()
         }
         .build()

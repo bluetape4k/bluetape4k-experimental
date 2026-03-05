@@ -30,7 +30,7 @@ class CacheController(private val entityManagerFactory: EntityManagerFactory) {
             val stats = cache.localStats()
             CacheStats(
                 regionName = regionName,
-                localSize = cache.localSize(),
+                localSize = cache.localCacheSize(),
                 localHitCount = stats?.hitCount(),
                 localMissCount = stats?.missCount(),
                 localHitRate = stats?.hitRate(),

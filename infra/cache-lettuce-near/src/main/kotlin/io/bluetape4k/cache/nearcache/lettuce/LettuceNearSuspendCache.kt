@@ -1,6 +1,7 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
@@ -15,6 +16,7 @@ import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.flow.collect
 
 /**
  * Lettuce 기반 Near Cache (2-tier cache) - Coroutine(Suspend) 구현.
@@ -68,11 +70,11 @@ class LettuceNearSuspendCache<V: Any>(
     private val closed = atomic(false)
     val isClosed by closed
 
-    private val localCache: LocalCache<String, V> = CaffeineLocalCache(config)
+    private val frontCache: LocalCache<String, V> = CaffeineLocalCache(config)
     private val connection: StatefulRedisConnection<String, V> = redisClient.connect(codec)
     private val commands: RedisCoroutinesCommands<String, V> = connection.coroutines()
     private val trackingListener: TrackingInvalidationListener<V> =
-        TrackingInvalidationListener(localCache, connection, config.cacheName)
+        TrackingInvalidationListener(frontCache, connection, config.cacheName)
 
     init {
         if (config.useRespProtocol3) {
@@ -91,10 +93,10 @@ class LettuceNearSuspendCache<V: Any>(
     suspend fun get(key: String): V? {
         key.requireNotBlank("key")
 
-        localCache.get(key)?.let { return it }
+        frontCache.get(key)?.let { return it }
 
         return commands.get(config.redisKey(key))?.also { value ->
-            localCache.put(key, value)
+            frontCache.put(key, value)
         }
     }
 
@@ -102,14 +104,14 @@ class LettuceNearSuspendCache<V: Any>(
      * 여러 키에 대한 값을 한 번에 조회한다.
      */
     suspend fun getAll(keys: Set<String>): Map<String, V> {
-        val result = localCache.getAll(keys).toMutableMap()
+        val result = frontCache.getAll(keys).toMutableMap()
         val missedKeys = keys - result.keys
 
-        for (key in missedKeys) {
+        missedKeys.forEach { key ->
             val value = commands.get(config.redisKey(key))
             if (value != null) {
                 result[key] = value
-                localCache.put(key, value)
+                frontCache.put(key, value)
             }
         }
 
@@ -123,7 +125,7 @@ class LettuceNearSuspendCache<V: Any>(
      * write-through 후 async Redis GET을 fire-and-forget으로 실행해 CLIENT TRACKING을 활성화한다.
      */
     suspend fun put(key: String, value: V) {
-        localCache.put(key, value)
+        frontCache.put(key, value)
         setRedis(key, value)
         // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
         commands.get(config.redisKey(key))
@@ -133,11 +135,12 @@ class LettuceNearSuspendCache<V: Any>(
      * 여러 key-value를 한 번에 저장한다.
      */
     suspend fun putAll(map: Map<String, V>) {
-        localCache.putAll(map)
+        frontCache.putAll(map)
         map.forEach { (key, value) ->
             setRedis(key, value)
-            commands.get(config.redisKey(key))  // CLIENT TRACKING 활성화
         }
+        val keys = map.map { config.redisKey(it.key) }.toTypedArray()
+        commands.mget(*keys).collect()  // CLIENT TRACKING 활성화
     }
 
     /**
@@ -154,7 +157,7 @@ class LettuceNearSuspendCache<V: Any>(
             config.redisTtl?.let { ttl ->
                 commands.expire(rKey, ttl.seconds)
             }
-            localCache.put(key, value)
+            frontCache.put(key, value)
             null
         } else {
             commands.get(rKey)
@@ -165,7 +168,7 @@ class LettuceNearSuspendCache<V: Any>(
      * 키를 제거한다 (front + Redis).
      */
     suspend fun remove(key: String) {
-        localCache.remove(key)
+        frontCache.remove(key)
         commands.del(config.redisKey(key))
     }
 
@@ -173,8 +176,9 @@ class LettuceNearSuspendCache<V: Any>(
      * 여러 키를 한 번에 제거한다.
      */
     suspend fun removeAll(keys: Set<String>) {
-        localCache.removeAll(keys)
-        keys.forEach { commands.del(config.redisKey(it)) }
+        frontCache.removeAll(keys)
+        val rKeys = keys.map { config.redisKey(it) }.toTypedArray()
+        commands.del(*rKeys)
     }
 
     /**
@@ -184,7 +188,7 @@ class LettuceNearSuspendCache<V: Any>(
     suspend fun replace(key: String, value: V): Boolean {
         val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx()) != null
         if (ok) {
-            localCache.put(key, value)
+            frontCache.put(key, value)
         }
         return ok
     }
@@ -222,23 +226,18 @@ class LettuceNearSuspendCache<V: Any>(
      * 해당 키가 캐시에 존재하는지 확인한다 (front or Redis).
      */
     suspend fun containsKey(key: String): Boolean {
-        if (localCache.containsKey(key)) return true
+        if (frontCache.containsKey(key)) return true
         return (commands.exists(config.redisKey(key)) ?: 0L) > 0L
     }
 
     /**
      * 로컬 캐시만 비운다 (Redis 유지).
      */
-    fun clearLocal() {
-        localCache.clear()
+    fun clearFrontCache() {
+        frontCache.clear()
     }
 
-    /**
-     * 로컬 캐시 + Redis를 모두 비운다.
-     * SCAN으로 이 cacheName의 key만 삭제한다 (다른 cacheName의 데이터 보존).
-     */
-    suspend fun clearAll() {
-        localCache.clear()
+    private suspend fun clearBackCache() {
         val pattern = "${config.cacheName}:*"
         var cursor: ScanCursor = ScanCursor.INITIAL
         var finished = false
@@ -257,9 +256,18 @@ class LettuceNearSuspendCache<V: Any>(
     }
 
     /**
+     * 로컬 캐시 + Redis를 모두 비운다.
+     * SCAN으로 이 cacheName의 key만 삭제한다 (다른 cacheName의 데이터 보존).
+     */
+    suspend fun clearAll() {
+        clearFrontCache()
+        clearBackCache()
+    }
+
+    /**
      * 로컬 캐시의 추정 크기.
      */
-    fun localSize(): Long = localCache.estimatedSize()
+    fun localSize(): Long = frontCache.estimatedSize()
 
     /**
      * Redis에서 이 cacheName에 속한 key의 개수를 반환한다.
@@ -289,12 +297,12 @@ class LettuceNearSuspendCache<V: Any>(
         if (closed.compareAndSet(false, true)) {
             runCatching { trackingListener.close() }
             runCatching { connection.close() }
-            runCatching { localCache.close() }
-            log.debug("LettuceNearSuspendCache [{}] closed", config.cacheName)
+            runCatching { frontCache.close() }
+            log.debug { "LettuceNearSuspendCache [${config.cacheName}] closed" }
         }
     }
 
-    private suspend fun setRedis(key: String, value: V) {
+    private suspend inline fun setRedis(key: String, value: V) {
         val rKey = config.redisKey(key)
         val ttl = config.redisTtl
         if (ttl != null) {

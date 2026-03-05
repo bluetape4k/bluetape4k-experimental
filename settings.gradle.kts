@@ -10,9 +10,9 @@ pluginManagement {
     }
 }
 
-val PROJECT_NAME = "bluetape4k"
+val baseProjectName = "bluetape4k"
 
-rootProject.name = "$PROJECT_NAME-experimental"
+rootProject.name = "$baseProjectName-experimental"
 
 include("shared")
 
@@ -36,8 +36,8 @@ fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir
                     val basePath = baseDir.replace("/", "-")
                     val projectName = when {
                         !withProjectName && !withBaseDir -> dir.name
-                        withProjectName && !withBaseDir  -> PROJECT_NAME + "-" + dir.name
-                        withProjectName                  -> PROJECT_NAME + "-" + basePath + "-" + dir.name
+                        withProjectName && !withBaseDir -> baseProjectName + "-" + dir.name
+                        withProjectName                 -> baseProjectName + "-" + basePath + "-" + dir.name
                         else                             -> basePath + "-" + dir.name
                     }
 

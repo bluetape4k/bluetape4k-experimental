@@ -17,7 +17,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
-import java.util.Optional
+import java.util.*
 
 /**
  * [CoroutineExposedRepository]의 기본 CRUD 구현체입니다.

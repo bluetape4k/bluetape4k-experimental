@@ -98,8 +98,8 @@ class LettuceNearCacheIsolationTest : AbstractLettuceNearCacheTest() {
         cacheB.get("k1").shouldBeNull()
         cacheB.get("k2").shouldBeNull()
         cacheB.get("k3").shouldBeNull()
-        cacheB.localSize() shouldBeEqualTo 0L
-        cacheB.redisSize() shouldBeEqualTo 0L
+        cacheB.localCacheSize() shouldBeEqualTo 0L
+        cacheB.backCacheSize() shouldBeEqualTo 0L
 
         // cacheA, cacheC는 그대로 유지
         cacheA.get("k1") shouldBeEqualTo "a1"
@@ -131,12 +131,12 @@ class LettuceNearCacheIsolationTest : AbstractLettuceNearCacheTest() {
         cacheA.putAll(mapOf("r1" to "v", "r2" to "v", "r3" to "v"))
         cacheB.putAll(mapOf("r1" to "v", "r2" to "v"))
 
-        cacheA.redisSize() shouldBeEqualTo 3L
-        cacheB.redisSize() shouldBeEqualTo 2L
+        cacheA.backCacheSize() shouldBeEqualTo 3L
+        cacheB.backCacheSize() shouldBeEqualTo 2L
 
         cacheA.remove("r1")
-        cacheA.redisSize() shouldBeEqualTo 2L
-        cacheB.redisSize() shouldBeEqualTo 2L   // B 영향 없음
+        cacheA.backCacheSize() shouldBeEqualTo 2L
+        cacheB.backCacheSize() shouldBeEqualTo 2L   // B 영향 없음
     }
 
     // ---- containsKey 격리 ----
@@ -157,13 +157,13 @@ class LettuceNearCacheIsolationTest : AbstractLettuceNearCacheTest() {
         cacheA.put("loc-key", "a-val")
         cacheB.put("loc-key", "b-val")
 
-        cacheA.localSize() shouldBeEqualTo 1L
-        cacheB.localSize() shouldBeEqualTo 1L
+        cacheA.localCacheSize() shouldBeEqualTo 1L
+        cacheB.localCacheSize() shouldBeEqualTo 1L
 
         cacheA.clearLocal()
 
-        cacheA.localSize() shouldBeEqualTo 0L
-        cacheB.localSize() shouldBeEqualTo 1L  // B L1 유지
+        cacheA.localCacheSize() shouldBeEqualTo 0L
+        cacheB.localCacheSize() shouldBeEqualTo 1L  // B L1 유지
 
         // Redis 데이터도 영향 없음
         directCommands.get("isolation-a:loc-key").shouldNotBeNull()
@@ -251,13 +251,13 @@ class LettuceNearCacheIsolationTest : AbstractLettuceNearCacheTest() {
         cacheA.putAll((1..countA).associate { "key-$it" to "val-a-$it" })
         cacheB.putAll((1..countB).associate { "key-$it" to "val-b-$it" })
 
-        cacheA.redisSize() shouldBeEqualTo countA.toLong()
-        cacheB.redisSize() shouldBeEqualTo countB.toLong()
+        cacheA.backCacheSize() shouldBeEqualTo countA.toLong()
+        cacheB.backCacheSize() shouldBeEqualTo countB.toLong()
 
         cacheA.clearAll()
 
-        cacheA.redisSize() shouldBeEqualTo 0L
-        cacheB.redisSize() shouldBeEqualTo countB.toLong()  // B 영향 없음
+        cacheA.backCacheSize() shouldBeEqualTo 0L
+        cacheB.backCacheSize() shouldBeEqualTo countB.toLong()  // B 영향 없음
 
         // B 데이터 무결성 확인
         cacheB.get("key-1") shouldBeEqualTo "val-b-1"

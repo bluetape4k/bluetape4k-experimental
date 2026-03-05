@@ -2,7 +2,6 @@ package io.bluetape4k.examples.exposed.mvc.controller
 
 import io.bluetape4k.examples.exposed.mvc.domain.ProductDto
 import io.bluetape4k.examples.exposed.mvc.domain.ProductEntity
-import io.bluetape4k.examples.exposed.mvc.domain.Products
 import io.bluetape4k.examples.exposed.mvc.domain.toDto
 import io.bluetape4k.examples.exposed.mvc.repository.ProductRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction

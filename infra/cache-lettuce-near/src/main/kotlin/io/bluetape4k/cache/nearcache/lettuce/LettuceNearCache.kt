@@ -70,11 +70,11 @@ class LettuceNearCache<V: Any>(
     private val closed = atomic(false)
     val isClosed by closed
 
-    private val localCache: LocalCache<String, V> = CaffeineLocalCache(config)
+    private val frontCache: LocalCache<String, V> = CaffeineLocalCache(config)
     private val connection: StatefulRedisConnection<String, V> = redisClient.connect(codec)
     private val commands: RedisCommands<String, V> = connection.sync()
     private val trackingListener: TrackingInvalidationListener<V> =
-        TrackingInvalidationListener(localCache, connection, config.cacheName)
+        TrackingInvalidationListener(frontCache, connection, config.cacheName)
 
     init {
         if (config.useRespProtocol3) {
@@ -93,10 +93,10 @@ class LettuceNearCache<V: Any>(
     fun get(key: String): V? {
         key.requireNotBlank("key")
 
-        localCache.get(key)?.let { return it }
+        frontCache.get(key)?.let { return it }
 
         return commands.get(config.redisKey(key))?.also { value ->
-            localCache.put(key, value)
+            frontCache.put(key, value)
         }
     }
 
@@ -106,7 +106,7 @@ class LettuceNearCache<V: Any>(
     fun getAll(keys: Set<String>): Map<String, V> {
         keys.requireNotEmpty("keys")
 
-        val result = localCache.getAll(keys).toMutableMap()
+        val result = frontCache.getAll(keys).toMutableMap()
         val missedKeys = keys - result.keys.toSet()
 
         if (missedKeys.isNotEmpty()) {
@@ -118,7 +118,7 @@ class LettuceNearCache<V: Any>(
             futures.forEach { (key, future) ->
                 future.get()?.let { value ->
                     result[key] = value
-                    localCache.put(key, value)
+                    frontCache.put(key, value)
                 }
             }
         }
@@ -133,7 +133,7 @@ class LettuceNearCache<V: Any>(
      * write-through 후 async Redis GET을 fire-and-forget으로 실행해 CLIENT TRACKING을 활성화한다.
      */
     fun put(key: String, value: V) {
-        localCache.put(key, value)
+        frontCache.put(key, value)
         setRedis(key, value)
         // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
         connection.async().get(config.redisKey(key))
@@ -143,7 +143,7 @@ class LettuceNearCache<V: Any>(
      * 여러 key-value를 한 번에 저장한다.
      */
     fun putAll(map: Map<out String, V>) {
-        localCache.putAll(map)
+        frontCache.putAll(map)
         val async = connection.async()
         map.forEach { (key, value) ->
             setRedis(key, value)
@@ -165,7 +165,7 @@ class LettuceNearCache<V: Any>(
             config.redisTtl?.let { ttl ->
                 commands.expire(rKey, ttl.seconds)
             }
-            localCache.put(key, value)
+            frontCache.put(key, value)
             null
         } else {
             commands.get(rKey)
@@ -176,7 +176,7 @@ class LettuceNearCache<V: Any>(
      * 키를 제거한다 (front + Redis).
      */
     fun remove(key: String) {
-        localCache.remove(key)
+        frontCache.remove(key)
         commands.del(config.redisKey(key))
     }
 
@@ -184,8 +184,9 @@ class LettuceNearCache<V: Any>(
      * 여러 키를 한 번에 제거한다.
      */
     fun removeAll(keys: Set<String>) {
-        localCache.removeAll(keys)
-        keys.forEach { commands.del(config.redisKey(it)) }
+        frontCache.removeAll(keys)
+        val rkeys = keys.map { config.redisKey(it) }
+        commands.del(*rkeys.toTypedArray())
     }
 
     /**
@@ -196,7 +197,7 @@ class LettuceNearCache<V: Any>(
         commands.get(config.redisKey(key)) ?: return false
         val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx()) != null
         if (ok) {
-            localCache.put(key, value)
+            frontCache.put(key, value)
         }
         return ok
     }
@@ -234,7 +235,7 @@ class LettuceNearCache<V: Any>(
      * 해당 키가 캐시에 존재하는지 확인한다 (front or Redis).
      */
     fun containsKey(key: String): Boolean {
-        if (localCache.containsKey(key)) return true
+        if (frontCache.containsKey(key)) return true
         return commands.exists(config.redisKey(key)) > 0
     }
 
@@ -242,15 +243,10 @@ class LettuceNearCache<V: Any>(
      * 로컬 캐시만 비운다 (Redis 유지).
      */
     fun clearLocal() {
-        localCache.clear()
+        frontCache.clear()
     }
 
-    /**
-     * 로컬 캐시 + Redis를 모두 비운다.
-     * SCAN으로 이 cacheName의 key만 삭제한다 (다른 cacheName의 데이터 보존).
-     */
-    fun clearAll() {
-        localCache.clear()
+    private fun clearBack() {
         val pattern = "${config.cacheName}:*"
         var cursor: ScanCursor = ScanCursor.INITIAL
         do {
@@ -263,14 +259,23 @@ class LettuceNearCache<V: Any>(
     }
 
     /**
+     * 로컬 캐시 + Redis를 모두 비운다.
+     * SCAN으로 이 cacheName의 key만 삭제한다 (다른 cacheName의 데이터 보존).
+     */
+    fun clearAll() {
+        clearLocal()
+        runCatching { clearBack() }
+    }
+
+    /**
      * 로컬 캐시의 추정 크기.
      */
-    fun localSize(): Long = localCache.estimatedSize()
+    fun localCacheSize(): Long = frontCache.estimatedSize()
 
     /**
      * Redis에서 이 cacheName에 속한 key의 개수를 반환한다.
      */
-    fun redisSize(): Long {
+    fun backCacheSize(): Long {
         val pattern = "${config.cacheName}:*"
         var count = 0L
         var cursor: ScanCursor = ScanCursor.INITIAL
@@ -285,7 +290,7 @@ class LettuceNearCache<V: Any>(
     /**
      * 로컬 캐시(Caffeine) 통계. [NearCacheConfig.recordStats]가 true일 때만 유효한 값을 반환한다.
      */
-    fun localStats(): CacheStats? = localCache.stats()
+    fun localStats(): CacheStats? = frontCache.stats()
 
     /**
      * 모든 리소스를 정리하고 연결을 닫는다.
@@ -294,7 +299,7 @@ class LettuceNearCache<V: Any>(
         if (closed.compareAndSet(expect = false, update = true)) {
             runCatching { trackingListener.close() }
             runCatching { connection.close() }
-            runCatching { localCache.close() }
+            runCatching { frontCache.close() }
             log.debug { "LettuceNearCache [${config.cacheName}] closed" }
         }
     }

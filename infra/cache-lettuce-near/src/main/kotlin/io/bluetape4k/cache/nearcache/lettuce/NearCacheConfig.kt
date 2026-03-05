@@ -13,8 +13,8 @@ import java.time.Duration
 data class NearCacheConfig<K: Any, V: Any>(
     val cacheName: String = "lettuce-near-cache",
     val maxLocalSize: Long = 10_000,
-    val localExpireAfterWrite: Duration = Duration.ofMinutes(30),
-    val localExpireAfterAccess: Duration? = null,
+    val frontExpireAfterWrite: Duration = Duration.ofMinutes(30),
+    val frontExpireAfterAccess: Duration? = null,
     val redisTtl: Duration? = null,
     val useRespProtocol3: Boolean = true,
     val recordStats: Boolean = false,
@@ -34,7 +34,8 @@ data class NearCacheConfig<K: Any, V: Any>(
      * key에는 ':'를 포함할 수 있다. invalidation 수신 시 startsWith + removePrefix 방식으로
      * cacheName prefix만 제거하므로 key의 ':' 문자는 그대로 보존된다.
      */
-    fun redisKey(key: String): String = "${cacheName}:${key}"
+    @Suppress("NOTHING_TO_INLINE")
+    inline fun redisKey(key: String): String = "${cacheName}:${key}"
 }
 
 /**
@@ -48,8 +49,8 @@ inline fun <K: Any, V: Any> nearCacheConfig(
 class NearCacheConfigBuilder<K: Any, V: Any> {
     var cacheName: String = "lettuce-near-cache"
     var maxLocalSize: Long = 10_000
-    var localExpireAfterWrite: Duration = Duration.ofMinutes(30)
-    var localExpireAfterAccess: Duration? = null
+    var frontExpireAfterWrite: Duration = Duration.ofMinutes(30)
+    var frontExpireAfterAccess: Duration? = null
     var redisTtl: Duration? = null
     var useRespProtocol3: Boolean = true
     var recordStats: Boolean = false
@@ -57,8 +58,8 @@ class NearCacheConfigBuilder<K: Any, V: Any> {
     fun build(): NearCacheConfig<K, V> = NearCacheConfig(
         cacheName = cacheName.requireNotBlank("cacheName"),
         maxLocalSize = maxLocalSize.requirePositiveNumber("maxLocalSize"),
-        localExpireAfterWrite = localExpireAfterWrite,
-        localExpireAfterAccess = localExpireAfterAccess,
+        frontExpireAfterWrite = frontExpireAfterWrite,
+        frontExpireAfterAccess = frontExpireAfterAccess,
         redisTtl = redisTtl,
         useRespProtocol3 = useRespProtocol3,
         recordStats = recordStats,

@@ -28,7 +28,7 @@ import java.nio.ByteBuffer
  * @param V 값 타입
  */
 class TrackingInvalidationListener<V: Any>(
-    private val localCache: LocalCache<String, V>,
+    private val frontCache: LocalCache<String, V>,
     private val connection: StatefulRedisConnection<String, V>,
     private val cacheName: String,
 ): AutoCloseable {
@@ -58,7 +58,7 @@ class TrackingInvalidationListener<V: Any>(
 
         if (keysRaw == null) {
             log.debug { "Received full invalidation flush" }
-            localCache.clear()
+            frontCache.clear()
             return
         }
 
@@ -79,7 +79,7 @@ class TrackingInvalidationListener<V: Any>(
 
         if (keys.isNotEmpty()) {
             log.debug { "Invalidating ${keys.size} keys from local cache: $keys" }
-            localCache.invalidateAll(keys)
+            frontCache.invalidateAll(keys)
         }
     }
 
@@ -87,7 +87,7 @@ class TrackingInvalidationListener<V: Any>(
      * CLIENT TRACKING을 활성화하고 push 리스너를 등록한다.
      */
     fun start() {
-        if (started.compareAndSet(false, true)) {
+        if (started.compareAndSet(expect = false, update = true)) {
             try {
                 connection.addListener(pushListener)
                 connection.sync().clientTracking(trackingEnabled)

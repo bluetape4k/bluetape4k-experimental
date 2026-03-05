@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.Repository
-import java.util.Optional
+import java.util.*
 
 /**
  * Exposed DAO Entity를 코루틴으로 사용하는 Repository 인터페이스입니다.

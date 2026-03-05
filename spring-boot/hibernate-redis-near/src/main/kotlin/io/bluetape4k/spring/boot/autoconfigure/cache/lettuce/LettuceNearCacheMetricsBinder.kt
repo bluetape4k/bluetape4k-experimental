@@ -49,7 +49,7 @@ class LettuceNearCacheMetricsBinder(
 
         // 전체 로컬(Caffeine) 캐시 항목 수 합계
         Gauge.builder("lettuce.nearcache.total.local.size", regionFactory) {
-            it.getCaches().values.sumOf { cache -> cache.localSize() }.toDouble()
+            it.getCaches().values.sumOf { cache -> cache.localCacheSize() }.toDouble()
         }
             .description("전체 로컬(Caffeine) 캐시 항목 수 합계")
             .register(meterRegistry)

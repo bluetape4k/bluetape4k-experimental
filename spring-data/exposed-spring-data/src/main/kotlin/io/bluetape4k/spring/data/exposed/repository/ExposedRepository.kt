@@ -2,10 +2,10 @@ package io.bluetape4k.spring.data.exposed.repository
 
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.dao.Entity
-import org.springframework.data.repository.NoRepositoryBean
-import org.springframework.data.repository.query.QueryByExampleExecutor
 import org.springframework.data.repository.ListCrudRepository
 import org.springframework.data.repository.ListPagingAndSortingRepository
+import org.springframework.data.repository.NoRepositoryBean
+import org.springframework.data.repository.query.QueryByExampleExecutor
 
 /**
  * Exposed DAO Entity를 위한 Spring Data Repository 인터페이스입니다.

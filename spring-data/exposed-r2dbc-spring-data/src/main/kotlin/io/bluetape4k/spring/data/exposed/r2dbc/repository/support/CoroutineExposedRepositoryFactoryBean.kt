@@ -1,7 +1,6 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
 import io.bluetape4k.spring.data.exposed.mapping.ExposedMappingContext
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
 import org.jetbrains.exposed.v1.dao.Entity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.Repository

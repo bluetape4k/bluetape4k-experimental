@@ -97,7 +97,7 @@ data class LettuceNearCacheProperties(
         return NearCacheConfig(
             cacheName = regionName,
             maxLocalSize = localMaxSize,
-            localExpireAfterWrite = localExpireAfterWrite,
+            frontExpireAfterWrite = localExpireAfterWrite,
             redisTtl = ttl,
             useRespProtocol3 = useResp3,
             recordStats = recordLocalStats,

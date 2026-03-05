@@ -72,14 +72,14 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
 
         // Step 2: nearCache1이 Redis에서 읽음 (cache miss) → CLIENT TRACKING이 이 키를 추적 시작
         nearCache1.get(key) shouldBeEqualTo "initial"
-        nearCache1.localSize() shouldBeEqualTo 1L
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
 
         // Step 3: nearCache2가 같은 키를 수정 → Redis가 nearCache1에 invalidation push 전송
         nearCache2.put(key, "updated-by-cache2")
 
         // Step 4: nearCache1의 local cache가 비동기로 invalidated되기를 기다림
         await.atMost(3, TimeUnit.SECONDS).untilAsserted {
-            nearCache1.localSize() shouldBeEqualTo 0L
+            nearCache1.localCacheSize() shouldBeEqualTo 0L
         }
 
         // Step 5: nearCache1이 다시 읽으면 새 값을 가져옴
@@ -94,14 +94,14 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
         // directCommands로 prefix key 설정 후 nearCache1이 읽어 tracking 활성화
         directCommands.set("${cacheName}:${key}", "initial")
         nearCache1.get(key) shouldBeEqualTo "initial"
-        nearCache1.localSize() shouldBeEqualTo 1L
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
 
         // 자신이 다시 write → noloop이므로 자신의 local은 invalidate되지 않아야 함
         nearCache1.put(key, "updated-by-self")
 
         // 약간 기다린 후에도 local size 유지 (noloop이므로 invalidated 안 됨)
         Thread.sleep(300)
-        nearCache1.localSize() shouldBeEqualTo 1L
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
         nearCache1.get(key) shouldBeEqualTo "updated-by-self"
     }
 
@@ -115,14 +115,14 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
 
         // Step 2: nearCache1이 읽어 local에 populate + tracking 활성화
         nearCache1.get(key) shouldBeEqualTo "initial"
-        nearCache1.localSize() shouldBeEqualTo 1L
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
 
         // Step 3: 외부 Redis 클라이언트(tracking 없는 연결)가 prefix key를 직접 수정
         directCommands.set("${cacheName}:${key}", "updated-by-external")
 
         // Step 4: nearCache1의 local이 invalidated되기를 기다림
         await.atMost(3, TimeUnit.SECONDS).untilAsserted {
-            nearCache1.localSize() shouldBeEqualTo 0L
+            nearCache1.localCacheSize() shouldBeEqualTo 0L
         }
 
         // Step 5: 다시 get 하면 새 값을 반환해야 함
@@ -139,14 +139,14 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
 
         // Step 2: nearCache1이 읽어 local populate + tracking 활성화
         nearCache1.get(key) shouldBeEqualTo "to-be-removed"
-        nearCache1.localSize() shouldBeEqualTo 1L
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
 
         // Step 3: nearCache2가 삭제 (같은 cacheName이므로 같은 Redis key 삭제)
         nearCache2.remove(key)
 
         // Step 4: nearCache1의 local이 invalidated되기를 기다림
         await.atMost(3, TimeUnit.SECONDS).untilAsserted {
-            nearCache1.localSize() shouldBeEqualTo 0L
+            nearCache1.localCacheSize() shouldBeEqualTo 0L
         }
 
         // Step 5: nearCache1이 읽으면 null (키 자체가 삭제됨)
@@ -168,14 +168,14 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
             // nearCache1이 키를 읽어 tracking 활성화
             directCommands.set("${cacheName1}:${key}", "initial")
             nearCache1.get(key) shouldBeEqualTo "initial"
-            nearCache1.localSize() shouldBeEqualTo 1L
+            nearCache1.localCacheSize() shouldBeEqualTo 1L
 
             // 다른 cacheName의 같은 key 이름 수정 (실제 Redis key는 다름)
             isolated.put(key, "from-isolated")
 
             // 약간 기다려도 nearCache1의 local은 invalidated되지 않아야 함
             Thread.sleep(300)
-            nearCache1.localSize() shouldBeEqualTo 1L
+            nearCache1.localCacheSize() shouldBeEqualTo 1L
             nearCache1.get(key) shouldBeEqualTo "initial"
         }
     }

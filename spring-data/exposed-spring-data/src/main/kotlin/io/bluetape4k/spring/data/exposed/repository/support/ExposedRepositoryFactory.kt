@@ -9,7 +9,7 @@ import org.springframework.data.repository.core.RepositoryMetadata
 import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.query.QueryLookupStrategy
 import org.springframework.data.repository.query.ValueExpressionDelegate
-import java.util.Optional
+import java.util.*
 
 /**
  * Exposed Repository 인스턴스를 생성하는 Factory입니다.

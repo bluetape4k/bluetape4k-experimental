@@ -146,14 +146,14 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
         cache.put("k1", "v1")
         cache.put("k2", "v2")
         cache.localSize() shouldBeEqualTo 2L
-        cache.clearLocal()
+        cache.clearFrontCache()
         cache.localSize() shouldBeEqualTo 0L
         // prefix key로 Redis 데이터 유지 확인
         directCommands.get("${cache.cacheName}:k1").shouldNotBeNull()
     }
 
     @Test
-    fun `clearAll - 로컬 + Redis 초기화`() = runTest {
+    fun `clearAll - 프론트 캐시 + 백엔드 캐시 초기화`() = runTest {
         cache.put("k1", "v1")
         cache.put("k2", "v2")
         cache.clearAll()

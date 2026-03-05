@@ -68,7 +68,7 @@ class LettuceNearCacheActuatorEndpoint(
 
         return RegionStats(
             regionName = regionName,
-            localSize = cache?.localSize() ?: 0L,
+            localSize = cache?.localCacheSize() ?: 0L,
             localHitRate = localStats?.hitRate(),
             localHitCount = localStats?.hitCount(),
             localMissCount = localStats?.missCount(),
