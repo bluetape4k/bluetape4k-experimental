@@ -10,6 +10,7 @@ import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,14 +25,16 @@ class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
 
     @AfterEach
     fun tearDown() {
-        Users.deleteAll()
+        transaction { Users.deleteAll() }
     }
 
     private fun createUser(name: String, email: String, age: Int): UserEntity =
-        UserEntity.new {
-            this.name = name
-            this.email = email
-            this.age = age
+        transaction {
+            UserEntity.new {
+                this.name = name
+                this.email = email
+                this.age = age
+            }
         }
 
 

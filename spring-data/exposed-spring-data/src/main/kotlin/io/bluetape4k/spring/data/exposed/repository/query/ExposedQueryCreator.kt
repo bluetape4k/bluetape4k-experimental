@@ -49,15 +49,14 @@ class ExposedQueryCreator(
     override fun or(base: Op<Boolean>, criteria: Op<Boolean>): Op<Boolean> =
         base.or(criteria)
 
-    override fun complete(criteria: Op<Boolean>?, sort: Sort): Op<Boolean> =
+    override fun complete(criteria: Op<Boolean>?, _sort: Sort): Op<Boolean> =
         criteria ?: Op.TRUE
 
     @Suppress("UNCHECKED_CAST")
     private fun buildCondition(part: Part, iterator: Iterator<Any>): Op<Boolean> {
         val colName = toColumnName(part.property.segment)
-        val column = table.columns.firstOrNull { col ->
-            col.name.equals(colName, ignoreCase = true)
-        } ?: error("Column '$colName' not found in table '${table.tableName}'")
+        val column = table.columns.firstOrNull { it.name.equals(colName, ignoreCase = true) }
+            ?: error("Column '$colName' not found in table '${table.tableName}'")
 
         return when (part.type) {
             Part.Type.SIMPLE_PROPERTY ->

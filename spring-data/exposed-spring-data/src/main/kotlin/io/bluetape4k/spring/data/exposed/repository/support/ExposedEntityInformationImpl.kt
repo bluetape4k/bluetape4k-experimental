@@ -45,7 +45,7 @@ class ExposedEntityInformationImpl<E : Entity<ID>, ID : Any>(
 
     companion object {
         @Suppress("UNCHECKED_CAST")
-        fun <E : Entity<ID>, ID : Any> of(domainClass: Class<E>): ExposedEntityInformationImpl<E, ID> {
+        operator fun <E : Entity<ID>, ID : Any> invoke(domainClass: Class<E>): ExposedEntityInformationImpl<E, ID> {
             val companion = domainClass.kotlin.companionObjectInstance
                 ?: error("${domainClass.name} must have a companion object (EntityClass<ID, E>)")
             val entityClass = companion as? EntityClass<ID, E>

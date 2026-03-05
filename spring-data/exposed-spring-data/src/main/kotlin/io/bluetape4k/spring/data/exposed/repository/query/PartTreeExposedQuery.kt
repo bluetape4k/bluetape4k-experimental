@@ -31,10 +31,8 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
         val provider = ParameterMetadataProvider.of(queryMethod.parameters, parameters as Array<Any?>)
         val op = ExposedQueryCreator(partTree, provider.accessor, entityInformation.table).createQuery()
 
-        val pageable = parameters.filterIsInstance<Pageable>().firstOrNull() ?: Pageable.unpaged()
-        val sort = pageable.sort.and(
-            parameters.filterIsInstance<Sort>().firstOrNull() ?: Sort.unsorted()
-        )
+        val pageable = parameters.firstInstanceOrNull<Pageable>() ?: Pageable.unpaged()
+        val sort = pageable.sort.and(parameters.firstInstanceOrNull<Sort>() ?: Sort.unsorted())
 
         return when {
             partTree.isDelete -> executeDelete(op)
@@ -44,8 +42,7 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
             isPageQuery() -> executePageQuery(op, pageable)
             isSliceQuery() -> executeSliceQuery(op, pageable)
             isSingleResult() -> entityClass.find { op }.firstOrNull()
-            else -> {
-                val query = entityClass.find { op }
+            else -> entityClass.find { op }.let { query ->
                 if (sort.isSorted) query.orderBy(*sort.toExposedOrderBy(entityInformation.table)).toList()
                 else query.toList()
             }
@@ -92,4 +89,7 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
             !queryMethod.isStreamQuery &&
             !queryMethod.isPageQuery &&
             !queryMethod.isSliceQuery
+
+    private inline fun <reified T : Any> Array<out Any>.firstInstanceOrNull(): T? =
+        firstOrNull { it is T } as? T
 }

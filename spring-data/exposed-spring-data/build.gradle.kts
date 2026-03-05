@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+    api(Libs.springData("commons"))
+
     api(Libs.kotlin_reflect)
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
@@ -13,15 +15,12 @@ dependencies {
     testImplementation(Libs.exposed_migration_jdbc)
     testImplementation(Libs.flyway_core)
 
-    api(Libs.springData("commons"))
-    api(Libs.bluetape4k_exposed_core)
-    api(Libs.bluetape4k_exposed_dao)
+    api(Libs.bluetape4k_exposed_jdbc)
+    testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
 
     compileOnly(Libs.springBoot("autoconfigure"))
     compileOnly(Libs.springBootStarter("data-jdbc"))
-
     testImplementation(Libs.springBootStarter("test"))
-    testImplementation(Libs.exposed_spring_boot4_starter)
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.hikaricp)
 }

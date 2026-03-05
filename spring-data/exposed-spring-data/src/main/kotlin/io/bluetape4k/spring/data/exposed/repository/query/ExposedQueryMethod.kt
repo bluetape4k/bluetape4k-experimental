@@ -24,8 +24,11 @@ class ExposedQueryMethod(
     val isAnnotatedQuery: Boolean get() = queryAnnotation != null
 
     /** @Query 어노테이션의 SQL 문자열 (없으면 null) */
-    fun getAnnotatedQuery(): String? = queryAnnotation?.value
+    fun getAnnotatedQuery(): String? = queryText
 
     /** @Query 어노테이션의 count 쿼리 문자열 (없으면 null) */
-    fun getCountQuery(): String? = queryAnnotation?.countQuery?.takeIf { it.isNotBlank() }
+    fun getCountQuery(): String? = countQueryText
+
+    private val queryText: String? get() = queryAnnotation?.value
+    private val countQueryText: String? get() = queryAnnotation?.countQuery?.takeIf { it.isNotBlank() }
 }

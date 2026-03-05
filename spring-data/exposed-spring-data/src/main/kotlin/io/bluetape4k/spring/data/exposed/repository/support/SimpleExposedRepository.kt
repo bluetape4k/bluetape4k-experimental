@@ -1,6 +1,7 @@
 package io.bluetape4k.spring.data.exposed.repository.support
 
 import io.bluetape4k.spring.data.exposed.repository.ExposedRepository
+import io.bluetape4k.support.toOptional
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
@@ -17,7 +18,8 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.repository.query.FluentQuery
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
+import java.util.Comparator
+import java.util.Optional
 import java.util.function.Function
 import java.util.stream.Stream
 
@@ -31,12 +33,12 @@ internal const val EXPOSED_TRANSACTION_MANAGER = "springTransactionManager"
 @Repository
 @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER, readOnly = true)
 @Suppress("UNCHECKED_CAST")
-open class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
-    val entityInformation: ExposedEntityInformation<E, ID>,
+class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
+    private val entityInformation: ExposedEntityInformation<E, ID>,
 ) : ExposedRepository<E, ID> {
 
-    val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
-    val table: IdTable<ID> get() = entityInformation.table
+    private val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
+    private val table: IdTable<ID> get() = entityInformation.table
 
     // ============================================================
     // CrudRepository
@@ -48,8 +50,7 @@ open class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun <S : E> saveAll(entities: Iterable<S>): List<S> = entities.toList()
 
-    override fun findById(id: ID): Optional<E> =
-        Optional.ofNullable(entityClass.findById(id))
+    override fun findById(id: ID): Optional<E> = Optional.ofNullable(entityClass.findById(id))
 
     override fun existsById(id: ID): Boolean =
         entityClass.findById(id) != null
@@ -84,7 +85,7 @@ open class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun deleteAllById(ids: Iterable<ID>) {
-        ids.forEach { id -> entityClass.findById(id)?.delete() }
+        ids.forEach { entityClass.findById(it)?.delete() }
     }
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
@@ -185,22 +186,20 @@ open class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     private fun buildExampleConditions(
         probe: E,
-        matcher: ExampleMatcher,
-    ): Op<Boolean>? {
-        var combined: Op<Boolean>? = null
+        _matcher: ExampleMatcher,
+    ): Op<Boolean>? =
+        table.columns
+            .asSequence()
+            .filterNot { it == table.id }
+            .mapNotNull { col ->
+                val field = runCatching {
+                    probe.javaClass.getDeclaredField(col.name).apply { isAccessible = true }
+                }.getOrNull() ?: return@mapNotNull null
 
-        for (col in table.columns) {
-            if (col == table.id) continue
-            val field = runCatching {
-                probe.javaClass.getDeclaredField(col.name).also { it.isAccessible = true }
-            }.getOrNull() ?: continue
-
-            val value = field.get(probe) ?: continue
-            val condition = (col as Column<Any>).eq(value)
-            combined = if (combined == null) condition else combined.and(condition)
-        }
-        return combined
-    }
+                val value = field.get(probe) ?: return@mapNotNull null
+                (col as Column<Any>).eq(value)
+            }
+            .reduceOrNull(Op<Boolean>::and)
 }
 
 /**
@@ -209,9 +208,10 @@ open class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 private class ExampleSortComparator<E>(private val sort: Sort) : Comparator<E> {
     @Suppress("UNCHECKED_CAST")
     override fun compare(a: E, b: E): Int {
+        val targetClass = (a ?: b)?.javaClass ?: return 0
         for (order in sort) {
             val field = runCatching {
-                a!!.javaClass.getDeclaredField(order.property).also { it.isAccessible = true }
+                targetClass.getDeclaredField(order.property).apply { isAccessible = true }
             }.getOrNull() ?: continue
 
             val va = field.get(a) as? Comparable<Any> ?: continue
@@ -236,11 +236,11 @@ private class SimpleFluentQuery<E : Any>(private val results: List<E>) :
 
     override fun project(properties: MutableCollection<String>): FluentQuery.FetchableFluentQuery<E> = this
 
-    override fun first(): Optional<E> = Optional.ofNullable(results.firstOrNull())
+    override fun first(): Optional<E> = results.firstOrNull().toOptional()
 
     override fun firstValue(): E? = results.firstOrNull()
 
-    override fun one(): Optional<E> = Optional.ofNullable(results.singleOrNull())
+    override fun one(): Optional<E> = results.singleOrNull().toOptional()
 
     override fun oneValue(): E? = results.singleOrNull()
 

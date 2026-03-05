@@ -23,13 +23,13 @@ class ExposedQueryLookupStrategy(
     override fun resolveQuery(
         method: Method,
         metadata: RepositoryMetadata,
-        factory: ProjectionFactory,
-        namedQueries: NamedQueries,
+        _factory: ProjectionFactory,
+        _namedQueries: NamedQueries,
     ): RepositoryQuery {
-        val queryMethod = ExposedQueryMethod(method, metadata, factory)
+        val queryMethod = ExposedQueryMethod(method, metadata, _factory)
 
         @Suppress("UNCHECKED_CAST")
-        val entityInformation = ExposedEntityInformationImpl.of<Entity<Any>, Any>(
+        val entityInformation = ExposedEntityInformationImpl(
             metadata.domainType as Class<Entity<Any>>
         )
 
@@ -44,11 +44,8 @@ class ExposedQueryLookupStrategy(
                 PartTreeExposedQuery(queryMethod, entityInformation)
 
             QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND ->
-                if (queryMethod.isAnnotatedQuery) {
-                    DeclaredExposedQuery(queryMethod, entityInformation)
-                } else {
-                    PartTreeExposedQuery(queryMethod, entityInformation)
-                }
+                if (queryMethod.isAnnotatedQuery) DeclaredExposedQuery(queryMethod, entityInformation)
+                else PartTreeExposedQuery(queryMethod, entityInformation)
         }
     }
 

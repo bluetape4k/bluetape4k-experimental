@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.repository.config
 
+import io.bluetape4k.spring.data.exposed.config.ExposedSpringDataAutoConfiguration
 import io.bluetape4k.spring.data.exposed.repository.support.ExposedRepositoryFactoryBean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
@@ -18,7 +19,7 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@Import(ExposedRepositoriesRegistrar::class)
+@Import(ExposedRepositoriesRegistrar::class, ExposedSpringDataAutoConfiguration::class)
 annotation class EnableExposedRepositories(
     /** basePackages 별칭 */
     vararg val value: String = [],

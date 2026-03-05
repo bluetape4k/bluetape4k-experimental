@@ -11,8 +11,10 @@ import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -26,14 +28,16 @@ class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
 
     @AfterEach
     fun tearDown() {
-        Users.deleteAll()
+        transaction { Users.deleteAll() }
     }
 
     private fun createUsers() {
-        UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
-        UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
-        UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 35 }
-        UserEntity.new { name = "Alice"; email = "alice2@example.com"; age = 20 }
+        transaction {
+            UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
+            UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
+            UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 35 }
+            UserEntity.new { name = "Alice"; email = "alice2@example.com"; age = 20 }
+        }
     }
 
     @Test
@@ -63,7 +67,7 @@ class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
         createUsers()
         val user = userRepository.findByNameAndAge("Alice", 30)
         user.shouldNotBeNull()
-        user!!.email shouldBeEqualTo "alice@example.com"
+        user.email shouldBeEqualTo "alice@example.com"
     }
 
     @Test
@@ -124,5 +128,81 @@ class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
         page.content shouldHaveSize 2
         page.totalElements shouldBeEqualTo 4L
         (page.content[0].age >= page.content[1].age).shouldBeTrue()
+    }
+
+    @Test
+    fun `@Query native - 위치 기반 파라미터 바인딩으로 단일 엔티티 조회`() {
+        createUsers()
+        val found = userRepository.findByEmailNative("alice@example.com")
+        found shouldHaveSize 1
+        found.first().name shouldBeEqualTo "Alice"
+    }
+
+    @Test
+    fun `@Query native - 파라미터 순서가 역순이어도 올바르게 바인딩된다`() {
+        createUsers()
+        val found = userRepository.findByEmailAndAgeNative("alice@example.com", 30)
+        found shouldHaveSize 1
+        found.first().email shouldBeEqualTo "alice@example.com"
+    }
+
+    @Test
+    fun `@Query native - SQL injection 문자열은 값으로 취급되어 우회되지 않는다`() {
+        createUsers()
+        val injected = "alice@example.com' OR 1=1 --"
+        val found = userRepository.findByEmailNative(injected)
+        found.shouldBeEmpty()
+    }
+
+    @Test
+    fun `@Query native - 따옴표가 포함된 문자열도 안전하게 조회된다`() {
+        transaction {
+            UserEntity.new { name = "O'Hara"; email = "o'hara@example.com"; age = 41 }
+        }
+        val found = userRepository.findByEmailNative("o'hara@example.com")
+        found shouldHaveSize 1
+        found.first().name shouldBeEqualTo "O'Hara"
+    }
+
+    @Test
+    fun `@Query native - placeholder 인덱스가 잘못되면 예외를 던진다`() {
+        createUsers()
+        assertThrows<IllegalArgumentException> {
+            userRepository.findByEmailNativeBrokenPlaceholder("alice@example.com")
+        }
+    }
+
+    @Test
+    fun `@Query native - 동일 placeholder 재사용 시 같은 인자가 재사용된다`() {
+        createUsers()
+        val found = userRepository.findByEmailNativeDuplicatedPlaceholder("alice@example.com")
+        found shouldHaveSize 1
+        found.first().email shouldBeEqualTo "alice@example.com"
+    }
+
+    @Test
+    fun `@Query native - Long 타입 숫자 파라미터도 정상 바인딩된다`() {
+        createUsers()
+        val found = userRepository.findByAgeNativeLong(30L)
+        found shouldHaveSize 1
+        found.first().name shouldBeEqualTo "Alice"
+    }
+
+    @Test
+    fun `@Query native - 범위 조건 파라미터를 순서대로 바인딩한다`() {
+        createUsers()
+        val found = userRepository.findByAgeRangeNative(25, 30)
+        found shouldHaveSize 2
+        found.all { it.age in 25..30 }.shouldBeTrue()
+    }
+
+    @Test
+    fun `@Query native - 10번째 placeholder 인덱스를 올바르게 해석한다`() {
+        createUsers()
+        val found = userRepository.findByEmailNativeTenthPlaceholder(
+            "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "alice@example.com"
+        )
+        found shouldHaveSize 1
+        found.first().name shouldBeEqualTo "Alice"
     }
 }
