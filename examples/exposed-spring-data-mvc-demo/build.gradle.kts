@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":spring-data-exposed-spring-data"))
+    implementation(project(":exposed-spring-data"))
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.exposed_spring_boot4_starter)
     implementation(Libs.exposed_jdbc)

@@ -16,15 +16,15 @@ rootProject.name = "$PROJECT_NAME-experimental"
 
 include("shared")
 
-includeModules("kotlin", false, true)
-includeModules("spring-boot", false, true)
-includeModules("spring-data", false, true)
-includeModules("coroutines", false, true)
-includeModules("ai", false, true)
-includeModules("data", false, true)
+includeModules("kotlin", false, false)
+includeModules("spring-boot", false, false)
+includeModules("spring-data", false, false)
+includeModules("coroutines", false, false)
+includeModules("ai", false, false)
+includeModules("data", false, false)
 includeModules("io", false, false)
-includeModules("infra", false, true)
-includeModules("examples", false, true)
+includeModules("infra", false, false)
+includeModules("examples", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
     files("$rootDir/$baseDir").files

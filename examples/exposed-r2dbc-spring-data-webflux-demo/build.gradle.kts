@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":spring-data-exposed-r2dbc-spring-data"))
+    implementation(project(":exposed-r2dbc-spring-data"))
     implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.exposed_spring_boot4_starter)
     implementation(Libs.exposed_jdbc)

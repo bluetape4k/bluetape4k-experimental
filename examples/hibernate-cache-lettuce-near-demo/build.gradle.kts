@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":spring-boot-hibernate-cache-lettuce-near"))
+    implementation(project(":hibernate-redis-near"))
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("data-jpa"))
     implementation(Libs.springBootStarter("actuator"))

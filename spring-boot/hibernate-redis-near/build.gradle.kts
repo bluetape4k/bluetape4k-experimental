@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-    api(project(":infra-hibernate-cache-lettuce-near"))
-    api(project(":infra-cache-lettuce-near"))
+    api(project(":hibernate-cache-lettuce-near"))
+    api(project(":cache-lettuce-near"))
     api(Libs.bluetape4k_io)
     api(Libs.bluetape4k_redis)
     api(Libs.springBoot("autoconfigure"))

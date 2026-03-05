@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":spring-data-exposed-spring-data"))  // EntityInformation, ExposedMappingContext 재사용
+    api(project(":exposed-spring-data"))  // EntityInformation, ExposedMappingContext 재사용
     api(Libs.kotlin_reflect)
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
