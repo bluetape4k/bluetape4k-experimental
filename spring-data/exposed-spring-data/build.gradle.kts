@@ -9,6 +9,10 @@ dependencies {
     api(Libs.exposed_jdbc)
     api(Libs.exposed_java_time)
     api(Libs.exposed_spring7_transaction)
+
+    testImplementation(Libs.exposed_migration_jdbc)
+    testImplementation(Libs.flyway_core)
+
     api(Libs.springData("commons"))
     api(Libs.bluetape4k_exposed_core)
     api(Libs.bluetape4k_exposed_dao)

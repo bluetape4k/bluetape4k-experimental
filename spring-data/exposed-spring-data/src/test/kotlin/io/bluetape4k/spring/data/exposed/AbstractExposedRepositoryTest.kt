@@ -21,6 +21,9 @@ abstract class AbstractExposedRepositoryTest {
     @BeforeEach
     fun setUp() {
         transaction {
+//            MigrationUtils.statementsRequiredForDatabaseMigration(Users).forEach {stmt ->
+//                exec(stmt)
+//            }
             SchemaUtils.createMissingTablesAndColumns(Users)
             Users.deleteAll()
         }

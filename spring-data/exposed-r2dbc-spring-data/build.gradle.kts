@@ -10,17 +10,25 @@ dependencies {
     api(Libs.exposed_jdbc)
     api(Libs.exposed_java_time)
     api(Libs.exposed_spring7_transaction)
-    api(Libs.springData("commons"))
-    api(Libs.kotlinx_coroutines_core)
-    api(Libs.kotlinx_coroutines_reactor)  // Spring Data 코루틴 지원 요구사항
+    testImplementation(Libs.exposed_spring_boot4_starter)
+
+    testImplementation(Libs.exposed_migration_jdbc)
+    testImplementation(Libs.flyway_core)
+
     api(Libs.bluetape4k_exposed_core)
     api(Libs.bluetape4k_exposed_dao)
+
+    api(Libs.springData("commons"))
+
+    api(Libs.bluetape4k_coroutines)
+    api(Libs.kotlinx_coroutines_core)
+    api(Libs.kotlinx_coroutines_reactor)  // Spring Data 코루틴 지원 요구사항
+    testImplementation(Libs.kotlinx_coroutines_test)
 
     compileOnly(Libs.springBoot("autoconfigure"))
 
     testImplementation(Libs.springBootStarter("test"))
-    testImplementation(Libs.exposed_spring_boot4_starter)
-    testImplementation(Libs.kotlinx_coroutines_test)
+
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.hikaricp)
 }
