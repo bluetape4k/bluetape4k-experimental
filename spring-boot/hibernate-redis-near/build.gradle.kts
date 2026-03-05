@@ -18,7 +18,7 @@ dependencies {
     compileOnly(Libs.springBootStarter("actuator"))
 
     implementation(Libs.fory_kotlin)
-    implementation(Libs.lz4_java)
+    implementation(Libs.zstd_jni)
 
     testImplementation(Libs.springBootStarter("test"))
     testImplementation(Libs.springBootStarter("data-jpa"))

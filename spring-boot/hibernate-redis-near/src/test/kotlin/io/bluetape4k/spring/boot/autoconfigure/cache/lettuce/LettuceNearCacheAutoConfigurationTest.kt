@@ -5,6 +5,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -19,7 +21,7 @@ class LettuceNearCacheAutoConfigurationTest {
     @Test
     fun `HibernatePropertiesCustomizer가 기본 설정으로 등록된다`() {
         contextRunner.run { context ->
-            context.getBeansOfType(HibernatePropertiesCustomizer::class.java).shouldHaveSize(1)
+            context.getBeansOfType<HibernatePropertiesCustomizer>().shouldHaveSize(1)
         }
     }
 
@@ -28,7 +30,7 @@ class LettuceNearCacheAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.cache.lettuce-near.enabled=false")
             .run { context ->
-                context.getBeansOfType(HibernatePropertiesCustomizer::class.java).shouldBeEmpty()
+                context.getBeansOfType<HibernatePropertiesCustomizer>().shouldBeEmpty()
             }
     }
 
@@ -37,13 +39,13 @@ class LettuceNearCacheAutoConfigurationTest {
         contextRunner
             .withPropertyValues("bluetape4k.cache.lettuce-near.redis-uri=redis://myredis:6380")
             .run { context ->
-                val customizer = context.getBean(HibernatePropertiesCustomizer::class.java)
+                val customizer = context.getBean<HibernatePropertiesCustomizer>()
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
                 props["hibernate.cache.lettuce.redis_uri"] shouldBeEqualTo "redis://myredis:6380"
                 props["hibernate.cache.region.factory_class"] shouldBeEqualTo
-                    "io.bluetape4k.hibernate.cache.lettuce.LettuceNearCacheRegionFactory"
+                        "io.bluetape4k.hibernate.cache.lettuce.LettuceNearCacheRegionFactory"
                 props["hibernate.cache.use_second_level_cache"] shouldBeEqualTo "true"
             }
     }
@@ -56,7 +58,7 @@ class LettuceNearCacheAutoConfigurationTest {
                 "bluetape4k.cache.lettuce-near.metrics.enable-caffeine-stats=true",
             )
             .run { context ->
-                val customizer = context.getBean(HibernatePropertiesCustomizer::class.java)
+                val customizer = context.getBean<HibernatePropertiesCustomizer>()
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
@@ -74,7 +76,7 @@ class LettuceNearCacheAutoConfigurationTest {
                 "bluetape4k.cache.lettuce-near.redis-ttl.regions[product]=300s",
             )
             .run { context ->
-                val customizer = context.getBean(HibernatePropertiesCustomizer::class.java)
+                val customizer = context.getBean<HibernatePropertiesCustomizer>()
                 val props = mutableMapOf<String, Any>()
                 customizer.customize(props)
 
@@ -86,10 +88,10 @@ class LettuceNearCacheAutoConfigurationTest {
     @Test
     fun `LettuceNearCacheSpringProperties 기본값이 올바르게 설정된다`() {
         contextRunner.run { context ->
-            val props = context.getBean(LettuceNearCacheSpringProperties::class.java)
+            val props = context.getBean<LettuceNearCacheSpringProperties>()
             props.enabled.shouldBeTrue()
             props.redisUri shouldBeEqualTo "redis://localhost:6379"
-            props.codec shouldBeEqualTo "lz4fory"
+            props.codec shouldBeEqualTo "zstdfory"
             props.useResp3.shouldBeTrue()
             props.local.maxSize shouldBeEqualTo 10_000L
             props.metrics.enabled.shouldBeTrue()

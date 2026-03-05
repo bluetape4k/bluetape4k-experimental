@@ -11,7 +11,7 @@ import java.time.Duration
  *   cache:
  *     lettuce-near:
  *       redis-uri: redis://localhost:6379
- *       codec: lz4fory
+ *       codec: zstdfory
  *       use-resp3: true
  *       local:
  *         max-size: 10000
@@ -29,7 +29,7 @@ import java.time.Duration
 data class LettuceNearCacheSpringProperties(
     val enabled: Boolean = true,
     val redisUri: String = "redis://localhost:6379",
-    val codec: String = "lz4fory",
+    val codec: String = "zstdfory",
     val useResp3: Boolean = true,
     val local: LocalProperties = LocalProperties(),
     val redisTtl: RedisTtlProperties = RedisTtlProperties(),
