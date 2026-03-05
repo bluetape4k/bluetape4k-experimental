@@ -12,6 +12,7 @@ class ExposedRepositoryConfigurationExtension : RepositoryConfigurationExtension
 
     override fun getModuleName(): String = "EXPOSED"
 
+    @Deprecated("use getModuleName instead.")
     override fun getModulePrefix(): String = "exposed"
 
     override fun getRepositoryFactoryBeanClassName(): String =

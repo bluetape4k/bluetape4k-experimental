@@ -1,7 +1,7 @@
 package io.bluetape4k.spring.boot.autoconfigure.cache.lettuce
 
-import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ class LettuceNearCacheAutoConfigurationTest {
     @Test
     fun `HibernatePropertiesCustomizer가 기본 설정으로 등록된다`() {
         contextRunner.run { context ->
-            context.getBeansOfType(HibernatePropertiesCustomizer::class.java) shouldHaveSize 1
+            context.getBeansOfType(HibernatePropertiesCustomizer::class.java).shouldHaveSize(1)
         }
     }
 

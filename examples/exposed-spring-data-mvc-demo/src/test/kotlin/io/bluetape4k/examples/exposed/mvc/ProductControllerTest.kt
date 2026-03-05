@@ -117,6 +117,6 @@ class ProductControllerTest {
             .retrieve()
             .toEntity<List<ProductDto>>()
         response.statusCode shouldBeEqualTo HttpStatus.OK
-        response.body?.any { it.name == "SearchableProduct" }.shouldBeTrue()
+        response.body!!.any { it.name == "SearchableProduct" }.shouldBeTrue()
     }
 }

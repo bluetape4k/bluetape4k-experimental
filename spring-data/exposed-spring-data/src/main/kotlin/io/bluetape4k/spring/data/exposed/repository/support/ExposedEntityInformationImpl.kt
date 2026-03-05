@@ -16,8 +16,7 @@ class ExposedEntityInformationImpl<E : Entity<ID>, ID : Any>(
     override val entityClass: EntityClass<ID, E>,
 ) : AbstractEntityInformation<E, ID>(domainClass), ExposedEntityInformation<E, ID> {
 
-    override val table: IdTable<ID>
-        get() = entityClass.table as IdTable<ID>
+    override val table: IdTable<ID> = entityClass.table
 
     override fun getId(entity: E): ID? =
         runCatching { entity.id.value }.getOrNull()
