@@ -1,0 +1,9 @@
+package io.bluetape4k.examples.exposed.mvc.repository
+
+import io.bluetape4k.examples.exposed.mvc.domain.ProductEntity
+import io.bluetape4k.spring.data.exposed.repository.ExposedRepository
+
+interface ProductRepository : ExposedRepository<ProductEntity, Long> {
+    fun findByName(name: String): List<ProductEntity>
+    fun findByPriceLessThan(price: java.math.BigDecimal): List<ProductEntity>
+}

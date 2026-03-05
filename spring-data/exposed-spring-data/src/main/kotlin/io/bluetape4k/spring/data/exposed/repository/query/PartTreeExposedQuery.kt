@@ -1,0 +1,95 @@
+package io.bluetape4k.spring.data.exposed.repository.query
+
+import io.bluetape4k.spring.data.exposed.repository.support.ExposedEntityInformation
+import io.bluetape4k.spring.data.exposed.repository.support.toExposedOrderBy
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.SliceImpl
+import org.springframework.data.domain.Sort
+import org.springframework.data.repository.query.RepositoryQuery
+import org.springframework.data.repository.query.parser.PartTree
+
+/**
+ * 메서드명 기반 PartTree 쿼리를 Exposed DAO로 실행합니다.
+ */
+class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
+    private val queryMethod: ExposedQueryMethod,
+    private val entityInformation: ExposedEntityInformation<E, ID>,
+) : RepositoryQuery {
+
+    private val entityClass: EntityClass<ID, E> = entityInformation.entityClass
+    private val partTree: PartTree = PartTree(queryMethod.name, queryMethod.entityInformation.javaType)
+
+    override fun getQueryMethod(): ExposedQueryMethod = queryMethod
+
+    @Suppress("UNCHECKED_CAST")
+    override fun execute(parameters: Array<out Any>): Any? {
+        val provider = ParameterMetadataProvider.of(queryMethod.parameters, parameters as Array<Any?>)
+        val op = ExposedQueryCreator(partTree, provider.accessor, entityInformation.table).createQuery()
+
+        val pageable = parameters.filterIsInstance<Pageable>().firstOrNull() ?: Pageable.unpaged()
+        val sort = pageable.sort.and(
+            parameters.filterIsInstance<Sort>().firstOrNull() ?: Sort.unsorted()
+        )
+
+        return when {
+            partTree.isDelete -> executeDelete(op)
+            partTree.isCountProjection -> entityClass.find { op }.count()
+            partTree.isExistsProjection -> !entityClass.find { op }.empty()
+            partTree.isLimiting -> executeLimiting(op, partTree.maxResults)
+            isPageQuery() -> executePageQuery(op, pageable)
+            isSliceQuery() -> executeSliceQuery(op, pageable)
+            isSingleResult() -> entityClass.find { op }.firstOrNull()
+            else -> {
+                val query = entityClass.find { op }
+                if (sort.isSorted) query.orderBy(*sort.toExposedOrderBy(entityInformation.table)).toList()
+                else query.toList()
+            }
+        }
+    }
+
+    private fun executeDelete(op: Op<Boolean>): Long {
+        val entities = entityClass.find { op }.toList()
+        entities.forEach { it.delete() }
+        return entities.size.toLong()
+    }
+
+    private fun executeLimiting(op: Op<Boolean>, maxResults: Int?): Any? {
+        val query = entityClass.find { op }
+        val limited = if (maxResults != null) query.limit(maxResults) else query
+        return if (isSingleResult()) limited.firstOrNull() else limited.toList()
+    }
+
+    private fun executePageQuery(op: Op<Boolean>, pageable: Pageable): Page<E> {
+        val total = entityClass.find { op }.count()
+        val query = entityClass.find { op }
+        if (pageable.sort.isSorted) query.orderBy(*pageable.sort.toExposedOrderBy(entityInformation.table))
+        val content = query.limit(pageable.pageSize).offset(pageable.offset).toList()
+        return PageImpl(content, pageable, total)
+    }
+
+    private fun executeSliceQuery(op: Op<Boolean>, pageable: Pageable): Any {
+        val query = entityClass.find { op }
+        if (pageable.sort.isSorted) query.orderBy(*pageable.sort.toExposedOrderBy(entityInformation.table))
+        val fetchSize = pageable.pageSize + 1
+        val content = query.limit(fetchSize).offset(pageable.offset).toList()
+        val hasNext = content.size > pageable.pageSize
+        return SliceImpl(if (hasNext) content.dropLast(1) else content, pageable, hasNext)
+    }
+
+    private fun isPageQuery(): Boolean =
+        Page::class.java.isAssignableFrom(queryMethod.returnedObjectType)
+
+    private fun isSliceQuery(): Boolean =
+        org.springframework.data.domain.Slice::class.java.isAssignableFrom(queryMethod.returnedObjectType)
+
+    private fun isSingleResult(): Boolean =
+        !queryMethod.isCollectionQuery &&
+            !queryMethod.isStreamQuery &&
+            !queryMethod.isPageQuery &&
+            !queryMethod.isSliceQuery
+}
