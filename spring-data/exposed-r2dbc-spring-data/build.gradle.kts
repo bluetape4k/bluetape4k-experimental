@@ -3,22 +3,21 @@ plugins {
 }
 
 dependencies {
+    api(Libs.springData("commons"))
+
     api(project(":exposed-spring-data"))  // EntityInformation, ExposedMappingContext 재사용
     api(Libs.kotlin_reflect)
     api(Libs.exposed_core)
-    api(Libs.exposed_dao)
-    api(Libs.exposed_jdbc)
+    api(Libs.exposed_r2dbc)
     api(Libs.exposed_java_time)
     api(Libs.exposed_spring7_transaction)
-    testImplementation(Libs.exposed_spring_boot4_starter)
 
-    testImplementation(Libs.exposed_migration_jdbc)
+    testImplementation(Libs.exposed_migration_r2dbc)
     testImplementation(Libs.flyway_core)
 
     api(Libs.bluetape4k_exposed_core)
-    api(Libs.bluetape4k_exposed_dao)
-
-    api(Libs.springData("commons"))
+    api(Libs.bluetape4k_exposed_r2dbc)
+    testImplementation(Libs.bluetape4k_exposed_r2dbc_tests)
 
     api(Libs.bluetape4k_coroutines)
     api(Libs.kotlinx_coroutines_core)
@@ -30,5 +29,6 @@ dependencies {
     testImplementation(Libs.springBootStarter("test"))
 
     testImplementation(Libs.h2_v2)
+    testImplementation(Libs.r2dbc_h2)
     testImplementation(Libs.hikaricp)
 }

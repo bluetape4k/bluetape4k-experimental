@@ -2,9 +2,11 @@ package io.bluetape4k.spring.data.exposed.r2dbc
 
 import io.bluetape4k.spring.data.exposed.r2dbc.config.EnableCoroutineExposedRepositories
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.deleteAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.r2dbc.deleteAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Configuration
 
 @SpringBootTest(classes = [AbstractCoroutineExposedRepositoryTest.TestConfig::class])
 abstract class AbstractCoroutineExposedRepositoryTest {
+    private lateinit var r2dbcDatabase: R2dbcDatabase
 
     @Configuration
     @EnableAutoConfiguration
@@ -21,11 +24,14 @@ abstract class AbstractCoroutineExposedRepositoryTest {
     class TestConfig
 
     @BeforeEach
-    fun setUp() {
-        transaction {
-//            MigrationUtils.statementsRequiredForDatabaseMigration(Users).forEach {stmt ->
-//                exec(stmt)
-//            }
+    fun setUp(): Unit = runBlocking {
+        if (!::r2dbcDatabase.isInitialized) {
+            r2dbcDatabase = R2dbcDatabase.connect(
+                url = "r2dbc:h2:mem:///coroutine_exposed_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=LEGACY",
+                driver = "h2",
+            )
+        }
+        suspendTransaction(r2dbcDatabase) {
             SchemaUtils.createMissingTablesAndColumns(Users)
             Users.deleteAll()
         }

@@ -1,126 +1,175 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
-import io.bluetape4k.spring.data.exposed.repository.support.ExposedEntityInformation
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
 import io.bluetape4k.spring.data.exposed.repository.support.toExposedOrderBy
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
+import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.r2dbc.deleteAll
+import org.jetbrains.exposed.v1.r2dbc.deleteWhere
+import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
+import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
-import java.util.*
+import java.util.Optional
 
 /**
- * [CoroutineExposedRepository]의 기본 CRUD 구현체입니다.
+ * [CoroutineExposedRepository]의 기본 구현체입니다.
  *
- * JDBC DAO 연산을 `withContext(Dispatchers.IO)` + `transaction {}` 으로 래핑하여
- * 코루틴 환경에서 안전하게 사용할 수 있도록 합니다.
+ * Reflection 없이 Repository가 제공한 매핑 함수([toDomain], [idOf], [toPersistValues])를 사용해
+ * [IdTable] DSL 쿼리를 실행합니다.
  */
 @Repository
 @Suppress("UNCHECKED_CAST")
-open class SimpleCoroutineExposedRepository<E : Entity<ID>, ID : Any>(
-    val entityInformation: ExposedEntityInformation<E, ID>,
-) : CoroutineExposedRepository<E, ID> {
+class SimpleCoroutineExposedRepository<R : HasIdentifier<ID>, ID : Any>(
+    private val table: IdTable<ID>,
+    private val toDomainMapper: (ResultRow) -> R,
+    private val persistValuesProvider: (R) -> Map<Column<*>, Any?>,
+) : CoroutineExposedRepository<IdTable<ID>, R, ID> {
 
-    val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
-    val table: IdTable<ID> get() = entityInformation.table
+    override fun toDomain(row: ResultRow): R = toDomainMapper(row)
 
-    private suspend fun <T> io(block: () -> T): T =
-        withContext(Dispatchers.IO) { transaction { block() } }
+    override fun toPersistValues(domain: R): Map<Column<*>, Any?> = persistValuesProvider(domain)
 
-    // ============================================================
-    // CRUD
-    // ============================================================
+    override suspend fun <S : R> save(entity: S): S {
+        val persisted = persist(entity)
+        return (persisted as? S) ?: entity
+    }
 
-    override suspend fun <S : E> save(entity: S): S = entity
+    override suspend fun <S : R> saveAll(entities: Iterable<S>): List<S> =
+        entities.map { save(it) }
 
-    override suspend fun <S : E> saveAll(entities: Iterable<S>): List<S> = entities.toList()
+    override suspend fun findById(id: ID): Optional<R> =
+        Optional.ofNullable(findByIdOrNull(id))
 
-    override suspend fun findById(id: ID): Optional<E> =
-        Optional.ofNullable(io { entityClass.findById(id) })
-
-    override suspend fun findByIdOrNull(id: ID): E? =
-        io { entityClass.findById(id) }
+    override suspend fun findByIdOrNull(id: ID): R? =
+        findRowById(id)?.let(::toDomain)
 
     override suspend fun existsById(id: ID): Boolean =
-        io { entityClass.findById(id) != null }
+        findRowById(id) != null
 
-    override fun findAll(): Flow<E> =
-        // JDBC는 lazy stream을 지원하지 않으므로 즉시 로드 후 Flow로 변환
-        transaction { entityClass.all().toList() }.asFlow()
-
-    override suspend fun findAllList(): List<E> =
-        io { entityClass.all().toList() }
-
-    override suspend fun findAll(sort: Sort): List<E> = io {
-        if (sort.isUnsorted) {
-            entityClass.all().toList()
-        } else {
-            entityClass.all().orderBy(*sort.toExposedOrderBy(table)).toList()
+    override fun findAll(): Flow<R> =
+        flow {
+            emitAll(
+                table.selectAll().toList().map(::toDomain)
+                    .asFlow()
+            )
         }
-    }
 
-    override suspend fun findAllById(ids: Iterable<ID>): List<E> {
+    override suspend fun findAllById(ids: Iterable<ID>): List<R> {
         val idList = ids.toList()
         if (idList.isEmpty()) return emptyList()
-        return io { entityClass.forIds(idList).toList() }
+
+        return table.selectAll()
+            .where { table.id inList idList }
+            .toList()
+            .map(::toDomain)
     }
 
-    override suspend fun count(): Long = io { entityClass.count() }
-
-    override suspend fun deleteById(id: ID): Unit = io { entityClass.findById(id)?.delete() }
-
-    override suspend fun delete(entity: E): Unit = io { entity.delete() }
-
-    override suspend fun deleteAllById(ids: Iterable<ID>): Unit = io {
-        ids.forEach { entityClass.findById(it)?.delete() }
+    override suspend fun count(): Long {
+        return table.selectAll().count()
     }
 
-    override suspend fun deleteAll(entities: Iterable<E>): Unit = io {
-        entities.forEach { it.delete() }
+    override suspend fun deleteById(id: ID) {
+        table.deleteWhere { table.id eq id }
     }
 
-    override suspend fun deleteAll(): Unit = io {
-        entityClass.all().forEach { it.delete() }
+    override suspend fun delete(entity: R) {
+        entity.id?.let { deleteById(it) }
     }
 
-    // ============================================================
-    // 페이징
-    // ============================================================
-
-    override suspend fun findAll(pageable: Pageable): Page<E> = io {
-        if (pageable.isUnpaged) {
-            val all = entityClass.all().toList()
-            return@io PageImpl(all, pageable, all.size.toLong())
+    override suspend fun deleteAllById(ids: Iterable<ID>) {
+        val idList = ids.toList()
+        if (idList.isNotEmpty()) {
+            table.deleteWhere { table.id inList idList }
         }
-        val query = entityClass.all()
+    }
+
+    override suspend fun deleteAll(entities: Iterable<R>) {
+        deleteAllById(entities.mapNotNull { it.id })
+    }
+
+    override suspend fun deleteAll() {
+        table.deleteAll()
+    }
+
+    override suspend fun findAll(pageable: Pageable): Page<R> {
+        val base = table.selectAll()
+
         if (pageable.sort.isSorted) {
-            query.orderBy(*pageable.sort.toExposedOrderBy(table))
+            base.orderBy(*pageable.sort.toExposedOrderBy(table))
         }
-        val total = entityClass.count()
-        val content = query.limit(pageable.pageSize).offset(pageable.offset).toList()
-        PageImpl(content, pageable, total)
+
+        val total = base.count()
+        if (pageable.isUnpaged) {
+            val all = base.toList().map(::toDomain)
+            return PageImpl(all, pageable, total)
+        }
+
+        val content = base
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
+            .toList()
+            .map(::toDomain)
+
+        return PageImpl(content, pageable, total)
     }
 
-    // ============================================================
-    // Exposed DSL 확장
-    // ============================================================
+    override suspend fun count(op: () -> Op<Boolean>): Long {
+        return table.selectAll()
+            .where { op() }
+            .count()
+    }
 
-    override suspend fun findAll(op: () -> Op<Boolean>): List<E> =
-        io { entityClass.find(op).toList() }
+    override suspend fun exists(op: () -> Op<Boolean>): Boolean {
+        return !table.selectAll()
+            .where { op() }
+            .empty()
+    }
 
-    override suspend fun count(op: () -> Op<Boolean>): Long =
-        io { entityClass.find(op).count() }
+    private suspend fun findRowById(id: ID): ResultRow? =
+        table.selectAll()
+            .where { table.id eq id }
+            .limit(1)
+            .toList()
+            .firstOrNull()
 
-    override suspend fun exists(op: () -> Op<Boolean>): Boolean =
-        io { !entityClass.find(op).empty() }
+    private suspend fun persist(entity: R): R {
+        val idValue = entity.id
+
+        return if (idValue == null) {
+            val insertedId = table.insertAndGetId { stmt ->
+                writePersistValues(stmt, entity)
+            }.value
+            findRowById(insertedId)?.let(::toDomain) ?: entity
+        } else {
+            table.update({ table.id eq idValue }) { stmt ->
+                writePersistValues(stmt, entity)
+            }
+            findRowById(idValue)?.let(::toDomain) ?: entity
+        }
+    }
+
+    private fun writePersistValues(statement: UpdateBuilder<*>, entity: R) {
+        toPersistValues(entity).forEach { (column, value) ->
+            require(column.table == table && column != table.id) {
+                "Persist column '${column.name}' must belong to table '${table.tableName}' and must not be id column"
+            }
+            statement[column as Column<Any?>] = value
+        }
+    }
 }
