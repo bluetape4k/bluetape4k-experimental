@@ -32,6 +32,22 @@ bluetape4k-experimental/
 
 ## 주요 모듈
 
+### io/benchmarks
+직렬화 및 압축 조합의 성능, serialized byte size, allocation 부하를 검증하는 benchmark 모듈.
+
+- serializer 비교 결과:
+  [BINARY_SERIALIZER_BENCHMARK_RESULTS.md](io/benchmarks/BINARY_SERIALIZER_BENCHMARK_RESULTS.md)
+- serializer + compressor 조합 비교 결과:
+  [BINARY_SERIALIZER_COMPRESSOR_RESULTS.md](io/benchmarks/BINARY_SERIALIZER_COMPRESSOR_RESULTS.md)
+
+현재 benchmark 기준 추천:
+
+- 기본 직렬화기: `BinarySerializers.Fory`
+- 압축 포함 기본 조합: `Fory + Snappy`
+- 크기 최우선 조합:
+  - small/medium: `Kryo + Deflate`
+  - large: `Kryo + Zstd`
+
 ### infra/cache-lettuce-near
 Caffeine(L1) + Redis(L2) 2-tier Near Cache 구현체. RESP3 CLIENT TRACKING으로 분산 환경에서 로컬 캐시 자동 무효화를 지원한다.
 → [README](infra/cache-lettuce-near/README.md)

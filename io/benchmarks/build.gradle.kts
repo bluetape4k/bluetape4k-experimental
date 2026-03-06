@@ -8,8 +8,12 @@ import org.gradle.kotlin.dsl.getByType
 
 dependencies {
     implementation(Libs.bluetape4k_io)
+    implementation(Libs.commons_compress)
     implementation(Libs.kryo5)
     implementation(Libs.fory_kotlin)
+    implementation(Libs.lz4_java)
+    implementation(Libs.snappy_java)
+    implementation(Libs.zstd_jni)
     implementation(Libs.chronicle_wire)
     implementation(Libs.jackson_module_kotlin)
     implementation(Libs.jackson_dataformat_msgpack)
@@ -123,4 +127,56 @@ tasks.register<JavaExec>("serializerSizeSnapshot") {
     classpath = sourceSets.named("main").get().runtimeClasspath
     mainClass.set("io.bluetape4k.benchmark.serializer.SerializerMetricsSnapshotKt")
     args(layout.buildDirectory.file("reports/benchmarks/serialized-size.json").get().asFile.absolutePath)
+}
+
+tasks.register<JavaExec>("comboJmhJson") {
+    group = "benchmark"
+    description = "Run serializer+compressor combination benchmarks with JMH JSON output."
+    dependsOn("mainBenchmarkCompile")
+    classpath = benchmarkClasspath
+    mainClass.set("org.openjdk.jmh.Main")
+    jvmArgs(benchmarkJvmArgs())
+    args(
+        ".*BinarySerializerCompressorBenchmark.*",
+        "-f", "1",
+        "-wi", "2",
+        "-i", "4",
+        "-w", "1s",
+        "-r", "1s",
+        "-tu", "us",
+        "-bm", "avgt",
+        "-rf", "json",
+        "-rff", layout.buildDirectory.file("reports/benchmarks/combo-jmh-results.json").get().asFile.absolutePath,
+    )
+}
+
+tasks.register<JavaExec>("comboJmhGc") {
+    group = "benchmark"
+    description = "Run serializer+compressor combination benchmarks with the JMH GC profiler."
+    dependsOn("mainBenchmarkCompile")
+    classpath = benchmarkClasspath
+    mainClass.set("org.openjdk.jmh.Main")
+    jvmArgs(benchmarkJvmArgs())
+    args(
+        ".*BinarySerializerCompressorBenchmark.*",
+        "-f", "1",
+        "-wi", "1",
+        "-i", "2",
+        "-w", "1s",
+        "-r", "1s",
+        "-tu", "us",
+        "-bm", "avgt",
+        "-prof", "gc",
+        "-rf", "json",
+        "-rff", layout.buildDirectory.file("reports/benchmarks/combo-jmh-gc-results.json").get().asFile.absolutePath,
+    )
+}
+
+tasks.register<JavaExec>("comboSizeSnapshot") {
+    group = "benchmark"
+    description = "Write serialized byte sizes for serializer+compressor combinations."
+    dependsOn("classes")
+    classpath = sourceSets.named("main").get().runtimeClasspath
+    mainClass.set("io.bluetape4k.benchmark.serializer.SerializerCompressorMetricsSnapshotKt")
+    args(layout.buildDirectory.file("reports/benchmarks/combo-serialized-size.json").get().asFile.absolutePath)
 }
