@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `bluetape4k-experimental` is an experimental Kotlin library project under the bluetape4k organization. This repository is used for prototyping and exploring new ideas before they are stabilized into the main bluetape4k library.
 
+## Agent Constraints (중요!)
+
+### 절대 하지 말 것
+- `./gradlew build` 전체 빌드 금지 (시간이 너무 걸림) → 항상 `./gradlew :<module>:build` 사용
+- 지시 없이 특정 모듈 외부의 파일 수정 금지
+- `git push` 금지 (항상 사람이 직접 수행)
+- 테스트 없이 implementation 코드만 작성하지 말 것
+
+### 작업 전 확인 필요
+- 새 모듈 생성 시 → `settings.gradle.kts`의 `includeModules()` 자동 감지 여부 확인
+- 의존성 추가 시 → `buildSrc/src/main/kotlin/Libs.kt`에 버전 추가 여부 확인
+
 ## Build System
 
 This project uses **Gradle with Kotlin DSL** (`build.gradle.kts`, `settings.gradle.kts`).
@@ -70,6 +82,24 @@ bluetape4k-experimental/
     └── exposed-r2dbc-spring-data-webflux-demo/ # Exposed Spring Data + WebFlux 예제 (:exposed-r2dbc-spring-data-webflux-demo)
 ```
 
+## 주요 파일 위치
+
+- 의존성 버전 관리: `buildSrc/src/main/kotlin/Libs.kt`
+- 플러그인 버전: `buildSrc/src/main/kotlin/Plugins.kt`
+- 모듈 등록: `settings.gradle.kts` (`includeModules()` 함수)
+- 공통 빌드 설정: `build.gradle.kts` (루트)
+- Near Cache 인프라: `infra/cache-lettuce-near/`
+- Hibernate 2LC: `infra/hibernate-cache-lettuce-near/`
+
+## 새 모듈 생성 절차
+
+1. `{baseDir}/{moduleName}/` 디렉토리 생성
+2. `build.gradle.kts` 작성 (기존 유사 모듈 참고)
+3. `settings.gradle.kts`는 `includeModules()`가 자동 감지하므로 **수정 불필요**
+4. `src/main/kotlin/io/bluetape4k/` 하위에 패키지 구조 생성
+5. `src/test/kotlin/` 하위에 테스트 패키지 생성
+6. `README.md` 작성 필수
+
 ### 모듈 명명 규칙
 
 `settings.gradle.kts`의 `includeModules(baseDir, withProjectName=false, withBaseDir=false)` 패턴:
@@ -126,9 +156,77 @@ bluetape4k-experimental/
 JUnit 5 기본. Coroutine 테스트는 `runTest` 사용.
 
 ```bash
-# Run tests with detailed output
-./gradlew test --info
+# 특정 모듈 테스트 (권장)
+./gradlew :<module>:test
 
-# Run tests continuously (watch mode)
-./gradlew test --continuous
+# 상세 출력
+./gradlew :<module>:test --info
+
+# 단일 테스트 클래스
+./gradlew :<module>:test --tests "fully.qualified.ClassName"
 ```
+
+### Testcontainers 사용 패턴
+
+Redis, Kafka 등 인프라가 필요한 테스트는 Testcontainers 싱글턴 패턴 사용:
+
+```kotlin
+class MyRedisTest {
+    companion object {
+        // bluetape4k-testcontainers의 싱글턴 컨테이너 재사용
+        @JvmStatic
+        val redisServer = RedisServer.Standalone.start()
+    }
+
+    @Test
+    fun `redis test`() {
+        // redisServer.host, redisServer.port 사용
+    }
+}
+```
+
+- `@Testcontainers` 어노테이션 불필요 — bluetape4k-testcontainers 싱글턴 방식 사용
+- 기존 infra 모듈 테스트 코드를 참고 패턴으로 활용
+
+## 코드 스타일
+
+### ❌ 하지 말 것
+
+```kotlin
+// Java 스타일 null 체크
+if (value != null) { ... }
+
+// blocking 호출을 그냥 사용
+val result = blockingApi.call()
+
+// runBlocking을 프로덕션 코드에서 사용
+val result = runBlocking { suspendFun() }
+```
+
+### ✅ 이렇게 할 것
+
+```kotlin
+// Kotlin 스타일
+value?.let { ... }
+
+// Coroutines로 래핑
+val result = withContext(Dispatchers.IO) { blockingApi.call() }
+
+// suspend 함수 체이닝
+suspend fun doWork(): Result = coroutineScope {
+    val a = async { fetchA() }
+    val b = async { fetchB() }
+    combine(a.await(), b.await())
+}
+```
+
+## 현재 진행 중인 작업 (WIP)
+
+<!-- 새로운 작업 시작 시 이 섹션을 갱신하세요 -->
+<!-- 예시:
+### 모듈명 또는 기능명
+- 위치: `infra/cache-lettuce-near/`
+- 목표: ...
+- 핵심 이슈: ...
+- 해결 방향: ...
+-->

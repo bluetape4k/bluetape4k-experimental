@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: exposed-jpa-benchmark
+  datasource:
+    url: jdbc:h2:mem:benchmark;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        jdbc.batch_size: 50
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+  exposed:
+    generate-ddl: false   # ExposedAutoConfiguration 제외로 인해 무효. DataInitializer에서 SchemaUtils로 직접 처리
+
+server:
+  port: 8080
+
+logging:
+  level:
+    io.bluetape4k: DEBUG
+    org.jetbrains.exposed: INFO
+    org.hibernate.SQL: INFO

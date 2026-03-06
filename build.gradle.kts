@@ -22,6 +22,7 @@ plugins {
     id(Plugins.dokka) version Plugins.Versions.dokka
     id(Plugins.testLogger) version Plugins.Versions.testLogger
     id(Plugins.shadow) version Plugins.Versions.shadow apply false
+    id(Plugins.gatling) version Plugins.Versions.gatling apply false
 }
 
 allprojects {
