@@ -71,8 +71,10 @@ object Versions {
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
     const val kotlinx_atomicfu = "0.31.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
-    
+
     const val kotlinx_benchmark = Plugins.Versions.kotlinx_benchmark
+    const val chronicle_wire = "2.27ea8"       // https://mvnrepository.com/artifact/net.openhft/chronicle-wire
+    const val msgpack = "0.9.11"               // https://mvnrepository.com/artifact/org.msgpack/msgpack-core
 
     const val spring_boot3 = Plugins.Versions.spring_boot3
     const val spring_boot4 = Plugins.Versions.spring_boot4
@@ -505,6 +507,10 @@ object Libs {
 
     const val kryo5 = "com.esotericsoftware:kryo:5.6.2" // https://mvnrepository.com/artifact/com.esotericsoftware/kryo
     const val fory_kotlin = "org.apache.fory:fory-kotlin:0.15.0" // https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
+    const val chronicle_wire = "net.openhft:chronicle-wire:${Versions.chronicle_wire}" // https://mvnrepository.com/artifact/net.openhft/chronicle-wire
+    const val msgpack_core = "org.msgpack:msgpack-core:${Versions.msgpack}" // https://mvnrepository.com/artifact/org.msgpack/msgpack-core
+    const val jackson_dataformat_msgpack =
+        "org.msgpack:jackson-dataformat-msgpack:${Versions.msgpack}" // https://mvnrepository.com/artifact/org.msgpack/jackson-dataformat-msgpack
 
     // Spring Boot
     const val spring_boot3_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot3}"
