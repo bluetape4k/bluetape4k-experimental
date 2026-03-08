@@ -7,12 +7,12 @@ import org.springframework.data.repository.core.support.TransactionalRepositoryF
 /**
  * 코루틴 Exposed Repository를 생성하는 [TransactionalRepositoryFactoryBeanSupport] 구현체입니다.
  */
-class CoroutineExposedRepositoryFactoryBean<T : Repository<E, ID>, E : Any, ID : Any>(
+class SuspendExposedRepositoryFactoryBean<T : Repository<E, ID>, E : Any, ID : Any>(
     repositoryInterface: Class<out T>,
 ) : TransactionalRepositoryFactoryBeanSupport<T, E, ID>(repositoryInterface) {
 
     override fun doCreateRepositoryFactory(): RepositoryFactorySupport =
-        CoroutineExposedRepositoryFactory()
+        SuspendExposedRepositoryFactory()
 
     override fun afterPropertiesSet() {
         setTransactionManager("springTransactionManager")

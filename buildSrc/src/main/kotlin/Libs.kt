@@ -65,7 +65,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.3 이상에서 사용하세요
-    const val bluetape4k = "1.3.0"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+    const val bluetape4k = "1.3.1-SNAPSHOT"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
     const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core

@@ -1,6 +1,6 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.domain
 
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
+import io.bluetape4k.exposed.core.HasIdentifier
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 object Users : LongIdTable("coroutine_users") {

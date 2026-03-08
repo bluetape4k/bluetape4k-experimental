@@ -1,6 +1,6 @@
 package io.bluetape4k.spring.data.exposed.r2dbc
 
-import io.bluetape4k.spring.data.exposed.r2dbc.config.EnableCoroutineExposedRepositories
+import io.bluetape4k.spring.data.exposed.r2dbc.config.EnableSuspendExposedRepositories
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -12,13 +12,13 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Configuration
 
-@SpringBootTest(classes = [AbstractCoroutineExposedRepositoryTest.TestConfig::class])
-abstract class AbstractCoroutineExposedRepositoryTest {
-    private lateinit var r2dbcDatabase: R2dbcDatabase
+@SpringBootTest(classes = [AbstractSuspendExposedRepositoryTest.TestConfig::class])
+abstract class AbstractSuspendExposedRepositoryTest {
+    protected lateinit var r2dbcDatabase: R2dbcDatabase
 
     @Configuration
     @EnableAutoConfiguration
-    @EnableCoroutineExposedRepositories(
+    @EnableSuspendExposedRepositories(
         basePackages = ["io.bluetape4k.spring.data.exposed.r2dbc.repository"]
     )
     class TestConfig

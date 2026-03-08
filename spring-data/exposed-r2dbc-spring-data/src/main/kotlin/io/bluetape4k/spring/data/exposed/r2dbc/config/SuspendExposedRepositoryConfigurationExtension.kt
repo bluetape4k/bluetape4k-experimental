@@ -1,25 +1,26 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.config
 
 import io.bluetape4k.spring.data.exposed.annotation.ExposedEntity
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.CoroutineExposedRepositoryFactoryBean
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedCrudRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.SuspendExposedRepositoryFactoryBean
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
 import org.springframework.data.repository.core.RepositoryMetadata
 
-class CoroutineExposedRepositoryConfigurationExtension : RepositoryConfigurationExtensionSupport() {
+class SuspendExposedRepositoryConfigurationExtension : RepositoryConfigurationExtensionSupport() {
 
-    override fun getModuleName(): String = "COROUTINE_EXPOSED"
+    override fun getModuleName(): String = "SUSPEND_EXPOSED"
 
-    override fun getModulePrefix(): String = "coroutineExposed"
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun getModulePrefix(): String = "suspendExposed"
 
     override fun getRepositoryFactoryBeanClassName(): String =
-        CoroutineExposedRepositoryFactoryBean::class.java.name
+        SuspendExposedRepositoryFactoryBean::class.java.name
 
     override fun getIdentifyingAnnotations(): Collection<Class<out Annotation>> =
         listOf(ExposedEntity::class.java)
 
     override fun getIdentifyingTypes(): Collection<Class<*>> =
-        listOf(CoroutineExposedRepository::class.java)
+        listOf(SuspendExposedCrudRepository::class.java)
 
     /**
      * 코루틴/Flow 기반의 reactive repository를 지원합니다.

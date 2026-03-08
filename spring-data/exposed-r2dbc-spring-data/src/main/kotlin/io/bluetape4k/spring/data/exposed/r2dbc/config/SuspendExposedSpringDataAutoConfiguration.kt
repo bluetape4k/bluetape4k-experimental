@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration
 @AutoConfiguration(after = [ExposedSpringDataAutoConfiguration::class])
 @ConditionalOnClass(EntityClass::class)
 @Configuration(proxyBeanMethods = false)
-class CoroutineExposedSpringDataAutoConfiguration {
+class SuspendExposedSpringDataAutoConfiguration {
 
     /**
      * Phase 1 AutoConfiguration에 의해 이미 등록된 경우 생략합니다.

@@ -1,10 +1,9 @@
 package io.bluetape4k.examples.exposed.webflux.controller
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
-import io.bluetape4k.examples.exposed.webflux.repository.ProductCoroutineRepository
+import io.bluetape4k.examples.exposed.webflux.repository.ProductSuspendRepository
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,15 +18,18 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/products")
+/**
+ * Exposed R2DBC 기반 상품 CRUD API이다.
+ */
 class ProductController(
-    private val productRepository: ProductCoroutineRepository,
+    private val productRepository: ProductSuspendRepository,
     private val r2dbcDatabase: R2dbcDatabase,
 ) {
 
     @GetMapping
     suspend fun findAll(): List<ProductDto> =
         suspendTransaction(r2dbcDatabase) {
-            productRepository.findAll(Pageable.unpaged()).content
+            productRepository.findAllAsList()
         }
 
     @GetMapping("/{id}")

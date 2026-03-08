@@ -1,34 +1,29 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository
 
+import io.bluetape4k.exposed.core.HasIdentifier
 import kotlinx.coroutines.flow.Flow
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.NoRepositoryBean
 import org.springframework.data.repository.Repository
 import java.util.Optional
 
 /**
- * Exposed [IdTable] 기반 코루틴 Repository 인터페이스입니다.
+ * Exposed [IdTable] 기반 suspend CRUD Repository 계약입니다.
  *
  * 테이블 타입 [T], 도메인 타입 [R], 식별자 타입 [ID]를 분리해
  * DAO Entity 의존 없이 Row/DTO 중심으로 사용할 수 있습니다.
  *
  * ```kotlin
- * interface UserRepository : CoroutineExposedRepository<Users, UserDto, Long> {
+ * interface UserRepository : SuspendExposedCrudRepository<Users, UserDto, Long> {
  *     suspend fun findByName(name: String): List<UserDto>
  * }
  * ```
  */
 @NoRepositoryBean
-interface CoroutineExposedRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any> : Repository<R, ID> {
-
-    // ============================================================
-    // CRUD 기본 메서드
-    // ============================================================
+interface SuspendExposedCrudRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any> : Repository<R, ID> {
 
     suspend fun <S : R> save(entity: S): S
     suspend fun <S : R> saveAll(entities: Iterable<S>): List<S>
@@ -38,6 +33,19 @@ interface CoroutineExposedRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID 
 
     suspend fun existsById(id: ID): Boolean
 
+    /**
+     * 모든 결과를 메모리에 적재한 뒤 List로 반환합니다.
+     *
+     * WebFlux 응답처럼 트랜잭션 바깥에서 소비되는 경로에서는 이 메서드를 우선 사용합니다.
+     */
+    suspend fun findAllAsList(): List<R>
+
+    /**
+     * [findAllAsList] 결과를 Flow 형태로 노출합니다.
+     *
+     * 이 메서드는 진짜 row streaming이 아니라 eager materialization 이후 Flow 래핑입니다.
+     * 트랜잭션 경계 밖에서 안전하게 소비할 수 있는 대신, large result set에서는 메모리 사용량이 증가합니다.
+     */
     fun findAll(): Flow<R>
     suspend fun findAllById(ids: Iterable<ID>): List<R>
 
@@ -48,16 +56,6 @@ interface CoroutineExposedRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID 
     suspend fun deleteAllById(ids: Iterable<ID>)
     suspend fun deleteAll(entities: Iterable<R>)
     suspend fun deleteAll()
-
-    // ============================================================
-    // 페이징
-    // ============================================================
-
-    suspend fun findAll(pageable: Pageable): Page<R>
-
-    // ============================================================
-    // Exposed DSL 확장
-    // ============================================================
 
     /**
      * ResultRow를 도메인 객체 [R]로 변환합니다.

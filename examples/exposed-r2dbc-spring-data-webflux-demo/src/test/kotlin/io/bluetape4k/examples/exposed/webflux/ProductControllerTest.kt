@@ -15,6 +15,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import java.math.BigDecimal
+import kotlin.test.fail
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
@@ -33,11 +34,8 @@ class ProductControllerTest {
     @Test
     @Order(1)
     fun `GET products returns list`() {
-        webTestClient.get().uri("/products")
-            .exchange()
-            .expectStatus().isOk
-            .expectBodyList<ProductDto>()
-            .hasSize(3)  // DataInitializer가 3개 생성, @BeforeEach에서 초기화
+        val products = awaitProducts()
+        products.size shouldBeEqualTo 3
     }
 
     @Test
@@ -104,5 +102,28 @@ class ProductControllerTest {
         webTestClient.get().uri("/products/${created.id}")
             .exchange()
             .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `GET missing product returns 404`() {
+        webTestClient.get().uri("/products/999999")
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    private fun awaitProducts(): List<ProductDto> {
+        repeat(30) {
+            val result = webTestClient.get().uri("/products")
+                .exchange()
+                .expectStatus().isOk
+                .expectBodyList<ProductDto>()
+                .returnResult()
+                .responseBody ?: emptyList()
+            if (result.size == 3) {
+                return result
+            }
+            Thread.sleep(100)
+        }
+        fail("seed products were not initialized in time")
     }
 }

@@ -1,7 +1,7 @@
 package io.bluetape4k.examples.exposed.webflux.domain
 
+import io.bluetape4k.exposed.core.HasIdentifier
 import io.bluetape4k.spring.data.exposed.annotation.ExposedEntity
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.dao.LongEntity

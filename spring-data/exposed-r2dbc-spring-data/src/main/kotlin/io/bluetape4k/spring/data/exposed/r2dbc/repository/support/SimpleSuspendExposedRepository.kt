@@ -1,10 +1,12 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
+import io.bluetape4k.exposed.core.HasIdentifier
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedPagingRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.StreamingSuspendExposedRepository
 import io.bluetape4k.spring.data.exposed.repository.support.toExposedOrderBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -15,42 +17,48 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
+import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.deleteWhere
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.selectAll
+import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.r2dbc.update
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Repository
-import java.util.Optional
+import java.util.*
 
 /**
- * [CoroutineExposedRepository]의 기본 구현체입니다.
+ * Exposed suspend CRUD/paging/streaming Repository의 기본 구현체입니다.
  *
- * Reflection 없이 Repository가 제공한 매핑 함수([toDomain], [idOf], [toPersistValues])를 사용해
+ * Reflection 없이 Repository가 제공한 매핑 함수([toDomain], [toPersistValues])를 사용해
  * [IdTable] DSL 쿼리를 실행합니다.
+ *
+ * 현재 `findAll(): Flow<R>`는 Exposed R2DBC row stream을 직접 전달하지 않고,
+ * 한 번 `toList()`로 materialize 한 뒤 `Flow`로 감싼다.
+ * 따라서 large result set에서는 진짜 streaming/back-pressure 대신 eager loading 특성을 가진다.
  */
 @Repository
 @Suppress("UNCHECKED_CAST")
-class SimpleCoroutineExposedRepository<R : HasIdentifier<ID>, ID : Any>(
+class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
     private val table: IdTable<ID>,
     private val toDomainMapper: (ResultRow) -> R,
     private val persistValuesProvider: (R) -> Map<Column<*>, Any?>,
-) : CoroutineExposedRepository<IdTable<ID>, R, ID> {
+): SuspendExposedPagingRepository<IdTable<ID>, R, ID>,
+    StreamingSuspendExposedRepository<IdTable<ID>, R, ID> {
 
     override fun toDomain(row: ResultRow): R = toDomainMapper(row)
 
     override fun toPersistValues(domain: R): Map<Column<*>, Any?> = persistValuesProvider(domain)
 
-    override suspend fun <S : R> save(entity: S): S {
+    override suspend fun <S: R> save(entity: S): S {
         val persisted = persist(entity)
         return (persisted as? S) ?: entity
     }
 
-    override suspend fun <S : R> saveAll(entities: Iterable<S>): List<S> =
+    override suspend fun <S: R> saveAll(entities: Iterable<S>): List<S> =
         entities.map { save(it) }
 
     override suspend fun findById(id: ID): Optional<R> =
@@ -62,12 +70,21 @@ class SimpleCoroutineExposedRepository<R : HasIdentifier<ID>, ID : Any>(
     override suspend fun existsById(id: ID): Boolean =
         findRowById(id) != null
 
+    override suspend fun findAllAsList(): List<R> =
+        table.selectAll().toList().map(::toDomain)
+
     override fun findAll(): Flow<R> =
         flow {
-            emitAll(
-                table.selectAll().toList().map(::toDomain)
-                    .asFlow()
-            )
+            emitAll(findAllAsList().asFlow())
+        }
+
+    override fun streamAll(database: R2dbcDatabase): Flow<R> =
+        channelFlow {
+            suspendTransaction(database) {
+                table.selectAll().collect { row ->
+                    send(toDomain(row))
+                }
+            }
         }
 
     override suspend fun findAllById(ids: Iterable<ID>): List<R> {

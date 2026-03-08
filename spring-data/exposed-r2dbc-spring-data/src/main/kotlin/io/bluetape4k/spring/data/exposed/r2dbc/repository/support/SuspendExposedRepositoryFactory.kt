@@ -1,7 +1,7 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.HasIdentifier
+import io.bluetape4k.exposed.core.HasIdentifier
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedCrudRepository
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -22,10 +22,10 @@ import java.lang.reflect.Proxy
 import java.util.Optional
 
 /**
- * [CoroutineExposedRepositoryFactory]는 테이블 기반 코루틴 Exposed Repository 프록시를 생성합니다.
+ * [SuspendExposedRepositoryFactory]는 테이블 기반 코루틴 Exposed Repository 프록시를 생성합니다.
  */
 @Suppress("UNCHECKED_CAST")
-class CoroutineExposedRepositoryFactory : RepositoryFactorySupport() {
+class SuspendExposedRepositoryFactory : RepositoryFactorySupport() {
 
     override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> =
         StaticEntityInformation(metadata.domainType as Class<Any>, metadata.idType as Class<Any>)
@@ -35,7 +35,7 @@ class CoroutineExposedRepositoryFactory : RepositoryFactorySupport() {
     }
 
     override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> =
-        SimpleCoroutineExposedRepository::class.java
+        SimpleSuspendExposedRepository::class.java
 
     override fun getRepositoryFragments(metadata: RepositoryMetadata): RepositoryComposition.RepositoryFragments =
         RepositoryComposition.RepositoryFragments.just(createRepositoryImplementation(metadata.repositoryInterface))
@@ -45,10 +45,10 @@ class CoroutineExposedRepositoryFactory : RepositoryFactorySupport() {
         valueExpressionDelegate: ValueExpressionDelegate,
     ): Optional<QueryLookupStrategy> = Optional.empty()
 
-    private fun createRepositoryImplementation(repositoryInterface: Class<*>): SimpleCoroutineExposedRepository<HasIdentifier<Any>, Any> {
+    private fun createRepositoryImplementation(repositoryInterface: Class<*>): SimpleSuspendExposedRepository<HasIdentifier<Any>, Any> {
         val repositoryType = ResolvableType
             .forClass(repositoryInterface)
-            .`as`(CoroutineExposedRepository::class.java)
+            .`as`(SuspendExposedCrudRepository::class.java)
 
         val tableType = repositoryType.getGeneric(0).resolve()
             ?: error("Cannot resolve table type for ${repositoryInterface.name}")
@@ -56,7 +56,7 @@ class CoroutineExposedRepositoryFactory : RepositoryFactorySupport() {
         val table = resolveTableInstance(tableType) as IdTable<Any>
         val mapper = resolveMapper(repositoryInterface)
 
-        return SimpleCoroutineExposedRepository(
+        return SimpleSuspendExposedRepository(
             table = table,
             toDomainMapper = mapper.toDomain,
             persistValuesProvider = mapper.toPersistValues,

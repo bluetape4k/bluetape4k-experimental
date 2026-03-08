@@ -2,7 +2,9 @@ package io.bluetape4k.spring.data.exposed.r2dbc
 
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.User
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserCoroutineRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.StreamingUserSuspendRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserPagingSuspendRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserSuspendRepository
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -23,10 +25,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 
-class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryTest() {
+class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest() {
 
     @Autowired
-    private lateinit var userRepository: UserCoroutineRepository
+    private lateinit var userRepository: UserSuspendRepository
+
+    @Autowired
+    private lateinit var streamingUserRepository: StreamingUserSuspendRepository
+
+    @Autowired
+    private lateinit var pagingUserRepository: UserPagingSuspendRepository
 
     @AfterEach
     fun tearDown(): Unit = runBlocking {
@@ -67,7 +75,16 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
     fun `findAllList returns all entities`() = runTest {
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
-        val all = inTx { userRepository.findAll().toList() }
+        val all = inTx { userRepository.findAllAsList() }
+        all shouldHaveSize 2
+    }
+
+    @Test
+    fun `streamAll opens its own transaction and streams rows`() = runTest {
+        createUser("Alice", "alice@example.com", 30)
+        createUser("Bob", "bob@example.com", 25)
+
+        val all = streamingUserRepository.streamAll(r2dbcDatabase).toList()
         all shouldHaveSize 2
     }
 
@@ -111,7 +128,7 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
         createUser("Alice", "alice@example.com", 30)
         createUser("Bob", "bob@example.com", 25)
         val results = inTx {
-            userRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "age"))).content
+            pagingUserRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "age"))).content
         }
         val ages = results.map { it.age }
         ages shouldBeEqualTo ages.sorted()
@@ -120,7 +137,7 @@ class SimpleCoroutineExposedRepositoryTest : AbstractCoroutineExposedRepositoryT
     @Test
     fun `findAll with Pageable returns page`() = runTest {
         repeat(5) { i -> createUser("User$i", "user$i@example.com", 20 + i) }
-        val page = inTx { userRepository.findAll(PageRequest.of(0, 3)) }
+        val page = inTx { pagingUserRepository.findAll(PageRequest.of(0, 3)) }
         page.content shouldHaveSize 3
         page.totalElements shouldBeEqualTo 5L
     }

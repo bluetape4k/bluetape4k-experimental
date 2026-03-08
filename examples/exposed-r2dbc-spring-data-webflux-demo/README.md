@@ -6,7 +6,7 @@
 
 - Spring Boot 4 + Spring WebFlux
 - Exposed R2DBC (`suspendTransaction`)
-- CoroutineExposedRepository (`IdTable + Domain DTO`)
+- SuspendExposedCrudRepository (`IdTable + Domain DTO`)
 - H2 (JDBC 초기화 + R2DBC 트랜잭션 경로)
 
 ## 최근 변경

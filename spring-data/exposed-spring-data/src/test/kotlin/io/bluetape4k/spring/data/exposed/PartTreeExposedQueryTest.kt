@@ -109,7 +109,22 @@ class PartTreeExposedQueryTest : AbstractExposedRepositoryTest() {
         createUsers()
         val results = userRepository.findTop3ByOrderByAgeDesc()
         results shouldHaveSize 3
-        (results[0].age >= results[1].age).shouldBeTrue()
+        results.map { it.age } shouldBeEqualTo listOf(35, 30, 25)
+    }
+
+    @Test
+    fun `findByNameOrderByAgeDesc applies declared order`() {
+        createUsers()
+        val results = userRepository.findByNameOrderByAgeDesc("Alice")
+        results.map { it.age } shouldBeEqualTo listOf(30, 20)
+    }
+
+    @Test
+    fun `findFirstByNameOrderByAgeDesc applies declared order before limiting`() {
+        createUsers()
+        val user = userRepository.findFirstByNameOrderByAgeDesc("Alice")
+        user.shouldNotBeNull()
+        user.age shouldBeEqualTo 30
     }
 
     @Test

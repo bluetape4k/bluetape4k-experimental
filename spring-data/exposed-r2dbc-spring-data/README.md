@@ -4,7 +4,7 @@ JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수
 
 ## 개요
 
-- `CoroutineExposedRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any>` 기반
+- `SuspendExposedCrudRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any>` 기반
 - DAO `Entity` 없이 **Table + ResultRow + Domain DTO** 중심으로 동작
 - Spring Data 4.x Repository 인프라와 WebFlux/Coroutine 조합 지원
 - 저장/조회 매핑을 Repository 인터페이스에서 명시적으로 정의 (`toDomain`, `toPersistValues`)
@@ -13,22 +13,26 @@ JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수
 
 - 제네릭을 `Entity` 중심에서 `IdTable + Domain` 중심으로 개편
 - `HasIdentifier<ID>` 계약 도입으로 ID 매핑 단순화
-- `SimpleCoroutineExposedRepository`를 `org.jetbrains.exposed.v1.r2dbc.*` DSL로 통일
+- `SimpleSuspendExposedRepository`를 `org.jetbrains.exposed.v1.r2dbc.*` DSL로 통일
 - Repository 내부 트랜잭션 경계를 제거하고, 호출 계층에서 `suspendTransaction`을 적용하도록 정리
 
 ## 핵심 API
 
 ```kotlin
-interface CoroutineExposedRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any> : Repository<R, ID> {
+interface SuspendExposedCrudRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any> : Repository<R, ID> {
     suspend fun <S : R> save(entity: S): S
     suspend fun findByIdOrNull(id: ID): R?
     fun findAll(): Flow<R>
-    suspend fun findAll(pageable: Pageable): Page<R>
     suspend fun count(): Long
     suspend fun deleteById(id: ID)
 
     fun toDomain(row: ResultRow): R
     fun toPersistValues(domain: R): Map<Column<*>, Any?>
+}
+
+interface SuspendExposedPagingRepository<T : IdTable<ID>, R : HasIdentifier<ID>, ID : Any> :
+    SuspendExposedCrudRepository<T, R, ID> {
+    suspend fun findAll(pageable: Pageable): Page<R>
 }
 ```
 
@@ -46,7 +50,7 @@ data class UserDto(
     val email: String,
 ) : HasIdentifier<Long>
 
-interface UserCoroutineRepository : CoroutineExposedRepository<Users, UserDto, Long> {
+interface UserRepository : SuspendExposedCrudRepository<Users, UserDto, Long> {
     override fun toDomain(row: ResultRow): UserDto = UserDto(
         id = row[Users.id].value,
         name = row[Users.name],

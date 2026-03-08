@@ -1,26 +1,44 @@
 package io.bluetape4k.examples.exposed.webflux.config
 
 import io.bluetape4k.examples.exposed.webflux.domain.Products
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.insert
 import org.jetbrains.exposed.v1.r2dbc.selectAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
-import org.springframework.boot.ApplicationArguments
-import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
+/**
+ * WebFlux 예제용 초기 데이터를 비동기로 적재한다.
+ *
+ * startup thread를 `runBlocking`으로 붙잡지 않고,
+ * 애플리케이션 준비 완료 후 별도 coroutine에서 schema 생성과 seed insert를 수행한다.
+ */
 class DataInitializer(
     private val r2dbcDatabase: R2dbcDatabase,
-) : ApplicationRunner {
+) : AutoCloseable {
 
-    override fun run(args: ApplicationArguments): Unit = runBlocking {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun onApplicationReady(@Suppress("UNUSED_PARAMETER") event: ApplicationReadyEvent) {
+        scope.launch {
+            initializeData()
+        }
+    }
+
+    suspend fun initializeData() {
+        ensureSchema()
         suspendTransaction(r2dbcDatabase) {
-            SchemaUtils.create(Products)
-
             if (Products.selectAll().count() == 0L) {
                 Products.insert {
                     it[name] = "Kotlin Coroutines Book"
@@ -39,5 +57,19 @@ class DataInitializer(
                 }
             }
         }
+    }
+
+    private suspend fun ensureSchema() {
+        suspendTransaction(r2dbcDatabase) {
+            val tables = SchemaUtils.listTables()
+            val productTableExists = tables.any { it.equals(Products.tableName, ignoreCase = true) }
+            if (!productTableExists) {
+                SchemaUtils.create(Products)
+            }
+        }
+    }
+
+    override fun close() {
+        scope.cancel()
     }
 }

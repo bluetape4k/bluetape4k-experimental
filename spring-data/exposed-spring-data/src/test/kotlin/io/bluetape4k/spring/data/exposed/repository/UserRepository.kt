@@ -23,6 +23,8 @@ interface UserRepository: ExposedRepository<UserEntity, Long> {
 
     fun findByNameOrderByAgeDesc(name: String): List<UserEntity>
 
+    fun findFirstByNameOrderByAgeDesc(name: String): UserEntity?
+
     fun findTop3ByOrderByAgeDesc(): List<UserEntity>
 
     @Query("SELECT * FROM users WHERE email = ?1")

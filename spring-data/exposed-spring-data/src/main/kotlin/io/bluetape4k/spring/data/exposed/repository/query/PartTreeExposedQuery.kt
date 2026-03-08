@@ -32,19 +32,28 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
         val op = ExposedQueryCreator(partTree, provider.accessor, entityInformation.table).createQuery()
 
         val pageable = parameters.firstInstanceOrNull<Pageable>() ?: Pageable.unpaged()
-        val sort = pageable.sort.and(parameters.firstInstanceOrNull<Sort>() ?: Sort.unsorted())
+        val sort = partTree.sort
+            .and(pageable.sort)
+            .and(parameters.firstInstanceOrNull<Sort>() ?: Sort.unsorted())
 
         return when {
             partTree.isDelete -> executeDelete(op)
             partTree.isCountProjection -> entityClass.find { op }.count()
             partTree.isExistsProjection -> !entityClass.find { op }.empty()
-            partTree.isLimiting -> executeLimiting(op, partTree.maxResults)
-            isPageQuery() -> executePageQuery(op, pageable)
-            isSliceQuery() -> executeSliceQuery(op, pageable)
-            isSingleResult() -> entityClass.find { op }.firstOrNull()
+            partTree.isLimiting -> executeLimiting(op, partTree.maxResults, sort)
+            isPageQuery() -> executePageQuery(op, pageable, sort)
+            isSliceQuery() -> executeSliceQuery(op, pageable, sort)
+            isSingleResult() -> entityClass.find { op }.let { query ->
+                if (sort.isSorted) {
+                    query.orderBy(*sort.toExposedOrderBy(entityInformation.table))
+                }
+                query.firstOrNull()
+            }
             else -> entityClass.find { op }.let { query ->
-                if (sort.isSorted) query.orderBy(*sort.toExposedOrderBy(entityInformation.table)).toList()
-                else query.toList()
+                if (sort.isSorted) {
+                    query.orderBy(*sort.toExposedOrderBy(entityInformation.table))
+                }
+                query.toList()
             }
         }
     }
@@ -55,23 +64,30 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
         return entities.size.toLong()
     }
 
-    private fun executeLimiting(op: Op<Boolean>, maxResults: Int?): Any? {
+    private fun executeLimiting(op: Op<Boolean>, maxResults: Int?, sort: Sort): Any? {
         val query = entityClass.find { op }
+        if (sort.isSorted) {
+            query.orderBy(*sort.toExposedOrderBy(entityInformation.table))
+        }
         val limited = if (maxResults != null) query.limit(maxResults) else query
         return if (isSingleResult()) limited.firstOrNull() else limited.toList()
     }
 
-    private fun executePageQuery(op: Op<Boolean>, pageable: Pageable): Page<E> {
+    private fun executePageQuery(op: Op<Boolean>, pageable: Pageable, sort: Sort): Page<E> {
         val total = entityClass.find { op }.count()
         val query = entityClass.find { op }
-        if (pageable.sort.isSorted) query.orderBy(*pageable.sort.toExposedOrderBy(entityInformation.table))
+        if (sort.isSorted) {
+            query.orderBy(*sort.toExposedOrderBy(entityInformation.table))
+        }
         val content = query.limit(pageable.pageSize).offset(pageable.offset).toList()
         return PageImpl(content, pageable, total)
     }
 
-    private fun executeSliceQuery(op: Op<Boolean>, pageable: Pageable): Any {
+    private fun executeSliceQuery(op: Op<Boolean>, pageable: Pageable, sort: Sort): Any {
         val query = entityClass.find { op }
-        if (pageable.sort.isSorted) query.orderBy(*pageable.sort.toExposedOrderBy(entityInformation.table))
+        if (sort.isSorted) {
+            query.orderBy(*sort.toExposedOrderBy(entityInformation.table))
+        }
         val fetchSize = pageable.pageSize + 1
         val content = query.limit(fetchSize).offset(pageable.offset).toList()
         val hasNext = content.size > pageable.pageSize

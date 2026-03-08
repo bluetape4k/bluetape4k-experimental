@@ -6,10 +6,10 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 
 /**
- * 테스트용 코루틴 기반 User Repository.
- * [CoroutineExposedRepository]의 기본 CRUD 메서드만 사용합니다.
+ * 테스트용 suspend 기반 User streaming Repository 입니다.
  */
-interface UserCoroutineRepository : CoroutineExposedRepository<Users, User, Long> {
+interface StreamingUserSuspendRepository :
+    StreamingSuspendExposedRepository<Users, User, Long> {
 
     override fun toDomain(row: ResultRow): User =
         User(

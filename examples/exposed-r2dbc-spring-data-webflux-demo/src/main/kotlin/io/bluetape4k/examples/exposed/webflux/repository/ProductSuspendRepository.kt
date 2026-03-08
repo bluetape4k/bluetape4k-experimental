@@ -2,11 +2,14 @@ package io.bluetape4k.examples.exposed.webflux.repository
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
 import io.bluetape4k.examples.exposed.webflux.domain.Products
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.CoroutineExposedRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedCrudRepository
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 
-interface ProductCoroutineRepository : CoroutineExposedRepository<Products, ProductDto, Long> {
+/**
+ * 상품 DTO에 대한 suspend CRUD Repository 입니다.
+ */
+interface ProductSuspendRepository : SuspendExposedCrudRepository<Products, ProductDto, Long> {
 
     override fun toDomain(row: ResultRow): ProductDto =
         ProductDto(
