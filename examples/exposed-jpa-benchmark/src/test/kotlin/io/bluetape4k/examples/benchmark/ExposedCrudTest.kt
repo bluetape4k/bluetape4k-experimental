@@ -25,6 +25,8 @@ class ExposedCrudTest {
 
     private var emailCounter = 0
 
+    private fun uniqueIsbn(prefix: String): String = "$prefix-${System.nanoTime().toString().takeLast(8)}"
+
     @BeforeEach
     fun setup() {
         client = RestClient.builder()
@@ -117,6 +119,42 @@ class ExposedCrudTest {
 
         response.statusCode shouldBeEqualTo HttpStatus.OK
         response.body?.name shouldBeEqualTo "Updated"
+    }
+
+    @Test
+    fun `PUT updates author books as well`() {
+        val request = CreateAuthorRequest(
+            name = "Original Books",
+            email = uniqueEmail(),
+            books = listOf(
+                BookDto(title = "Old Book", isbn = uniqueIsbn("OLD"), price = BigDecimal("10.00"))
+            ),
+        )
+        val created = client.post()
+            .uri("/authors")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(request)
+            .retrieve()
+            .toEntity<AuthorDto>().body!!
+
+        val updateRequest = CreateAuthorRequest(
+            name = "Updated Books",
+            email = created.email,
+            books = listOf(
+                BookDto(title = "New Book", isbn = uniqueIsbn("NEW"), price = BigDecimal("20.00"))
+            ),
+        )
+        val response = client.put()
+            .uri("/authors/${created.id}")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(updateRequest)
+            .retrieve()
+            .toEntity<AuthorDto>()
+
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body?.name shouldBeEqualTo "Updated Books"
+        response.body?.books?.size shouldBeEqualTo 1
+        response.body?.books?.first()?.title shouldBeEqualTo "New Book"
     }
 
     @Test

@@ -11,6 +11,12 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
+/**
+ * JPA 기반 Author CRUD 서비스를 제공한다.
+ *
+ * 생성/수정 시 요청 payload의 book 컬렉션까지 함께 동기화해
+ * API 입력과 저장 결과가 어긋나지 않도록 유지한다.
+ */
 class JpaAuthorService(
     private val authorRepository: AuthorJpaRepository,
 ) {
@@ -44,6 +50,7 @@ class JpaAuthorService(
         val author = authorRepository.findByIdWithBooks(id) ?: return null
         author.name = request.name
         author.email = request.email
+        syncBooks(author, request.books)
         return authorRepository.saveAndFlush(author).toDto()
     }
 
@@ -86,4 +93,17 @@ class JpaAuthorService(
         isbn = this.isbn,
         price = this.price,
     )
+
+    private fun syncBooks(author: AuthorJpa, books: List<BookDto>) {
+        author.books.toList().forEach(author::removeBook)
+        books.forEach { bookDto ->
+            author.addBook(
+                BookJpa(
+                    title = bookDto.title,
+                    isbn = bookDto.isbn,
+                    price = bookDto.price,
+                )
+            )
+        }
+    }
 }

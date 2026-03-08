@@ -11,10 +11,12 @@ data class SerializerCompressorSizeMetric(
     val fingerprint: String,
 )
 
-fun main(args: Array<String>) {
-    val outputPath = args.firstOrNull()
-        ?: error("output path argument is required")
-
+/**
+ * 직렬화기+압축기 조합별 payload 크기 스냅샷을 JSON 파일로 기록한다.
+ *
+ * `outputPath`가 단순 파일명이어도 부모 디렉터리 접근에서 예외가 나지 않아야 한다.
+ */
+fun writeSerializerCompressorMetricsSnapshot(outputPath: String) {
     val metrics = buildList {
         PayloadScale.entries.forEach { scale ->
             val payload = BenchmarkFixtures.samplePayload(scale)
@@ -34,7 +36,12 @@ fun main(args: Array<String>) {
     }
 
     val mapper = jacksonObjectMapper().registerKotlinModule()
-    val outputFile = File(outputPath)
-    outputFile.parentFile.mkdirs()
+    val outputFile = prepareOutputFile(outputPath)
     mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, metrics)
+}
+
+fun main(args: Array<String>) {
+    val outputPath = args.firstOrNull()
+        ?: error("output path argument is required")
+    writeSerializerCompressorMetricsSnapshot(outputPath)
 }

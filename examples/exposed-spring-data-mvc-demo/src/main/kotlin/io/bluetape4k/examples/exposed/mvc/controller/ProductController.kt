@@ -18,6 +18,12 @@ import java.net.URI
 
 @RestController
 @RequestMapping("/products")
+/**
+ * Exposed 기반 상품 CRUD API를 제공한다.
+ *
+ * Exposed DAO 엔티티는 트랜잭션 경계 밖으로 넘기지 않고,
+ * 각 요청에서 DTO 변환까지 하나의 transaction 안에서 마무리한다.
+ */
 class ProductController(
     private val productRepository: ProductRepository,
 ) {
@@ -28,41 +34,47 @@ class ProductController(
 
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long): ResponseEntity<ProductDto> {
-        val entity = transaction { productRepository.findById(id).orElse(null) }
+        val entity = transaction {
+            productRepository.findById(id).orElse(null)?.toDto()
+        }
             ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(transaction { entity.toDto() })
+        return ResponseEntity.ok(entity)
     }
 
     @PostMapping
     fun create(@RequestBody dto: ProductDto): ResponseEntity<ProductDto> {
-        val entity = transaction {
+        val created = transaction {
             ProductEntity.new {
                 name = dto.name
                 price = dto.price
                 stock = dto.stock
-            }
+            }.toDto()
         }
-        val created = transaction { entity.toDto() }
         return ResponseEntity.created(URI.create("/products/${created.id}")).body(created)
     }
 
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody dto: ProductDto): ResponseEntity<ProductDto> {
-        val entity = transaction { productRepository.findById(id).orElse(null) }
-            ?: return ResponseEntity.notFound().build()
-        transaction {
-            entity.name = dto.name
-            entity.price = dto.price
-            entity.stock = dto.stock
+        val entity = transaction {
+            productRepository.findById(id).orElse(null)?.apply {
+                name = dto.name
+                price = dto.price
+                stock = dto.stock
+            }?.toDto()
         }
-        return ResponseEntity.ok(transaction { entity.toDto() })
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(entity)
     }
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<Void> {
-        val entity = transaction { productRepository.findById(id).orElse(null) }
-            ?: return ResponseEntity.notFound().build()
-        transaction { entity.delete() }
+        val deleted = transaction {
+            productRepository.findById(id).orElse(null)?.let {
+                it.delete()
+                true
+            } ?: false
+        }
+        if (!deleted) return ResponseEntity.notFound().build()
         return ResponseEntity.noContent().build()
     }
 

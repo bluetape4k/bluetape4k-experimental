@@ -43,6 +43,15 @@ class AuthorExposedRepository {
         val author = AuthorEntity.findById(id) ?: return@transaction null
         author.name = request.name
         author.email = request.email
+        author.books.toList().forEach { it.delete() }
+        request.books.forEach { bookDto ->
+            BookEntity.new {
+                title = bookDto.title
+                isbn = bookDto.isbn
+                price = bookDto.price
+                this.author = author
+            }
+        }
         author.toDto()
     }
 

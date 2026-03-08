@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.toEntity
 import java.math.BigDecimal
 
@@ -103,6 +104,19 @@ class ProductControllerTest {
             .retrieve()
             .toBodilessEntity()
         deleteResponse.statusCode shouldBeEqualTo HttpStatus.NO_CONTENT
+    }
+
+    @Test
+    fun `GET unknown product returns not found`() {
+        val response = runCatching {
+            client.get()
+                .uri("/products/999999")
+                .retrieve()
+                .toEntity<ProductDto>()
+        }.exceptionOrNull() as? HttpClientErrorException
+
+        response.shouldNotBeNull()
+        response.statusCode shouldBeEqualTo HttpStatus.NOT_FOUND
     }
 
     @Test

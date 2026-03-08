@@ -1,15 +1,19 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
 import io.bluetape4k.logging.KLogging
+import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldNotBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
+import java.nio.ByteBuffer
 import java.time.Duration
 
 class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
@@ -59,6 +63,24 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
     }
 
     @Test
+    fun `put - Redis 쓰기 실패 시 local cache를 오염시키지 않는다`() {
+        val failingCache = LettuceNearCache(
+            redisClient = resp3Client,
+            codec = failingValueCodec(),
+            config = NearCacheConfig(cacheName = "failing-put-cache-" + Base58.randomString(6)),
+        )
+
+        failingCache.use { broken ->
+            assertWriteFailure {
+                broken.put("k", "boom")
+            }
+
+            broken.localCacheSize() shouldBeEqualTo 0L
+            broken.containsKey("k").shouldBeFalse()
+        }
+    }
+
+    @Test
     fun `get - front miss 시 Redis에서 읽어 front populate`() {
         // prefix key로 직접 설정해야 cache.get()이 찾을 수 있음
         directCommands.set("${cache.cacheName}:remote-key", "remote-val")
@@ -74,6 +96,24 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
             putAll = { cache.putAll(it) },
             getAll = { cache.getAll(it) },
         )
+    }
+
+    @Test
+    fun `putAll - Redis 쓰기 실패 시 local cache를 오염시키지 않는다`() {
+        val failingCache = LettuceNearCache(
+            redisClient = resp3Client,
+            codec = failingValueCodec(),
+            config = NearCacheConfig(cacheName = "failing-put-all-cache-" + Base58.randomString(6)),
+        )
+
+        failingCache.use { broken ->
+            assertWriteFailure {
+                broken.putAll(mapOf("k1" to "boom"))
+            }
+
+            broken.localCacheSize() shouldBeEqualTo 0L
+            broken.get("k1").shouldBeNull()
+        }
     }
 
     @Test
@@ -234,5 +274,25 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         val c = LettuceNearCache(resp3Client)
         c.close()
         c.close() // 두 번 호출해도 예외 없어야 함
+    }
+
+    private fun failingValueCodec(): RedisCodec<String, String> = object : RedisCodec<String, String> {
+        override fun decodeKey(bytes: ByteBuffer): String = StringCodec.UTF8.decodeKey(bytes)
+
+        override fun decodeValue(bytes: ByteBuffer): String = StringCodec.UTF8.decodeValue(bytes)
+
+        override fun encodeKey(key: String): ByteBuffer = StringCodec.UTF8.encodeKey(key)
+
+        override fun encodeValue(value: String): ByteBuffer {
+            throw IllegalStateException("encode failure for test")
+        }
+    }
+
+    private fun assertWriteFailure(block: () -> Unit) {
+        val thrown = runCatching(block).exceptionOrNull()
+        thrown.shouldNotBeNull()
+        generateSequence(thrown) { it.cause }
+            .any { it is IllegalStateException && it.message == "encode failure for test" }
+            .shouldBeTrue()
     }
 }

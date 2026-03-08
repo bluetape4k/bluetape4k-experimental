@@ -9,7 +9,11 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.RestClient
+import org.springframework.web.client.toEntity
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.annotation.Transactional
@@ -32,9 +36,17 @@ class DemoApplicationTest {
     @Autowired
     private lateinit var productRepository: ProductRepository
 
+    @Value("\${local.server.port}")
+    private var port: Int = 0
+
+    private lateinit var client: RestClient
+
     @BeforeEach
     fun setup() {
         productRepository.deleteAll()
+        client = RestClient.builder()
+            .baseUrl("http://localhost:$port")
+            .build()
     }
 
     @Test
@@ -85,5 +97,39 @@ class DemoApplicationTest {
 
         val all = productRepository.findAll()
         all shouldHaveSize 3
+    }
+
+    @Test
+    fun `cache stats endpoint returns local cache metadata`() {
+        val product = productRepository.save(Product(name = "Mac Studio", price = 1_999.0))
+        productRepository.findById(product.id!!).orElseThrow()
+
+        val response = client.get()
+            .uri("/api/cache/stats")
+            .retrieve()
+            .toEntity<String>()
+
+        response.statusCode shouldBeEqualTo HttpStatus.OK
+        response.body.shouldNotBeNull()
+    }
+
+    @Test
+    fun `cache evict endpoint clears local cache only`() {
+        val product = productRepository.save(Product(name = "Vision Pro", price = 3_499.0))
+        productRepository.findById(product.id!!).orElseThrow()
+
+        val before = client.get()
+            .uri("/api/cache/stats")
+            .retrieve()
+            .toEntity<String>()
+        before.statusCode shouldBeEqualTo HttpStatus.OK
+
+        val evict = client.delete()
+            .uri("/api/cache/evict")
+            .retrieve()
+            .toEntity<String>()
+
+        evict.statusCode shouldBeEqualTo HttpStatus.OK
+        evict.body.shouldNotBeNull()
     }
 }

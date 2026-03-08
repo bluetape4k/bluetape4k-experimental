@@ -11,10 +11,12 @@ data class SerializerSizeMetric(
     val fingerprint: String,
 )
 
-fun main(args: Array<String>) {
-    val outputPath = args.firstOrNull()
-        ?: error("output path argument is required")
-
+/**
+ * 직렬화기별 payload 크기 스냅샷을 JSON 파일로 기록한다.
+ *
+ * `outputPath`에 디렉터리 구성이 없더라도 현재 작업 디렉터리에 안전하게 파일을 생성한다.
+ */
+fun writeSerializerMetricsSnapshot(outputPath: String) {
     val metrics = buildList {
         PayloadScale.entries.forEach { scale ->
             val payload = BenchmarkFixtures.samplePayload(scale)
@@ -34,7 +36,17 @@ fun main(args: Array<String>) {
     }
 
     val mapper = jacksonObjectMapper().registerKotlinModule()
-    val outputFile = File(outputPath)
-    outputFile.parentFile.mkdirs()
+    val outputFile = prepareOutputFile(outputPath)
     mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, metrics)
 }
+
+fun main(args: Array<String>) {
+    val outputPath = args.firstOrNull()
+        ?: error("output path argument is required")
+    writeSerializerMetricsSnapshot(outputPath)
+}
+
+internal fun prepareOutputFile(outputPath: String): File =
+    File(outputPath).also { file ->
+        file.parentFile?.mkdirs()
+    }

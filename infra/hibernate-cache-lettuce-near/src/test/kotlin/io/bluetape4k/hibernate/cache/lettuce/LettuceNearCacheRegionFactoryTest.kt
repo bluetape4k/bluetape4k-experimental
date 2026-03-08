@@ -1,6 +1,9 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
+import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.lettuce.core.RedisClient
+import io.lettuce.core.codec.StringCodec
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
@@ -68,5 +71,25 @@ class LettuceNearCacheRegionFactoryTest {
         props.localMaxSize shouldBeEqualTo 5000L
         props.useResp3 shouldBeEqualTo false
         props.regionTtls.containsKey("myRegion").shouldBeTrue()
+    }
+
+    @Test
+    fun `StorageAccess release는 공유 near cache를 닫지 않는다`() {
+        val redisClient = RedisClient.create("redis://${redis.host}:${redis.port}")
+
+        @Suppress("UNCHECKED_CAST")
+        val nearCache = LettuceNearCache(redisClient, StringCodec.UTF8) as LettuceNearCache<Any>
+
+        redisClient.use {
+            nearCache.use { cache ->
+                val storageAccess = LettuceNearCacheStorageAccess("region", cache)
+
+                storageAccess.release()
+
+                cache.isClosed.shouldBeFalse()
+                cache.put("key", "value")
+                cache.get("key") shouldBeEqualTo "value"
+            }
+        }
     }
 }

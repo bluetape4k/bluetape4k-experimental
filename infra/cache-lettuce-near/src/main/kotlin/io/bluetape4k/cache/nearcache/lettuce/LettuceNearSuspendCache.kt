@@ -6,6 +6,7 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.KeyScanCursor
+import io.lettuce.core.MSetExArgs
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
 import io.lettuce.core.ScanCursor
@@ -124,23 +125,26 @@ class LettuceNearSuspendCache<V: Any>(
      * write-through 후 async Redis GET을 fire-and-forget으로 실행해 CLIENT TRACKING을 활성화한다.
      */
     suspend fun put(key: String, value: V) {
-        frontCache.put(key, value)
+        key.requireNotBlank("key")
         setRedis(key, value)
-        // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
-        // write 경로 지연을 줄이기 위해 fire-and-forget으로 등록한다.
-        connection.async().get(config.redisKey(key))
+        frontCache.put(key, value)
+        registerTrackingKey(key)
     }
 
     /**
      * 여러 key-value를 한 번에 저장한다.
      */
     suspend fun putAll(map: Map<String, V>) {
-        frontCache.putAll(map)
-        val async = connection.async()
+        if (map.isEmpty()) return
+
+        val normalizedMap = LinkedHashMap<String, V>(map.size)
         map.forEach { (key, value) ->
-            setRedis(key, value)
-            async.get(config.redisKey(key))
+            key.requireNotBlank("key")
+            normalizedMap[key] = value
         }
+        setRedisBulk(normalizedMap)
+        frontCache.putAll(normalizedMap)
+        registerTrackingKeys(normalizedMap.keys)
     }
 
     /**
@@ -310,5 +314,28 @@ class LettuceNearSuspendCache<V: Any>(
         } else {
             commands.set(rKey, value)
         }
+    }
+
+    private fun registerTrackingKey(key: String) {
+        // CLIENT TRACKING 활성화: 다른 인스턴스가 이 키를 수정할 때 invalidation을 받을 수 있도록
+        // write 경로 지연을 줄이기 위해 fire-and-forget으로 등록한다.
+        connection.async().get(config.redisKey(key))
+    }
+
+    private suspend fun setRedisBulk(map: Map<String, V>) {
+        val redisMap = map.entries.associate { (key, value) -> config.redisKey(key) to value }
+        val ttl = config.redisTtl
+        if (ttl != null) {
+            val applied = commands.msetex(redisMap, MSetExArgs().ex(ttl))
+            require(applied == true) { "Redis MSETEX failed for cacheName=${config.cacheName}" }
+        } else {
+            val status = commands.mset(redisMap)
+            require(status == "OK") { "Redis MSET failed for cacheName=${config.cacheName}: $status" }
+        }
+    }
+
+    private fun registerTrackingKeys(keys: Collection<String>) {
+        if (keys.isEmpty()) return
+        connection.async().mget(*keys.map(config::redisKey).toTypedArray())
     }
 }

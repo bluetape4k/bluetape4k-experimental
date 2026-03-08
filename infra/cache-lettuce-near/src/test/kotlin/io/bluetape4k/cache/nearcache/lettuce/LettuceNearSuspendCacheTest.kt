@@ -1,8 +1,10 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
+import java.nio.ByteBuffer
 import java.time.Duration
 
 class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
@@ -53,6 +56,29 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
     }
 
     @Test
+    fun `put - Redis 쓰기 실패 시 local cache를 오염시키지 않는다`() = runTest {
+        val failingCache = LettuceNearSuspendCache(
+            redisClient = resp3Client,
+            codec = failingValueCodec(),
+            config = NearCacheConfig(cacheName = "failing-suspend-put-" + Base58.randomString(6)),
+        )
+
+        failingCache.use { broken ->
+            val thrown = runCatching {
+                broken.put("k", "boom")
+            }.exceptionOrNull()
+
+            thrown.shouldNotBeNull()
+            generateSequence(thrown) { it.cause }
+                .any { it is IllegalStateException && it.message == "encode failure for test" }
+                .shouldBeTrue()
+
+            broken.localSize() shouldBeEqualTo 0L
+            broken.containsKey("k").shouldBeFalse()
+        }
+    }
+
+    @Test
     fun `get - front miss 시 Redis에서 읽어 front populate`() = runTest {
         // prefix key로 직접 설정
         directCommands.set("${cache.cacheName}:remote-key", "remote-val")
@@ -71,6 +97,29 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
         result["b"] shouldBeEqualTo "2"
         result["c"] shouldBeEqualTo "3"
         result["x"].shouldBeNull()
+    }
+
+    @Test
+    fun `putAll - Redis 쓰기 실패 시 local cache를 오염시키지 않는다`() = runTest {
+        val failingCache = LettuceNearSuspendCache(
+            redisClient = resp3Client,
+            codec = failingValueCodec(),
+            config = NearCacheConfig(cacheName = "failing-suspend-put-all-" + Base58.randomString(6)),
+        )
+
+        failingCache.use { broken ->
+            val thrown = runCatching {
+                broken.putAll(mapOf("k1" to "boom"))
+            }.exceptionOrNull()
+
+            thrown.shouldNotBeNull()
+            generateSequence(thrown) { it.cause }
+                .any { it is IllegalStateException && it.message == "encode failure for test" }
+                .shouldBeTrue()
+
+            broken.localSize() shouldBeEqualTo 0L
+            broken.get("k1").shouldBeNull()
+        }
     }
 
     @Test
@@ -222,5 +271,17 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
         val c = LettuceNearSuspendCache(resp3Client)
         c.close()
         c.close()
+    }
+
+    private fun failingValueCodec(): RedisCodec<String, String> = object : RedisCodec<String, String> {
+        override fun decodeKey(bytes: ByteBuffer): String = StringCodec.UTF8.decodeKey(bytes)
+
+        override fun decodeValue(bytes: ByteBuffer): String = StringCodec.UTF8.decodeValue(bytes)
+
+        override fun encodeKey(key: String): ByteBuffer = StringCodec.UTF8.encodeKey(key)
+
+        override fun encodeValue(value: String): ByteBuffer {
+            throw IllegalStateException("encode failure for test")
+        }
     }
 }

@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/products")
+/**
+ * Hibernate second-level cache 예제를 위한 상품 CRUD API이다.
+ */
 class ProductController(private val productRepository: ProductRepository) {
 
     @GetMapping

@@ -46,7 +46,13 @@ class LettuceNearCacheStorageAccess(
         nearCache.clearAll()
     }
 
+    /**
+     * [LettuceNearCache] 인스턴스의 수명은 [LettuceNearCacheRegionFactory]가 관리한다.
+     *
+     * Hibernate가 region access 단위를 정리하더라도, 공유 cache를 여기서 닫으면
+     * 같은 region을 재사용하는 다른 access 인스턴스가 즉시 깨질 수 있으므로 no-op으로 둔다.
+     */
     override fun release() {
-        nearCache.close()
+        // no-op: RegionFactory가 공유 near cache lifecycle을 관리한다.
     }
 }

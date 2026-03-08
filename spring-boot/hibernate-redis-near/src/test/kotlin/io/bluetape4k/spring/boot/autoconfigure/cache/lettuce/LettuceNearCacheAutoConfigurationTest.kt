@@ -1,5 +1,7 @@
 package io.bluetape4k.spring.boot.autoconfigure.cache.lettuce
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import jakarta.persistence.EntityManagerFactory
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -10,12 +12,25 @@ import org.springframework.beans.factory.getBeansOfType
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
+import java.util.function.Supplier
 
 class LettuceNearCacheAutoConfigurationTest {
 
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(
             AutoConfigurations.of(LettuceNearCacheHibernateAutoConfiguration::class.java)
+        )
+
+    private val metricsContextRunner = ApplicationContextRunner()
+        .withConfiguration(
+            AutoConfigurations.of(
+                LettuceNearCacheMetricsAutoConfiguration::class.java,
+                LettuceNearCacheActuatorAutoConfiguration::class.java,
+            )
+        )
+        .withBean(
+            EntityManagerFactory::class.java,
+            Supplier { org.mockito.Mockito.mock(EntityManagerFactory::class.java) }
         )
 
     @Test
@@ -91,10 +106,36 @@ class LettuceNearCacheAutoConfigurationTest {
             val props = context.getBean<LettuceNearCacheSpringProperties>()
             props.enabled.shouldBeTrue()
             props.redisUri shouldBeEqualTo "redis://localhost:6379"
-            props.codec shouldBeEqualTo "zstdfory"
+            props.codec shouldBeEqualTo "lzfory"
             props.useResp3.shouldBeTrue()
             props.local.maxSize shouldBeEqualTo 10_000L
             props.metrics.enabled.shouldBeTrue()
         }
+    }
+
+    @Test
+    fun `metrics auto configuration registers binder when registry exists`() {
+        metricsContextRunner
+            .withBean(SimpleMeterRegistry::class.java, Supplier { SimpleMeterRegistry() })
+            .run { context ->
+                context.getBeansOfType<LettuceNearCacheMetricsBinder>().shouldHaveSize(1)
+            }
+    }
+
+    @Test
+    fun `actuator auto configuration registers endpoint when entity manager exists`() {
+        metricsContextRunner.run { context ->
+            context.getBeansOfType<LettuceNearCacheActuatorEndpoint>().shouldHaveSize(1)
+        }
+    }
+
+    @Test
+    fun `metrics auto configuration backs off when disabled`() {
+        metricsContextRunner
+            .withBean(SimpleMeterRegistry::class.java, Supplier { SimpleMeterRegistry() })
+            .withPropertyValues("bluetape4k.cache.lettuce-near.metrics.enabled=false")
+            .run { context ->
+                context.getBeansOfType<LettuceNearCacheMetricsBinder>().shouldBeEmpty()
+            }
     }
 }

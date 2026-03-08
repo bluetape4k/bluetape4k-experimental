@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/cache")
+/**
+ * Hibernate near-cache 상태를 조회하고 local(L1) cache만 비우는 관리용 API이다.
+ *
+ * 이 컨트롤러의 eviction은 Redis L2를 건드리지 않는다.
+ */
 class CacheController(private val entityManagerFactory: EntityManagerFactory) {
 
     data class CacheStats(
@@ -45,7 +50,7 @@ class CacheController(private val entityManagerFactory: EntityManagerFactory) {
         val cache = factory.getCaches()[region]
             ?: return ResponseEntity.notFound().build()
         cache.clearLocal()
-        return ResponseEntity.ok("Evicted local cache for region: $region")
+        return ResponseEntity.ok("Evicted local cache (L1 only) for region: $region")
     }
 
     @DeleteMapping("/evict")
@@ -53,7 +58,7 @@ class CacheController(private val entityManagerFactory: EntityManagerFactory) {
         val factory = getRegionFactory()
             ?: return ResponseEntity.internalServerError().body("RegionFactory not available")
         factory.getCaches().values.forEach { it.clearLocal() }
-        return ResponseEntity.ok("Evicted all local caches (${factory.getCaches().size} regions)")
+        return ResponseEntity.ok("Evicted all local caches (L1 only, ${factory.getCaches().size} regions)")
     }
 
     private fun getRegionFactory(): LettuceNearCacheRegionFactory? {
