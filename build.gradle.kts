@@ -124,7 +124,7 @@ subprojects {
                 "-Xshare:off",
                 "-Xms2G",
                 "-Xmx4G",
-                "-XX:+UseZGC",
+                "-XX:+UseG1GC",
                 "-XX:+UnlockExperimentalVMOptions",
                 "-XX:+EnableDynamicAgentLoading",
                 "--enable-preview",
