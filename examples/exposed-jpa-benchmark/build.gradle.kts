@@ -21,10 +21,8 @@ dependencies {
 
     // DB - PostgreSQL (Testcontainers로 자동 시작)
     implementation(Libs.bluetape4k_testcontainers)
-    // PostgreSQLContainer 컴파일 가시성을 위해 버전을 명시 (BOM이 2.0.3을 강제하지만 해당 버전은 postgresql 모듈이 없음)
-    implementation("org.testcontainers:postgresql") {
-        version { strictly("1.21.4") }
-    }
+    implementation(Libs.testcontainers)
+    implementation(Libs.testcontainers_postgresql)
     runtimeOnly(Libs.postgresql_driver)
     // H2 fallback (테스트용)
     runtimeOnly(Libs.h2_v2)

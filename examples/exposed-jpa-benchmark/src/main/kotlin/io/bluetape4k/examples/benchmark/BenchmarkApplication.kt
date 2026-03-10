@@ -14,8 +14,8 @@ fun main(args: Array<String>) {
     // PostgreSQL Testcontainers 컨테이너를 Spring 컨텍스트 초기화 전에 시작
     val postgres = PostgreSQLServer.Launcher.postgres
     System.setProperty("spring.datasource.url", postgres.jdbcUrl)
-    System.setProperty("spring.datasource.username", postgres.username)
-    System.setProperty("spring.datasource.password", postgres.password)
+    System.setProperty("spring.datasource.username", postgres.username.orEmpty())
+    System.setProperty("spring.datasource.password", postgres.password.orEmpty())
     System.setProperty("spring.datasource.driver-class-name", PostgreSQLServer.DRIVER_CLASS_NAME)
 
     runApplication<BenchmarkApplication>(*args)
