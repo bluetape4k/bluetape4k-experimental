@@ -50,3 +50,4 @@ local.properties
 .DS_Store
 Thumbs.db
 /.profileconfig.json
+.worktrees/
