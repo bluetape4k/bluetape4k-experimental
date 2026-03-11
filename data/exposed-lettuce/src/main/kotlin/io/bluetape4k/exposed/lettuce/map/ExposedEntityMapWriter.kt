@@ -1,82 +1,67 @@
 package io.bluetape4k.exposed.lettuce.map
 
-import org.jetbrains.exposed.v1.dao.Entity
-import org.jetbrains.exposed.v1.dao.EntityClass
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import io.github.resilience4j.retry.RetryConfig
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.statements.UpdateStatement
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Duration
 
 /**
- * Exposed DAO [EntityClass]를 사용해 DB에 엔티티를 upsert/delete하는 [MapWriter] 구현체.
+ * Exposed DSL을 사용해 DB에 엔티티를 upsert/delete하는 [EntityMapWriter] 구현체.
  *
- * - [write]: 트랜잭션 내에서 [upsert] 함수를 호출해 저장한다.
- * - [delete]: 트랜잭션 내에서 [EntityClass.findById] + [Entity.delete]를 호출한다.
- *
- * @param E Exposed Entity 타입
- * @param ID Entity ID 타입
- * @param V 캐시에 저장된 값 타입
- * @param entityClass Exposed EntityClass (companion object)
- * @param upsert (ID, V) → Unit: ID와 값을 받아 DB에 저장(insert or update)하는 함수
+ * @param ID PK 타입
+ * @param E 엔티티(DTO) 타입
+ * @param table Exposed [IdTable]
+ * @param writeMode 쓰기 전략 ([WriteMode])
+ * @param updateEntity UPDATE 시 컬럼 매핑 함수
+ * @param insertEntity INSERT 시 컬럼 매핑 함수
+ * @param chunkSize batchInsert 청크 크기
+ * @param retryAttempts 재시도 횟수
+ * @param retryInterval 재시도 간격
  */
-class ExposedEntityMapWriter<E: Entity<ID>, ID: Any, V: Any>(
-    private val entityClass: EntityClass<ID, E>,
-    private val upsert: (ID, V) -> Unit,
-): MapWriter<ID, V> {
+class ExposedEntityMapWriter<ID : Comparable<ID>, E : Any>(
+    private val table: IdTable<ID>,
+    private val writeMode: WriteMode,
+    private val updateEntity: (UpdateStatement, E) -> Unit,
+    private val insertEntity: (BatchInsertStatement, E) -> Unit,
+    private val chunkSize: Int = 1000,
+    retryAttempts: Int = 3,
+    retryInterval: Duration = Duration.ofMillis(100),
+) : EntityMapWriter<ID, E>(
+    RetryConfig.custom<Any>()
+        .maxAttempts(retryAttempts)
+        .waitDuration(retryInterval)
+        .build()
+) {
+    override fun writeEntities(map: Map<ID, E>) {
+        if (map.isEmpty() || writeMode == WriteMode.NONE) return
 
-    /**
-     * [key], [value]를 DB에 저장한다 (insert or update).
-     */
-    override fun write(key: ID, value: V) {
-        transaction {
-            upsert(key, value)
+        // WRITE_THROUGH, WRITE_BEHIND 모두 upsert (duplicate key 방지)
+        val existingIds = table.select(table.id)
+            .where { table.id inList map.keys }
+            .map { it[table.id].value }
+            .toSet()
+
+        existingIds.forEach { id ->
+            table.update({ table.id eq id }) { updateEntity(it, map[id]!!) }
         }
-    }
 
-    /**
-     * [key]에 해당하는 DB 행을 삭제한다.
-     * 엔티티가 없으면 아무 작업도 하지 않는다.
-     */
-    override fun delete(key: ID) {
-        transaction {
-            entityClass.findById(key)?.delete()
-        }
-    }
-
-    /**
-     * 여러 항목을 단일 트랜잭션 내에서 일괄 저장한다.
-     */
-    override fun writeAll(entries: Map<ID, V>) {
-        if (entries.isEmpty()) return
-        transaction {
-            entries.forEach { (k, v) -> upsert(k, v) }
-        }
-    }
-
-    /**
-     * 여러 항목을 단일 트랜잭션 내에서 일괄 삭제한다.
-     */
-    override fun deleteAll(keys: Iterable<ID>) {
-        val keyList = keys.toList()
-        if (keyList.isEmpty()) return
-        transaction {
-            keyList.forEach { key ->
-                entityClass.findById(key)?.delete()
+        val newIds = map.keys - existingIds
+        if (newIds.isNotEmpty()) {
+            newIds.chunked(chunkSize).forEach { chunk ->
+                table.batchInsert(chunk) { id -> insertEntity(this, map[id]!!) }
             }
         }
     }
-}
 
-/**
- * [ExposedEntityMapWriter] DSL 생성 함수.
- *
- * ```kotlin
- * val writer = exposedEntityMapWriter(UserEntity) { id, dto ->
- *     val entity = UserEntity.findById(id) ?: UserEntity.new(id) {}
- *     entity.name = dto.name
- *     entity.email = dto.email
- * }
- * ```
- */
-fun <E: Entity<ID>, ID: Any, V: Any> exposedEntityMapWriter(
-    entityClass: EntityClass<ID, E>,
-    upsert: (ID, V) -> Unit,
-): ExposedEntityMapWriter<E, ID, V> =
-    ExposedEntityMapWriter(entityClass, upsert)
+    override fun deleteEntities(keys: Collection<ID>) {
+        if (keys.isEmpty()) return
+        table.deleteWhere { table.id inList keys }
+    }
+}
