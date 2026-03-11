@@ -53,7 +53,9 @@ class LettuceLoadedMap<K : Any, V : Any>(
     private val commands: RedisCommands<String, V> = connection.sync()
 
     // Fix 5: lazy 초기화 - strConnection은 dead letter 기록 시에만 사용
-    private val strConnection: StatefulRedisConnection<String, String> by lazy { client.connect(StringCodec.UTF8) }
+    // isInitialized() 체크를 위해 Lazy 참조 명시적 보관
+    private val lazyStrConnection = lazy { client.connect(StringCodec.UTF8) }
+    private val strConnection: StatefulRedisConnection<String, String> by lazyStrConnection
     private val strCommands: RedisCommands<String, String> by lazy { strConnection.sync() }
 
     private val ttlSeconds = config.ttl.seconds
@@ -213,7 +215,8 @@ class LettuceLoadedMap<K : Any, V : Any>(
             }
             sched.awaitTermination(1, TimeUnit.SECONDS)
         }
-        strConnection.close()
+        // lazy 초기화된 경우에만 close (불필요한 연결 생성 방지)
+        if (lazyStrConnection.isInitialized()) strConnection.close()
         connection.close()
     }
 }
