@@ -11,7 +11,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 절대 하지 말 것
 - `./gradlew build` 전체 빌드 금지 (시간이 너무 걸림) → 항상 `./gradlew :<module>:build` 사용
 - 지시 없이 특정 모듈 외부의 파일 수정 금지
-- `git push` 금지 (항상 사람이 직접 수행)
 - 테스트 없이 implementation 코드만 작성하지 말 것
 
 ### 작업 전 확인 필요
