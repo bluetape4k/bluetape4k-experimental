@@ -48,6 +48,8 @@ class ExposedEntityMapWriter<ID : Comparable<ID>, E : Any>(
             .map { it[table.id].value }
             .toSet()
 
+        // 주의: 기존 엔티티는 건별 UPDATE (N+1). 배치 크기가 작은(< 50) 경우에 적합.
+        // 대용량 업데이트가 필요하면 upsert/INSERT ... ON CONFLICT 구문 사용 권장.
         existingIds.forEach { id ->
             table.update({ table.id eq id }) { updateEntity(it, map[id]!!) }
         }

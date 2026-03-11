@@ -17,6 +17,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -65,6 +66,11 @@ class AbstractJdbcLettuceRepositoryTest {
         transaction { ItemTable.deleteAll() }
         repo = ItemRepository(redisClient)
         repo.clearCache()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        if (::repo.isInitialized) repo.close()
     }
 
     @Test
@@ -144,8 +150,16 @@ class AbstractJdbcLettuceRepositoryTest {
         // cache에 저장 → write-behind 큐에 적재
         wbRepo.save(created.id, created)
 
-        // flush 대기 (write-behind delay 기본 1000ms)
-        Thread.sleep(2000L)
+        // flush 대기: 폴링으로 최대 5초 대기 (write-behind delay 기본 1000ms)
+        val itemId = created.id
+        val deadline = System.currentTimeMillis() + 5000L
+        while (System.currentTimeMillis() < deadline) {
+            val found = transaction {
+                ItemTable.selectAll().where { ItemTable.id eq itemId }.singleOrNull()
+            }
+            if (found != null) break
+            Thread.sleep(100L)
+        }
 
         // DB에서 직접 조회하여 반영 확인
         val dbRow = transaction {

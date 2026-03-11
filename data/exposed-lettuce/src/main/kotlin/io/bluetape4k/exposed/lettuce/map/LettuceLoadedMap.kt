@@ -6,6 +6,8 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.logging.error
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodec
 import io.lettuce.core.RedisClient
+import io.lettuce.core.ScanArgs
+import io.lettuce.core.ScanCursor
 import io.lettuce.core.SetArgs
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
@@ -40,7 +42,9 @@ class LettuceLoadedMap<K : Any, V : Any>(
     private val keySerializer: (K) -> String = { it.toString() },
 ) : Closeable {
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private const val MAX_DEAD_LETTER_RETRY = 3
+    }
 
     @Suppress("UNCHECKED_CAST")
     private val codec = LettuceBinaryCodec<V>(BinarySerializers.LZ4Fory)
@@ -48,12 +52,14 @@ class LettuceLoadedMap<K : Any, V : Any>(
     private val connection: StatefulRedisConnection<String, V> = client.connect(codec)
     private val commands: RedisCommands<String, V> = connection.sync()
 
-    private val strConnection: StatefulRedisConnection<String, String> = client.connect(StringCodec.UTF8)
-    private val strCommands: RedisCommands<String, String> = strConnection.sync()
+    // Fix 5: lazy 초기화 - strConnection은 dead letter 기록 시에만 사용
+    private val strConnection: StatefulRedisConnection<String, String> by lazy { client.connect(StringCodec.UTF8) }
+    private val strCommands: RedisCommands<String, String> by lazy { strConnection.sync() }
 
     private val ttlSeconds = config.ttl.seconds
 
-    private val writeBehindQueue: LinkedBlockingDeque<Pair<K, V>>? =
+    // Fix 1: Triple<K, V, Int> - retryCount 포함
+    private val writeBehindQueue: LinkedBlockingDeque<Triple<K, V, Int>>? =
         if (config.writeMode == WriteMode.WRITE_BEHIND)
             LinkedBlockingDeque(config.writeBehindQueueCapacity)
         else null
@@ -88,29 +94,45 @@ class LettuceLoadedMap<K : Any, V : Any>(
     }
 
     operator fun set(key: K, value: V) {
-        commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
+        // Fix 2: WRITE_BEHIND는 큐 offer 먼저, NONE/WRITE_THROUGH는 Redis 먼저
         when (config.writeMode) {
-            WriteMode.WRITE_THROUGH -> writer?.write(mapOf(key to value))
+            WriteMode.NONE -> {
+                commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
+            }
+            WriteMode.WRITE_THROUGH -> {
+                commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
+                writer?.write(mapOf(key to value))
+            }
             WriteMode.WRITE_BEHIND -> {
                 val queue = writeBehindQueue ?: return
-                if (!queue.offer(key to value)) {
+                // 먼저 큐에 offer 시도 (Triple with retryCount=0)
+                if (!queue.offer(Triple(key, value, 0))) {
                     throw IllegalStateException(
                         "Write-behind 큐 포화 (capacity=${config.writeBehindQueueCapacity})"
                     )
                 }
+                // 큐 삽입 성공 후 Redis 쓰기
+                commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
             }
-            WriteMode.NONE -> {}
         }
     }
 
     fun getAll(keys: Set<K>): Map<K, V> {
         if (keys.isEmpty()) return emptyMap()
+        val keyList = keys.toList()
+        val redisKeys = keyList.map { redisKey(it) }.toTypedArray()
+
+        // Fix 4: MGET으로 한번에 조회
+        val values = runCatching { commands.mget(*redisKeys) }.getOrNull() ?: emptyList()
+
         val result = mutableMapOf<K, V>()
-        val missedKeys = mutableSetOf<K>()
-        for (key in keys) {
-            val value = runCatching { commands.get(redisKey(key)) }.getOrNull()
-            if (value != null) result[key] = value else missedKeys.add(key)
+        val missedKeys = mutableListOf<K>()
+
+        values.forEachIndexed { i, kv ->
+            if (kv != null && kv.hasValue()) result[keyList[i]] = kv.value
+            else missedKeys.add(keyList[i])
         }
+
         if (missedKeys.isNotEmpty() && loader != null) {
             for (key in missedKeys) {
                 val value = loader.load(key) ?: continue
@@ -134,29 +156,49 @@ class LettuceLoadedMap<K : Any, V : Any>(
     }
 
     fun clear() {
-        val keys = commands.keys("${config.keyPrefix}:*")
-        if (keys.isNotEmpty()) commands.del(*keys.toTypedArray())
+        // Fix 3: KEYS 대신 SCAN 사용 (프로덕션 안전)
+        val pattern = "${config.keyPrefix}:*"
+        val scanArgs = ScanArgs.Builder.matches(pattern).limit(100)
+        var cursor: ScanCursor = ScanCursor.INITIAL
+        do {
+            val scanResult = commands.scan(cursor, scanArgs)
+            if (scanResult.keys.isNotEmpty()) {
+                commands.del(*scanResult.keys.toTypedArray())
+            }
+            cursor = scanResult
+        } while (!cursor.isFinished)
     }
 
     private fun flushWriteBehindQueue() {
         val queue = writeBehindQueue ?: return
-        val batch = mutableMapOf<K, V>()
+        // Fix 1: Triple<K, V, Int> - retryCount 추적
+        val entries = mutableListOf<Triple<K, V, Int>>()
         var count = 0
         while (count < config.writeBehindBatchSize) {
             val entry = queue.poll() ?: break
-            batch[entry.first] = entry.second
+            entries.add(entry)
             count++
         }
-        if (batch.isNotEmpty()) {
-            runCatching { writer?.write(batch) }
-                .onFailure { e ->
-                    log.error(e) { "Write-behind flush 실패. Dead letter 기록: ${batch.keys}" }
+        if (entries.isEmpty()) return
+
+        val batch = entries.associate { it.first to it.second }
+        runCatching { writer?.write(batch) }
+            .onFailure { e ->
+                val retryCount = entries.first().third + 1
+                log.error(e) { "Write-behind flush 실패 (attempt $retryCount): ${batch.keys}" }
+                if (retryCount < MAX_DEAD_LETTER_RETRY) {
+                    // 재시도: 큐 앞에 재삽입
+                    entries.forEach { (k, v, _) ->
+                        queue.offerFirst(Triple(k, v, retryCount))
+                    }
+                } else {
+                    // Dead letter 기록 후 폐기
                     runCatching {
                         val deadLetterKey = "${config.keyPrefix}:dead-letter"
                         strCommands.lpush(deadLetterKey, *batch.keys.map { keySerializer(it) }.toTypedArray())
                     }.onFailure { ex -> log.error(ex) { "Dead letter 기록 실패" } }
                 }
-        }
+            }
     }
 
     override fun close() {
