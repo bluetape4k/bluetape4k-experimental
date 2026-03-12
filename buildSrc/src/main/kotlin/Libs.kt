@@ -67,7 +67,7 @@ object Versions {
     // Java 21, Kotlin 2.3 이상에서 사용하세요
     const val bluetape4k = "1.5.0-SNAPSHOT"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
-    const val kotlin = "2.3.20-RC2"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+    const val kotlin = "2.3.20-RC3"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
     const val kotlinx_atomicfu = "0.31.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
@@ -115,7 +115,7 @@ object Versions {
     const val httpcore5 = "5.4"    // https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
     const val retrofit2 = "3.0.0"   // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
     const val okhttp3 = "5.3.2"     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-    const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
+    const val okio = "3.17.0"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
     const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
