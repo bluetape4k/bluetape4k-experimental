@@ -46,6 +46,42 @@ This project uses **Gradle with Kotlin DSL** (`build.gradle.kts`, `settings.grad
 ./gradlew check
 ```
 
+## Claude 작업 지침
+
+- Rate Limit 이 다가오면 Memory.md 에 현재까지의 Context 를 저장해서 토큰을 절약할 것
+- 작업 시 Python 코드 제작은 자제하고, Read/Edit 방식으로 작업할 것
+- Think Before Coding — 모르면 추측하지 말고 물어봐
+- Simplicity First — 요청한 것만 만들어. 200줄이 50줄로 되면 다시 써
+- Surgical Changes — 옆 코드 "개선"하지 마. 변경된 모든 줄이 요청으로 추적 가능해야 함
+- Goal-Driven Execution — "버그 고쳐" 대신 "버그 재현 테스트 쓰고 통과시켜"
+
+### CLI 도구 사용 규칙 (Rust 기반 현대 도구 우선)
+
+- **파일 탐색**: `find` 대신 `fd` 사용 (예: `fd -e kt -t f`)
+- **텍스트 검색**: `grep` 대신 `rg` (ripgrep) 사용 (예: `rg "패턴" --type kotlin`)
+- **파일 내용 확인**: `cat` 대신 `bat` 사용 (예: `bat src/Foo.kt`)
+- **디렉토리 목록**: `ls` 대신 `eza` 사용 (예: `eza -la --git`)
+- **코드 구조 검색/리팩토링**: `ast-grep` 적극 활용 (예: `ast-grep -p 'fun $NAME($$$)' -l kotlin`)
+- **JSON 파싱**: `jq` 사용 (예: `curl ... | jq '.data[]'`)
+- **YAML 파싱**: `yq` 사용 (예: `yq '.dependencies' build.gradle.yaml`)
+- **GitHub 작업**: `gh` CLI를 비대화형 모드로 사용 (예: `gh pr list --json number,title`,
+  `gh issue create --title "..." --body "..."`)
+- **Python 린팅/포매팅**: `ruff` 사용 (예: `ruff check .`, `ruff format .`)
+- **모든 외부 CLI 명령**: 비대화형 플래그(`--yes`, `--quiet`, `--no-input`) 및 JSON 출력(`--format json`, `--json`) 강제 적용
+
+### Git
+
+```bash
+# 저장소 상태 요약
+./bin/repo-status
+
+# diff 요약
+./bin/repo-diff
+
+# 테스트/Gradle 출력 요약
+./bin/repo-test-summary -- ./gradlew :bluetape4k-coroutines:test
+```
+
 ## Architecture
 
 **Kotlin 2.3 + Java 25 + Spring Boot 4** 기반의 멀티모듈 Gradle 프로젝트입니다. publishing 없이 실험 전용으로 구성되어 있습니다.
