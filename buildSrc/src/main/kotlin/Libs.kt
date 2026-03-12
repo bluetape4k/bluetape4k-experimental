@@ -67,7 +67,7 @@ object Versions {
     // Java 21, Kotlin 2.3 이상에서 사용하세요
     const val bluetape4k = "1.5.0-SNAPSHOT"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
-    const val kotlin = "2.3.10"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+    const val kotlin = "2.3.20-RC2"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
     const val kotlinx_atomicfu = "0.31.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
