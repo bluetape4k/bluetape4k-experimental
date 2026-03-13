@@ -38,25 +38,28 @@ import java.util.concurrent.ConcurrentHashMap
  * 업데이트 시 캐시 항목을 제거하고 다음 읽기 시 DB에서 재로드.
  */
 class LettuceNearCacheRegionFactory : RegionFactoryTemplate() {
-
     private lateinit var redisClient: RedisClient
     private lateinit var properties: LettuceNearCacheProperties
     private lateinit var codec: LettuceBinaryCodec<Any>
     private val cacheMap = ConcurrentHashMap<String, LettuceNearCache<Any>>()
 
-    override fun prepareForUse(settings: SessionFactoryOptions, configValues: Map<String, Any>) {
+    override fun prepareForUse(
+        settings: SessionFactoryOptions,
+        configValues: Map<String, Any>,
+    ) {
         properties = LettuceNearCacheProperties.from(configValues)
         codec = properties.createCodec()
 
-        redisClient = RedisClient.create(properties.redisUri).apply {
-            if (properties.useResp3) {
-                setOptions(
-                    ClientOptions.builder()
-                        .protocolVersion(ProtocolVersion.RESP3)
-                        .build()
-                )
+        redisClient =
+            RedisClient.create(properties.redisUri).apply {
+                if (properties.useResp3) {
+                    options =
+                        ClientOptions
+                            .builder()
+                            .protocolVersion(ProtocolVersion.RESP3)
+                            .build()
+                }
             }
-        }
     }
 
     override fun releaseFromUse() {
@@ -71,8 +74,7 @@ class LettuceNearCacheRegionFactory : RegionFactoryTemplate() {
      * 현재 관리 중인 모든 region의 [LettuceNearCache] 인스턴스 맵을 반환한다.
      * Spring Boot Auto-Configuration에서 Metrics/Actuator 연동 시 사용된다.
      */
-    fun getCaches(): Map<String, LettuceNearCache<Any>> =
-        Collections.unmodifiableMap(cacheMap)
+    fun getCaches(): Map<String, LettuceNearCache<Any>> = Collections.unmodifiableMap(cacheMap)
 
     override fun createDomainDataStorageAccess(
         regionConfig: DomainDataRegionConfig,
@@ -90,9 +92,10 @@ class LettuceNearCacheRegionFactory : RegionFactoryTemplate() {
     ): StorageAccess = createStorageAccess(regionName)
 
     private fun createStorageAccess(regionName: String): LettuceNearCacheStorageAccess {
-        val nearCache = cacheMap.computeIfAbsent(regionName) {
-            LettuceNearCache(redisClient, codec, properties.buildNearCacheConfig(regionName))
-        }
+        val nearCache =
+            cacheMap.computeIfAbsent(regionName) {
+                LettuceNearCache(redisClient, codec, properties.buildNearCacheConfig(regionName))
+            }
         return LettuceNearCacheStorageAccess(regionName, nearCache)
     }
 }

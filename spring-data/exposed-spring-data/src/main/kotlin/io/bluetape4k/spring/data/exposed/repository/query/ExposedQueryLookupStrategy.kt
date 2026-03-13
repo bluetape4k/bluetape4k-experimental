@@ -19,19 +19,19 @@ import java.lang.reflect.Method
 class ExposedQueryLookupStrategy(
     private val key: QueryLookupStrategy.Key,
 ) : QueryLookupStrategy {
-
     override fun resolveQuery(
         method: Method,
         metadata: RepositoryMetadata,
-        _factory: ProjectionFactory,
-        _namedQueries: NamedQueries,
+        factory: ProjectionFactory,
+        namedQueries: NamedQueries,
     ): RepositoryQuery {
-        val queryMethod = ExposedQueryMethod(method, metadata, _factory)
+        val queryMethod = ExposedQueryMethod(method, metadata, factory)
 
         @Suppress("UNCHECKED_CAST")
-        val entityInformation = ExposedEntityInformationImpl(
-            metadata.domainType as Class<Entity<Any>>
-        )
+        val entityInformation =
+            ExposedEntityInformationImpl(
+                metadata.domainType as Class<Entity<Any>>,
+            )
 
         return when (key) {
             QueryLookupStrategy.Key.USE_DECLARED_QUERY -> {
@@ -40,17 +40,22 @@ class ExposedQueryLookupStrategy(
                 }
                 DeclaredExposedQuery(queryMethod, entityInformation)
             }
-            QueryLookupStrategy.Key.CREATE ->
-                PartTreeExposedQuery(queryMethod, entityInformation)
 
-            QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND ->
-                if (queryMethod.isAnnotatedQuery) DeclaredExposedQuery(queryMethod, entityInformation)
-                else PartTreeExposedQuery(queryMethod, entityInformation)
+            QueryLookupStrategy.Key.CREATE -> {
+                PartTreeExposedQuery(queryMethod, entityInformation)
+            }
+
+            QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND -> {
+                if (queryMethod.isAnnotatedQuery) {
+                    DeclaredExposedQuery(queryMethod, entityInformation)
+                } else {
+                    PartTreeExposedQuery(queryMethod, entityInformation)
+                }
+            }
         }
     }
 
     companion object {
-        fun create(key: QueryLookupStrategy.Key): ExposedQueryLookupStrategy =
-            ExposedQueryLookupStrategy(key)
+        fun create(key: QueryLookupStrategy.Key): ExposedQueryLookupStrategy = ExposedQueryLookupStrategy(key)
     }
 }

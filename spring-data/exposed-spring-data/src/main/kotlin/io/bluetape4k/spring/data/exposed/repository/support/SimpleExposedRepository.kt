@@ -27,6 +27,7 @@ import java.util.stream.Stream
  * [ExposedRepository]의 기본 CRUD 구현체입니다.
  * 모든 Exposed DAO 연산은 트랜잭션 내에서 실행됩니다.
  */
+
 /** Exposed Spring Boot 4 Starter가 등록하는 SpringTransactionManager 빈 이름 */
 internal const val EXPOSED_TRANSACTION_MANAGER = "springTransactionManager"
 
@@ -36,7 +37,6 @@ internal const val EXPOSED_TRANSACTION_MANAGER = "springTransactionManager"
 class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     private val entityInformation: ExposedEntityInformation<E, ID>,
 ) : ExposedRepository<E, ID> {
-
     private val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
     private val table: IdTable<ID> get() = entityInformation.table
 
@@ -52,15 +52,14 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     override fun findById(id: ID): Optional<E> = Optional.ofNullable(entityClass.findById(id))
 
-    override fun existsById(id: ID): Boolean =
-        entityClass.findById(id) != null
+    override fun existsById(id: ID): Boolean = entityClass.findById(id) != null
 
-    override fun findAll(): List<E> =
-        entityClass.all().toList()
+    override fun findAll(): List<E> = entityClass.all().toList()
 
     override fun findAll(sort: Sort): List<E> {
         if (sort.isUnsorted) return findAll()
-        return entityClass.all()
+        return entityClass
+            .all()
             .orderBy(*sort.toExposedOrderBy(table))
             .toList()
     }
@@ -112,10 +111,11 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
             query.orderBy(*pageable.sort.toExposedOrderBy(table))
         }
         val total = entityClass.count()
-        val content = query
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .toList()
+        val content =
+            query
+                .limit(pageable.pageSize)
+                .offset(pageable.offset)
+                .toList()
         return PageImpl(content, pageable, total)
     }
 
@@ -123,32 +123,33 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     // ExposedRepository DSL extensions
     // ============================================================
 
-    override fun findAll(op: () -> Op<Boolean>): List<E> =
-        entityClass.find(op).toList()
+    override fun findAll(op: () -> Op<Boolean>): List<E> = entityClass.find(op).toList()
 
-    override fun count(op: () -> Op<Boolean>): Long =
-        entityClass.find(op).count()
+    override fun count(op: () -> Op<Boolean>): Long = entityClass.find(op).count()
 
-    override fun exists(op: () -> Op<Boolean>): Boolean =
-        !entityClass.find(op).empty()
+    override fun exists(op: () -> Op<Boolean>): Boolean = !entityClass.find(op).empty()
 
     // ============================================================
     // QueryByExampleExecutor
     // ============================================================
 
-    override fun <S : E> findOne(example: Example<S>): Optional<S> =
-        Optional.ofNullable(findByExample(example).firstOrNull())
+    override fun <S : E> findOne(example: Example<S>): Optional<S> = Optional.ofNullable(findByExample(example).firstOrNull())
 
-    override fun <S : E> findAll(example: Example<S>): List<S> =
-        findByExample(example)
+    override fun <S : E> findAll(example: Example<S>): List<S> = findByExample(example)
 
-    override fun <S : E> findAll(example: Example<S>, sort: Sort): List<S> {
+    override fun <S : E> findAll(
+        example: Example<S>,
+        sort: Sort,
+    ): List<S> {
         val results = findByExample(example)
         if (sort.isUnsorted) return results
         return results.sortedWith(ExampleSortComparator(sort))
     }
 
-    override fun <S : E> findAll(example: Example<S>, pageable: Pageable): Page<S> {
+    override fun <S : E> findAll(
+        example: Example<S>,
+        pageable: Pageable,
+    ): Page<S> {
         val all = findByExample(example)
         val sorted = if (pageable.sort.isSorted) all.sortedWith(ExampleSortComparator(pageable.sort)) else all
         val start = pageable.offset.toInt().coerceAtMost(sorted.size)
@@ -156,11 +157,9 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
         return PageImpl(sorted.subList(start, end), pageable, sorted.size.toLong())
     }
 
-    override fun <S : E> count(example: Example<S>): Long =
-        findByExample(example).size.toLong()
+    override fun <S : E> count(example: Example<S>): Long = findByExample(example).size.toLong()
 
-    override fun <S : E> exists(example: Example<S>): Boolean =
-        findByExample(example).isNotEmpty()
+    override fun <S : E> exists(example: Example<S>): Boolean = findByExample(example).isNotEmpty()
 
     override fun <S : E, R> findBy(
         example: Example<S>,
@@ -184,35 +183,42 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun buildExampleConditions(
         probe: E,
-        _matcher: ExampleMatcher,
+        matcher: ExampleMatcher,
     ): Op<Boolean>? =
         table.columns
             .asSequence()
             .filterNot { it == table.id }
             .mapNotNull { col ->
-                val field = runCatching {
-                    probe.javaClass.getDeclaredField(col.name).apply { isAccessible = true }
-                }.getOrNull() ?: return@mapNotNull null
+                val field =
+                    runCatching {
+                        probe.javaClass.getDeclaredField(col.name).apply { isAccessible = true }
+                    }.getOrNull() ?: return@mapNotNull null
 
                 val value = field.get(probe) ?: return@mapNotNull null
                 (col as Column<Any>).eq(value)
-            }
-            .reduceOrNull(Op<Boolean>::and)
+            }.reduceOrNull(Op<Boolean>::and)
 }
 
 /**
  * In-memory 정렬을 위한 Comparator (QueryByExample 결과 정렬용)
  */
-private class ExampleSortComparator<E>(private val sort: Sort) : Comparator<E> {
+private class ExampleSortComparator<E>(
+    private val sort: Sort,
+) : Comparator<E> {
     @Suppress("UNCHECKED_CAST")
-    override fun compare(a: E, b: E): Int {
+    override fun compare(
+        a: E,
+        b: E,
+    ): Int {
         val targetClass = (a ?: b)?.javaClass ?: return 0
         for (order in sort) {
-            val field = runCatching {
-                targetClass.getDeclaredField(order.property).apply { isAccessible = true }
-            }.getOrNull() ?: continue
+            val field =
+                runCatching {
+                    targetClass.getDeclaredField(order.property).apply { isAccessible = true }
+                }.getOrNull() ?: continue
 
             val va = field.get(a) as? Comparable<Any> ?: continue
             val vb = field.get(b) as? Comparable<Any> ?: continue
@@ -226,9 +232,9 @@ private class ExampleSortComparator<E>(private val sort: Sort) : Comparator<E> {
 /**
  * FluentQuery 최소 구현 (findBy 지원용)
  */
-private class SimpleFluentQuery<E : Any>(private val results: List<E>) :
-    FluentQuery.FetchableFluentQuery<E> {
-
+private class SimpleFluentQuery<E : Any>(
+    private val results: List<E>,
+) : FluentQuery.FetchableFluentQuery<E> {
     override fun sortBy(sort: Sort): FluentQuery.FetchableFluentQuery<E> = this
 
     override fun <R : Any> `as`(projectionType: Class<R>): FluentQuery.FetchableFluentQuery<R> =

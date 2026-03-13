@@ -10,7 +10,7 @@ import java.time.Duration
  * @param K 키 타입
  * @param V 값 타입
  */
-data class NearCacheConfig<K: Any, V: Any>(
+data class NearCacheConfig<K : Any, V : Any>(
     val cacheName: String = "lettuce-near-cache",
     val maxLocalSize: Long = 10_000,
     val frontExpireAfterWrite: Duration = Duration.ofMinutes(30),
@@ -20,7 +20,7 @@ data class NearCacheConfig<K: Any, V: Any>(
     val recordStats: Boolean = false,
 ) {
     init {
-        require(cacheName.isNotBlank()) { "cacheName must not be blank" }
+        cacheName.requireNotBlank("cacheName")
         require(':' !in cacheName) {
             "cacheName must not contain ':' to avoid Redis key prefix collision, but was: '$cacheName'. " +
                 "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
@@ -35,18 +35,16 @@ data class NearCacheConfig<K: Any, V: Any>(
      * cacheName prefix만 제거하므로 key의 ':' 문자는 그대로 보존된다.
      */
     @Suppress("NOTHING_TO_INLINE")
-    inline fun redisKey(key: String): String = "${cacheName}:${key}"
+    inline fun redisKey(key: String): String = "$cacheName:$key"
 }
 
 /**
  * [NearCacheConfig] DSL 빌더.
  */
-inline fun <K: Any, V: Any> nearCacheConfig(
-    @BuilderInference block: NearCacheConfigBuilder<K, V>.() -> Unit,
-): NearCacheConfig<K, V> =
+inline fun <K : Any, V : Any> nearCacheConfig(block: NearCacheConfigBuilder<K, V>.() -> Unit): NearCacheConfig<K, V> =
     NearCacheConfigBuilder<K, V>().apply(block).build()
 
-class NearCacheConfigBuilder<K: Any, V: Any> {
+class NearCacheConfigBuilder<K : Any, V : Any> {
     var cacheName: String = "lettuce-near-cache"
     var maxLocalSize: Long = 10_000
     var frontExpireAfterWrite: Duration = Duration.ofMinutes(30)
@@ -55,13 +53,14 @@ class NearCacheConfigBuilder<K: Any, V: Any> {
     var useRespProtocol3: Boolean = true
     var recordStats: Boolean = false
 
-    fun build(): NearCacheConfig<K, V> = NearCacheConfig(
-        cacheName = cacheName.requireNotBlank("cacheName"),
-        maxLocalSize = maxLocalSize.requirePositiveNumber("maxLocalSize"),
-        frontExpireAfterWrite = frontExpireAfterWrite,
-        frontExpireAfterAccess = frontExpireAfterAccess,
-        redisTtl = redisTtl,
-        useRespProtocol3 = useRespProtocol3,
-        recordStats = recordStats,
-    )
+    fun build(): NearCacheConfig<K, V> =
+        NearCacheConfig(
+            cacheName = cacheName.requireNotBlank("cacheName"),
+            maxLocalSize = maxLocalSize.requirePositiveNumber("maxLocalSize"),
+            frontExpireAfterWrite = frontExpireAfterWrite,
+            frontExpireAfterAccess = frontExpireAfterAccess,
+            redisTtl = redisTtl,
+            useRespProtocol3 = useRespProtocol3,
+            recordStats = recordStats,
+        )
 }

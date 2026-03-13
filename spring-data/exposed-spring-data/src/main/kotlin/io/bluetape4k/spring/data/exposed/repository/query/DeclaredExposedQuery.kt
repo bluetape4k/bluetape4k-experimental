@@ -29,8 +29,9 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
 
     private val positionalPlaceholderRegex = Regex("\\?(\\d+)")
     private val entityClass: EntityClass<ID, E> = entityInformation.entityClass
-    private val rawSql: String = queryMethod.getAnnotatedQuery()
-        ?: error("@Query annotation is required for DeclaredExposedQuery")
+    private val rawSql: String =
+        queryMethod.getAnnotatedQuery()
+            ?: error("@Query annotation is required for DeclaredExposedQuery")
 
     override fun getQueryMethod(): ExposedQueryMethod = queryMethod
 
@@ -52,16 +53,20 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
         } ?: emptyList<E>()
     }
 
-    private fun bindParameters(sql: String, parameters: Array<out Any?>): BoundSql {
+    private fun bindParameters(
+        sql: String,
+        parameters: Array<out Any?>,
+    ): BoundSql {
         val args = mutableListOf<Pair<ColumnType<*>, Any?>>()
-        val normalizedSql = positionalPlaceholderRegex.replace(sql) { match ->
-            val placeholderIndex = match.groupValues[1].toInt() - 1
-            require(placeholderIndex in parameters.indices) {
-                "Query placeholder index out of bounds: ${match.value} for parameter size ${parameters.size}"
+        val normalizedSql =
+            positionalPlaceholderRegex.replace(sql) { match ->
+                val placeholderIndex = match.groupValues[1].toInt() - 1
+                require(placeholderIndex in parameters.indices) {
+                    "Query placeholder index out of bounds: ${match.value} for parameter size ${parameters.size}"
+                }
+                args += toSqlArg(parameters[placeholderIndex])
+                "?"
             }
-            args += toSqlArg(parameters[placeholderIndex])
-            "?"
-        }
         return BoundSql(normalizedSql, args)
     }
 
@@ -69,10 +74,11 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
     private fun toSqlArg(value: Any?): Pair<ColumnType<*>, Any?> {
         if (value == null) return TextColumnType() to null
 
-        val columnType = runCatching {
-            @Suppress("UNCHECKED_CAST")
-            resolveColumnType(value::class as kotlin.reflect.KClass<Any>, defaultType = TextColumnType())
-        }.getOrElse { TextColumnType() }
+        val columnType =
+            runCatching {
+                @Suppress("UNCHECKED_CAST")
+                resolveColumnType(value::class as kotlin.reflect.KClass<Any>, defaultType = TextColumnType())
+            }.getOrElse { TextColumnType() }
 
         val normalizedValue = if (columnType is TextColumnType && value !is String) value.toString() else value
         return columnType to normalizedValue
@@ -89,11 +95,11 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
         if (idType.isInstance(rawId)) {
             return rawId as ID
         }
-        return when {
-            idType == Long::class.java && rawId is Number -> rawId.toLong() as ID
-            idType == Int::class.java && rawId is Number -> rawId.toInt() as ID
-            idType == Short::class.java && rawId is Number -> rawId.toShort() as ID
-            idType == String::class.java -> rawId.toString() as ID
+        return when (idType) {
+            Long::class.java -> if (rawId is Number) rawId.toLong() as ID else rawId as ID
+            Int::class.java -> if (rawId is Number) rawId.toInt() as ID else rawId as ID
+            Short::class.java -> if (rawId is Number) rawId.toShort() as ID else rawId as ID
+            String::class.java -> rawId.toString() as ID
             else -> rawId as ID
         }
     }
