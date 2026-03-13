@@ -49,21 +49,19 @@ import kotlinx.atomicfu.atomic
  *
  * @param V 값 타입 (키는 항상 String)
  */
-class LettuceNearCache<V: Any>(
-    private val redisClient: RedisClient,
-    private val codec: RedisCodec<String, V>,
+class LettuceNearCache<V : Any>(
+    redisClient: RedisClient,
+    codec: RedisCodec<String, V>,
     private val config: NearCacheConfig<String, V> = NearCacheConfig(),
-): AutoCloseable {
-
-    companion object: KLogging() {
+) : AutoCloseable {
+    companion object : KLogging() {
         /**
          * String 키/값 타입의 Near Cache를 생성한다.
          */
         operator fun invoke(
             redisClient: RedisClient,
             config: NearCacheConfig<String, String> = NearCacheConfig(),
-        ): LettuceNearCache<String> =
-            LettuceNearCache(redisClient, StringCodec.UTF8, config)
+        ): LettuceNearCache<String> = LettuceNearCache(redisClient, StringCodec.UTF8, config)
     }
 
     val cacheName: String get() = config.cacheName
@@ -112,9 +110,10 @@ class LettuceNearCache<V: Any>(
 
         if (missedKeys.isNotEmpty()) {
             val pipeline: RedisAsyncCommands<String, V> = connection.async()
-            val futures: Map<String, RedisFuture<V>> = missedKeys.associateWith { key ->
-                pipeline.get(config.redisKey(key))
-            }
+            val futures: Map<String, RedisFuture<V>> =
+                missedKeys.associateWith { key ->
+                    pipeline.get(config.redisKey(key))
+                }
             connection.flushCommands()
             futures.forEach { (key, future) ->
                 future.get()?.let { value ->
@@ -133,7 +132,10 @@ class LettuceNearCache<V: Any>(
      *
      * write-through 후 async Redis GET을 fire-and-forget으로 실행해 CLIENT TRACKING을 활성화한다.
      */
-    fun put(key: String, value: V) {
+    fun put(
+        key: String,
+        value: V,
+    ) {
         key.requireNotBlank("key")
         setRedis(key, value)
         frontCache.put(key, value)
@@ -160,7 +162,10 @@ class LettuceNearCache<V: Any>(
      * 해당 키가 없을 때만 저장한다 (put-if-absent).
      * @return 기존 값(있었으면) 또는 null(새로 저장됨)
      */
-    fun putIfAbsent(key: String, value: V): V? {
+    fun putIfAbsent(
+        key: String,
+        value: V,
+    ): V? {
         val existing = get(key)
         if (existing != null) return existing
 
@@ -198,7 +203,10 @@ class LettuceNearCache<V: Any>(
      * 기존 값을 새 값으로 교체한다.
      * @return 교체 성공 여부
      */
-    fun replace(key: String, value: V): Boolean {
+    fun replace(
+        key: String,
+        value: V,
+    ): Boolean {
         commands.get(config.redisKey(key)) ?: return false
         val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx()) != null
         if (ok) {
@@ -210,7 +218,11 @@ class LettuceNearCache<V: Any>(
     /**
      * 기존 값이 oldValue와 같을 때만 newValue로 교체한다.
      */
-    fun replace(key: String, oldValue: V, newValue: V): Boolean {
+    fun replace(
+        key: String,
+        oldValue: V,
+        newValue: V,
+    ): Boolean {
         val current = get(key) ?: return false
         if (current != oldValue) return false
         return replace(key, newValue)
@@ -230,7 +242,10 @@ class LettuceNearCache<V: Any>(
     /**
      * 조회 후 교체한다.
      */
-    fun getAndReplace(key: String, value: V): V? {
+    fun getAndReplace(
+        key: String,
+        value: V,
+    ): V? {
         val existing = get(key) ?: return null
         put(key, value)
         return existing
@@ -309,7 +324,10 @@ class LettuceNearCache<V: Any>(
         }
     }
 
-    private fun setRedis(key: String, value: V) {
+    private fun setRedis(
+        key: String,
+        value: V,
+    ) {
         val rKey = config.redisKey(key)
         val ttl = config.redisTtl
         if (ttl != null) {
@@ -324,10 +342,10 @@ class LettuceNearCache<V: Any>(
         val ttl = config.redisTtl
         if (ttl != null) {
             val applied = commands.msetex(redisMap, MSetExArgs().ex(ttl))
-            require(applied == true) { "Redis MSETEX failed for cacheName=${config.cacheName}" }
+            check(applied == true) { "Redis MSETEX failed for cacheName=${config.cacheName}" }
         } else {
             val status = commands.mset(redisMap)
-            require(status == "OK") { "Redis MSET failed for cacheName=${config.cacheName}: $status" }
+            check(status == "OK") { "Redis MSET failed for cacheName=${config.cacheName}: $status" }
         }
     }
 
