@@ -43,13 +43,13 @@ class LettuceNearCacheHibernateAutoConfiguration {
         // 로컬(Caffeine) 캐시 설정
         hibernateProperties["hibernate.cache.lettuce.local.max_size"] = props.local.maxSize.toString()
         hibernateProperties["hibernate.cache.lettuce.local.expire_after_write"] =
-            "${props.local.expireAfterWrite.seconds}s"
+            toHibernateDuration(props.local.expireAfterWrite)
 
         // Redis TTL 설정
         hibernateProperties["hibernate.cache.lettuce.redis_ttl.default"] =
-            "${props.redisTtl.default.seconds}s"
+            toHibernateDuration(props.redisTtl.default)
         props.redisTtl.regions.forEach { (region, ttl) ->
-            hibernateProperties["hibernate.cache.lettuce.redis_ttl.$region"] = "${ttl.seconds}s"
+            hibernateProperties["hibernate.cache.lettuce.redis_ttl.$region"] = toHibernateDuration(ttl)
         }
 
         // Metrics/통계 설정
@@ -60,4 +60,11 @@ class LettuceNearCacheHibernateAutoConfiguration {
             }
         }
     }
+
+    private fun toHibernateDuration(duration: java.time.Duration): String =
+        if (duration.toMillis() % 1000L == 0L) {
+            "${duration.seconds}s"
+        } else {
+            "${duration.toMillis()}ms"
+        }
 }

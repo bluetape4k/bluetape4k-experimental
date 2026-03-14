@@ -3,6 +3,7 @@
 Hibernate 7 **2nd Level Cache** (Lettuce Near Cache) 를 위한 **Spring Boot 4 Auto-Configuration**.
 
 `application.yml`에 `bluetape4k.cache.lettuce-near.*` 설정만 추가하면 별도 코드 없이 Hibernate Second Level Cache가 자동으로 활성화된다.
+밀리초 단위 duration(`500ms`)도 Hibernate 설정으로 그대로 전달된다.
 
 ## 특징
 
@@ -13,7 +14,7 @@ Hibernate 7 **2nd Level Cache** (Lettuce Near Cache) 를 위한 **Spring Boot 4 
 
 ## 최근 변경
 
-- 기본 코덱 값을 `lz4fory`에서 `zstdfory`로 변경
+- 기본 코덱 값을 `lz4fory`로 유지하고 Boot 4 기준 테스트를 정리
 - 프로퍼티 바인딩/자동설정 테스트를 Boot 4 기준으로 정리
 
 ## 의존성

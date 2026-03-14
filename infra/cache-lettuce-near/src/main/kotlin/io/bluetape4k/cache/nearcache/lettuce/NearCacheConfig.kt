@@ -21,10 +21,14 @@ data class NearCacheConfig<K : Any, V : Any>(
 ) {
     init {
         cacheName.requireNotBlank("cacheName")
+        maxLocalSize.requirePositiveNumber("maxLocalSize")
         require(':' !in cacheName) {
             "cacheName must not contain ':' to avoid Redis key prefix collision, but was: '$cacheName'. " +
                 "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
         }
+        validatePositiveDuration("frontExpireAfterWrite", frontExpireAfterWrite)
+        validatePositiveDuration("frontExpireAfterAccess", frontExpireAfterAccess)
+        validatePositiveDuration("redisTtl", redisTtl)
     }
 
     /**
@@ -63,4 +67,11 @@ class NearCacheConfigBuilder<K : Any, V : Any> {
             useRespProtocol3 = useRespProtocol3,
             recordStats = recordStats,
         )
+}
+
+private fun validatePositiveDuration(name: String, duration: Duration?) {
+    if (duration == null) return
+    require(!duration.isZero && !duration.isNegative) {
+        "$name must be a positive duration, but was: $duration"
+    }
 }

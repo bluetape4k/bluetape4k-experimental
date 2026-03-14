@@ -106,11 +106,28 @@ class LettuceNearCacheAutoConfigurationTest {
             val props = context.getBean<LettuceNearCacheSpringProperties>()
             props.enabled.shouldBeTrue()
             props.redisUri shouldBeEqualTo "redis://localhost:6379"
-            props.codec shouldBeEqualTo "lzfory"
+            props.codec shouldBeEqualTo "lz4fory"
             props.useResp3.shouldBeTrue()
             props.local.maxSize shouldBeEqualTo 10_000L
             props.metrics.enabled.shouldBeTrue()
         }
+    }
+
+    @Test
+    fun `millisecond duration이 Hibernate properties에 보존된다`() {
+        contextRunner
+            .withPropertyValues(
+                "bluetape4k.cache.lettuce-near.local.expire-after-write=500ms",
+                "bluetape4k.cache.lettuce-near.redis-ttl.default=1500ms",
+            )
+            .run { context ->
+                val customizer = context.getBean<HibernatePropertiesCustomizer>()
+                val props = mutableMapOf<String, Any>()
+                customizer.customize(props)
+
+                props["hibernate.cache.lettuce.local.expire_after_write"] shouldBeEqualTo "500ms"
+                props["hibernate.cache.lettuce.redis_ttl.default"] shouldBeEqualTo "1500ms"
+            }
     }
 
     @Test

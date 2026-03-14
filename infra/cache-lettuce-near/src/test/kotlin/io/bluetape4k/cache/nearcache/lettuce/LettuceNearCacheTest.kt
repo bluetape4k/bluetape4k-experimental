@@ -274,6 +274,34 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         }
     }
 
+    @Test
+    fun `Redis TTL - millisecond 단위도 보존된다`() {
+        val ttlCacheName = "ttl-ms-test-" + Base58.randomString(6)
+        val ttlCache = LettuceNearCache(
+            redisClient = resp3Client,
+            codec = StringCodec.UTF8,
+            config = NearCacheConfig(
+                cacheName = ttlCacheName,
+                redisTtl = Duration.ofMillis(500),
+            ),
+        )
+        ttlCache.use { c ->
+            c.put("ttl-key", "ttl-val")
+            val ttl = directCommands.pttl("${ttlCacheName}:ttl-key")
+            (ttl in 1..500).shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `NearCacheConfig는 잘못된 duration을 즉시 거부한다`() {
+        runCatching {
+            NearCacheConfig<String, String>(
+                cacheName = "invalid-config",
+                frontExpireAfterWrite = Duration.ZERO,
+            )
+        }.exceptionOrNull().shouldNotBeNull()
+    }
+
     // ---- redisSize ----
 
     @Test

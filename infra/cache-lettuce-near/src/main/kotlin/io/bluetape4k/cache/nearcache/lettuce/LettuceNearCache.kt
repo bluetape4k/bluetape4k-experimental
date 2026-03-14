@@ -188,6 +188,7 @@ class LettuceNearCache<V : Any>(
         val setted = status == "OK"
         return if (setted) {
             frontCache.put(key, value)
+            registerTrackingKey(key)
             null
         } else {
             commands.get(rKey)
@@ -222,6 +223,7 @@ class LettuceNearCache<V : Any>(
         val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx().keepttl()) != null
         if (ok) {
             frontCache.put(key, value)
+            registerTrackingKey(key)
         }
         return ok
     }
@@ -243,6 +245,7 @@ class LettuceNearCache<V : Any>(
         ) == 1L
         if (replaced) {
             frontCache.put(key, newValue)
+            registerTrackingKey(key)
         }
         return replaced
     }
@@ -303,7 +306,7 @@ class LettuceNearCache<V : Any>(
      */
     fun clearAll() {
         clearLocal()
-        runCatching { clearBack() }
+        clearBack()
     }
 
     /**
@@ -350,7 +353,7 @@ class LettuceNearCache<V : Any>(
         val rKey = config.redisKey(key)
         val ttl = config.redisTtl
         if (ttl != null) {
-            commands.set(rKey, value, SetArgs.Builder.ex(ttl.seconds))
+            commands.set(rKey, value, SetArgs.Builder.px(ttl))
         } else {
             commands.set(rKey, value)
         }

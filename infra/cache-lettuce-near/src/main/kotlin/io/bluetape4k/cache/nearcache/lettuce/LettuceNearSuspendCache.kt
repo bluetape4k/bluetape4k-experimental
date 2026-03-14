@@ -115,11 +115,17 @@ class LettuceNearSuspendCache<V : Any>(
         val result = frontCache.getAll(keys).toMutableMap()
         val missedKeys = keys - result.keys
 
-        missedKeys.forEach { key ->
-            val value = commands.get(config.redisKey(key))
-            if (value != null) {
-                result[key] = value
-                frontCache.put(key, value)
+        if (missedKeys.isNotEmpty()) {
+            val pipeline = connection.async()
+            val futures = missedKeys.associateWith { key ->
+                pipeline.get(config.redisKey(key))
+            }
+            connection.flushCommands()
+            futures.forEach { (key, future) ->
+                future.get()?.let { value ->
+                    result[key] = value
+                    frontCache.put(key, value)
+                }
             }
         }
 
@@ -178,6 +184,7 @@ class LettuceNearSuspendCache<V : Any>(
         val setted = status == "OK"
         return if (setted) {
             frontCache.put(key, value)
+            registerTrackingKey(key)
             null
         } else {
             commands.get(rKey)
@@ -212,6 +219,7 @@ class LettuceNearSuspendCache<V : Any>(
         val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx().keepttl()) != null
         if (ok) {
             frontCache.put(key, value)
+            registerTrackingKey(key)
         }
         return ok
     }
@@ -233,6 +241,7 @@ class LettuceNearSuspendCache<V : Any>(
         ) == 1L
         if (replaced) {
             frontCache.put(key, newValue)
+            registerTrackingKey(key)
         }
         return replaced
     }
@@ -347,7 +356,7 @@ class LettuceNearSuspendCache<V : Any>(
         val rKey = config.redisKey(key)
         val ttl = config.redisTtl
         if (ttl != null) {
-            commands.set(rKey, value, SetArgs.Builder.ex(ttl.seconds))
+            commands.set(rKey, value, SetArgs.Builder.px(ttl))
         } else {
             commands.set(rKey, value)
         }

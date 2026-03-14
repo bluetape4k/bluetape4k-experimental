@@ -154,6 +154,39 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
     }
 
     @Test
+    fun `putIfAbsent success 경로도 tracking을 등록해서 외부 변경 시 invalidation 된다`() {
+        val key = "put-if-absent-tracking-key"
+
+        nearCache1.putIfAbsent(key, "initial").shouldBeNull()
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
+
+        directCommands.set("${nearCache1.cacheName}:$key", "external-update")
+
+        await.atMost(3, TimeUnit.SECONDS).untilAsserted {
+            nearCache1.localCacheSize() shouldBeEqualTo 0L
+        }
+
+        nearCache1.get(key) shouldBeEqualTo "external-update"
+    }
+
+    @Test
+    fun `replace success 경로도 tracking을 등록해서 외부 변경 시 invalidation 된다`() {
+        val key = "replace-tracking-key"
+
+        nearCache1.put(key, "initial")
+        nearCache1.replace(key, "updated-by-self") shouldBeEqualTo true
+        nearCache1.localCacheSize() shouldBeEqualTo 1L
+
+        directCommands.set("${nearCache1.cacheName}:$key", "external-update")
+
+        await.atMost(3, TimeUnit.SECONDS).untilAsserted {
+            nearCache1.localCacheSize() shouldBeEqualTo 0L
+        }
+
+        nearCache1.get(key) shouldBeEqualTo "external-update"
+    }
+
+    @Test
     fun `cacheName 격리 - 다른 cacheName 인스턴스의 쓰기는 invalidation을 발생시키지 않음`() {
         val key = "isolation-key"
         val cacheName1 = nearCache1.cacheName  // "tracking-cache"
@@ -221,6 +254,39 @@ class LettuceNearCacheTrackingTest : AbstractLettuceNearCacheTest() {
         directCommands.set("${cacheName}:${key}", "external-update")
 
         // nearSuspendCache1의 local이 invalidated되기를 기다림
+        await.atMost(3, TimeUnit.SECONDS).untilAsserted {
+            nearSuspendCache1.localSize() shouldBeEqualTo 0L
+        }
+
+        nearSuspendCache1.get(key) shouldBeEqualTo "external-update"
+    }
+
+    @Test
+    fun `suspend - putIfAbsent success 경로도 tracking을 등록한다`() = runTest {
+        val key = "suspend-put-if-absent-tracking"
+
+        nearSuspendCache1.putIfAbsent(key, "initial").shouldBeNull()
+        nearSuspendCache1.localSize() shouldBeEqualTo 1L
+
+        directCommands.set("${nearSuspendCache1.cacheName}:$key", "external-update")
+
+        await.atMost(3, TimeUnit.SECONDS).untilAsserted {
+            nearSuspendCache1.localSize() shouldBeEqualTo 0L
+        }
+
+        nearSuspendCache1.get(key) shouldBeEqualTo "external-update"
+    }
+
+    @Test
+    fun `suspend - replace success 경로도 tracking을 등록한다`() = runTest {
+        val key = "suspend-replace-tracking"
+
+        nearSuspendCache1.put(key, "initial")
+        nearSuspendCache1.replace(key, "updated-by-self") shouldBeEqualTo true
+        nearSuspendCache1.localSize() shouldBeEqualTo 1L
+
+        directCommands.set("${nearSuspendCache1.cacheName}:$key", "external-update")
+
         await.atMost(3, TimeUnit.SECONDS).untilAsserted {
             nearSuspendCache1.localSize() shouldBeEqualTo 0L
         }

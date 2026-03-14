@@ -29,7 +29,7 @@ import java.time.Duration
 data class LettuceNearCacheSpringProperties(
     val enabled: Boolean = true,
     val redisUri: String = "redis://localhost:6379",
-    val codec: String = "lzfory",
+    val codec: String = "lz4fory",
     val useResp3: Boolean = true,
     val local: LocalProperties = LocalProperties(),
     val redisTtl: RedisTtlProperties = RedisTtlProperties(),
