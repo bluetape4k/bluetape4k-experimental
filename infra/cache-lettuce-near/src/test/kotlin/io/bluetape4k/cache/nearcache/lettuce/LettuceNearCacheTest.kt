@@ -152,6 +152,25 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
     }
 
     @Test
+    fun `putIfAbsent - TTL이 있는 경우 단일 명령으로 TTL까지 함께 저장한다`() {
+        val ttlCacheName = "put-if-absent-ttl-" + Base58.randomString(6)
+        val ttlCache = LettuceNearCache(
+            redisClient = resp3Client,
+            codec = StringCodec.UTF8,
+            config = NearCacheConfig(
+                cacheName = ttlCacheName,
+                redisTtl = Duration.ofSeconds(30),
+            ),
+        )
+
+        ttlCache.use { c ->
+            c.putIfAbsent("ttl-key", "ttl-val").shouldBeNull()
+            val ttl = directCommands.ttl("${ttlCacheName}:ttl-key")
+            (ttl > 0L).shouldBeTrue()
+        }
+    }
+
+    @Test
     fun `replace - 캐시 값 교체`() {
         verifyReplace(
             put = { k, v -> cache.put(k, v) },

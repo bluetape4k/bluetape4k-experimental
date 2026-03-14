@@ -102,8 +102,8 @@ class LettuceLoadedMap<K : Any, V : Any>(
                 commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
             }
             WriteMode.WRITE_THROUGH -> {
-                commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
                 writer?.write(mapOf(key to value))
+                commands.set(redisKey(key), value, SetArgs().ex(ttlSeconds))
             }
             WriteMode.WRITE_BEHIND -> {
                 val queue = writeBehindQueue ?: return
@@ -147,14 +147,14 @@ class LettuceLoadedMap<K : Any, V : Any>(
     }
 
     fun delete(key: K) {
-        commands.del(redisKey(key))
         if (config.writeMode != WriteMode.NONE) writer?.delete(listOf(key))
+        commands.del(redisKey(key))
     }
 
     fun deleteAll(keys: Collection<K>) {
         if (keys.isEmpty()) return
-        commands.del(*keys.map { redisKey(it) }.toTypedArray())
         if (config.writeMode != WriteMode.NONE) writer?.delete(keys)
+        commands.del(*keys.map { redisKey(it) }.toTypedArray())
     }
 
     fun clear() {

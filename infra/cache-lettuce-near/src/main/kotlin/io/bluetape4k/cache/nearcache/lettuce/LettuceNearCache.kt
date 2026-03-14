@@ -12,6 +12,7 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.ScanArgs
 import io.lettuce.core.ScanCursor
+import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.SetArgs
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
@@ -55,6 +56,15 @@ class LettuceNearCache<V : Any>(
     private val config: NearCacheConfig<String, V> = NearCacheConfig(),
 ) : AutoCloseable {
     companion object : KLogging() {
+        private const val COMPARE_AND_SET_SCRIPT = """
+            local current = redis.call('GET', KEYS[1])
+            if current == false or current ~= ARGV[1] then
+                return 0
+            end
+            redis.call('SET', KEYS[1], ARGV[2], 'XX', 'KEEPTTL')
+            return 1
+        """
+
         /**
          * String 키/값 타입의 Near Cache를 생성한다.
          */
@@ -170,11 +180,13 @@ class LettuceNearCache<V : Any>(
         if (existing != null) return existing
 
         val rKey = config.redisKey(key)
-        val setted = commands.setnx(rKey, value)
+        val status = if (config.redisTtl != null) {
+            commands.set(rKey, value, SetArgs.Builder.nx().ex(config.redisTtl.seconds))
+        } else {
+            commands.set(rKey, value, SetArgs.Builder.nx())
+        }
+        val setted = status == "OK"
         return if (setted) {
-            config.redisTtl?.let { ttl ->
-                commands.expire(rKey, ttl.seconds)
-            }
             frontCache.put(key, value)
             null
         } else {
@@ -207,8 +219,7 @@ class LettuceNearCache<V : Any>(
         key: String,
         value: V,
     ): Boolean {
-        commands.get(config.redisKey(key)) ?: return false
-        val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx()) != null
+        val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx().keepttl()) != null
         if (ok) {
             frontCache.put(key, value)
         }
@@ -223,9 +234,17 @@ class LettuceNearCache<V : Any>(
         oldValue: V,
         newValue: V,
     ): Boolean {
-        val current = get(key) ?: return false
-        if (current != oldValue) return false
-        return replace(key, newValue)
+        val replaced = commands.eval<Long>(
+            COMPARE_AND_SET_SCRIPT,
+            ScriptOutputType.INTEGER,
+            arrayOf(config.redisKey(key)),
+            oldValue,
+            newValue,
+        ) == 1L
+        if (replaced) {
+            frontCache.put(key, newValue)
+        }
+        return replaced
     }
 
     /**

@@ -54,7 +54,7 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
     override fun toPersistValues(domain: R): Map<Column<*>, Any?> = persistValuesProvider(domain)
 
     override suspend fun <S: R> save(entity: S): S {
-        val persisted = persist(entity)
+        val persisted = inTransaction { persist(entity) }
         return (persisted as? S) ?: entity
     }
 
@@ -65,13 +65,13 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
         Optional.ofNullable(findByIdOrNull(id))
 
     override suspend fun findByIdOrNull(id: ID): R? =
-        findRowById(id)?.let(::toDomain)
+        inTransaction { findRowById(id)?.let(::toDomain) }
 
     override suspend fun existsById(id: ID): Boolean =
-        findRowById(id) != null
+        inTransaction { findRowById(id) != null }
 
     override suspend fun findAllAsList(): List<R> =
-        table.selectAll().toList().map(::toDomain)
+        inTransaction { table.selectAll().toList().map(::toDomain) }
 
     override fun findAll(): Flow<R> =
         flow {
@@ -91,19 +91,20 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
         val idList = ids.toList()
         if (idList.isEmpty()) return emptyList()
 
-        return table.selectAll()
-            .where { table.id inList idList }
-            .toList()
-            .map(::toDomain)
+        return inTransaction {
+            table.selectAll()
+                .where { table.id inList idList }
+                .toList()
+                .map(::toDomain)
+        }
     }
 
-    override suspend fun count(): Long {
-        return table.selectAll().count()
-    }
+    override suspend fun count(): Long = inTransaction { table.selectAll().count() }
 
-    override suspend fun deleteById(id: ID) {
-        table.deleteWhere { table.id eq id }
-    }
+    override suspend fun deleteById(id: ID): Unit =
+        inTransaction {
+            table.deleteWhere { table.id eq id }
+        }
 
     override suspend fun delete(entity: R) {
         entity.id?.let { deleteById(it) }
@@ -112,7 +113,9 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
     override suspend fun deleteAllById(ids: Iterable<ID>) {
         val idList = ids.toList()
         if (idList.isNotEmpty()) {
-            table.deleteWhere { table.id inList idList }
+            inTransaction {
+                table.deleteWhere { table.id inList idList }
+            }
         }
     }
 
@@ -120,42 +123,48 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
         deleteAllById(entities.mapNotNull { it.id })
     }
 
-    override suspend fun deleteAll() {
-        table.deleteAll()
-    }
-
-    override suspend fun findAll(pageable: Pageable): Page<R> {
-        val base = table.selectAll()
-
-        if (pageable.sort.isSorted) {
-            base.orderBy(*pageable.sort.toExposedOrderBy(table))
+    override suspend fun deleteAll(): Unit =
+        inTransaction {
+            table.deleteAll()
         }
 
-        val total = base.count()
-        if (pageable.isUnpaged) {
-            val all = base.toList().map(::toDomain)
-            return PageImpl(all, pageable, total)
+    override suspend fun findAll(pageable: Pageable): Page<R> =
+        inTransaction {
+            val base = table.selectAll()
+
+            if (pageable.sort.isSorted) {
+                base.orderBy(*pageable.sort.toExposedOrderBy(table))
+            }
+
+            val total = base.count()
+            if (pageable.isUnpaged) {
+                val all = base.toList().map(::toDomain)
+                PageImpl(all, pageable, total)
+            } else {
+                val content = base
+                    .limit(pageable.pageSize)
+                    .offset(pageable.offset)
+                    .toList()
+                    .map(::toDomain)
+
+                PageImpl(content, pageable, total)
+            }
         }
-
-        val content = base
-            .limit(pageable.pageSize)
-            .offset(pageable.offset)
-            .toList()
-            .map(::toDomain)
-
-        return PageImpl(content, pageable, total)
-    }
 
     override suspend fun count(op: () -> Op<Boolean>): Long {
-        return table.selectAll()
-            .where { op() }
-            .count()
+        return inTransaction {
+            table.selectAll()
+                .where { op() }
+                .count()
+        }
     }
 
     override suspend fun exists(op: () -> Op<Boolean>): Boolean {
-        return !table.selectAll()
-            .where { op() }
-            .empty()
+        return inTransaction {
+            !table.selectAll()
+                .where { op() }
+                .empty()
+        }
     }
 
     private suspend fun findRowById(id: ID): ResultRow? =
@@ -180,6 +189,9 @@ class SimpleSuspendExposedRepository<R: HasIdentifier<ID>, ID: Any>(
             findRowById(idValue)?.let(::toDomain) ?: entity
         }
     }
+
+    private suspend fun <T> inTransaction(block: suspend () -> T): T =
+        suspendTransaction { block() }
 
     private fun writePersistValues(statement: UpdateBuilder<*>, entity: R) {
         toPersistValues(entity).forEach { (column, value) ->

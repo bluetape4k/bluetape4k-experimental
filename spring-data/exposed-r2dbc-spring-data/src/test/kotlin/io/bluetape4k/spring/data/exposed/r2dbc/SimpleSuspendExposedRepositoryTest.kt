@@ -58,14 +58,12 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
             User(id = id, name = name, email = email, age = age)
         }
 
-    private suspend fun <T> inTx(block: suspend () -> T): T = suspendTransaction { block() }
-
     @Test
     fun `findById returns entity`() =
         runTest {
             val user = createUser("Alice", "alice@example.com", 30)
             val userId = user.id.requireNotNull("user.id")
-            val found = inTx { userRepository.findByIdOrNull(userId) }
+            val found = userRepository.findByIdOrNull(userId)
             found.shouldNotBeNull()
             found.name shouldBeEqualTo "Alice"
         }
@@ -75,7 +73,7 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 25)
-            val all = inTx { userRepository.findAll().toList() }
+            val all = userRepository.findAll().toList()
             all shouldHaveSize 2
         }
 
@@ -84,7 +82,7 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 25)
-            val all = inTx { userRepository.findAllAsList() }
+            val all = userRepository.findAllAsList()
             all shouldHaveSize 2
         }
 
@@ -103,20 +101,20 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 25)
-            inTx { userRepository.count() } shouldBeEqualTo 2L
+            userRepository.count() shouldBeEqualTo 2L
         }
 
     @Test
     fun `existsById returns true when entity exists`() =
         runTest {
             val user = createUser("Alice", "alice@example.com", 30)
-            inTx { userRepository.existsById(user.id.requireNotNull("user.id")) }.shouldBeTrue()
+            userRepository.existsById(user.id.requireNotNull("user.id")).shouldBeTrue()
         }
 
     @Test
     fun `existsById returns false when entity does not exist`() =
         runTest {
-            inTx { userRepository.existsById(-1L) }.shouldBeFalse()
+            userRepository.existsById(-1L).shouldBeFalse()
         }
 
     @Test
@@ -124,8 +122,8 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             val user = createUser("Alice", "alice@example.com", 30)
             val userId = user.id.requireNotNull("user.id")
-            inTx { userRepository.deleteById(userId) }
-            inTx { userRepository.findByIdOrNull(userId) }.shouldBeNull()
+            userRepository.deleteById(userId)
+            userRepository.findByIdOrNull(userId).shouldBeNull()
         }
 
     @Test
@@ -133,8 +131,8 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 25)
-            inTx { userRepository.deleteAll() }
-            inTx { userRepository.count() } shouldBeEqualTo 0L
+            userRepository.deleteAll()
+            userRepository.count() shouldBeEqualTo 0L
         }
 
     @Test
@@ -143,10 +141,7 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
             createUser("Charlie", "charlie@example.com", 35)
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 25)
-            val results =
-                inTx {
-                    pagingUserRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "age"))).content
-                }
+            val results = pagingUserRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "age"))).content
             val ages = results.map { it.age }
             ages shouldBeEqualTo ages.sorted()
         }
@@ -155,7 +150,7 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
     fun `findAll with Pageable returns page`() =
         runTest {
             repeat(5) { i -> createUser("User$i", "user$i@example.com", 20 + i) }
-            val page = inTx { pagingUserRepository.findAll(PageRequest.of(0, 3)) }
+            val page = pagingUserRepository.findAll(PageRequest.of(0, 3))
             page.content shouldHaveSize 3
             page.totalElements shouldBeEqualTo 5L
         }
@@ -165,7 +160,7 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 17)
-            inTx { userRepository.count { Users.age greaterEq 18 } } shouldBeEqualTo 1L
+            userRepository.count { Users.age greaterEq 18 } shouldBeEqualTo 1L
         }
 
     @Test
@@ -173,14 +168,14 @@ class SimpleSuspendExposedRepositoryTest : AbstractSuspendExposedRepositoryTest(
         runTest {
             createUser("Alice", "alice@example.com", 30)
             createUser("Bob", "bob@example.com", 17)
-            inTx { userRepository.count { Users.age greaterEq 18 } } shouldBeEqualTo 1L
+            userRepository.count { Users.age greaterEq 18 } shouldBeEqualTo 1L
         }
 
     @Test
     fun `exists with DSL op returns true when found`() =
         runTest {
             createUser("Alice", "alice@example.com", 30)
-            inTx { userRepository.exists { Users.name eq "Alice" } }.shouldBeTrue()
-            inTx { userRepository.exists { Users.name eq "Nobody" } }.shouldBeFalse()
+            userRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
+            userRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
         }
 }

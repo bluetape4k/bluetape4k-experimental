@@ -14,7 +14,8 @@ JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수
 - 제네릭을 `Entity` 중심에서 `IdTable + Domain` 중심으로 개편
 - `HasIdentifier<ID>` 계약 도입으로 ID 매핑 단순화
 - `SimpleSuspendExposedRepository`를 `org.jetbrains.exposed.v1.r2dbc.*` DSL로 통일
-- Repository 내부 트랜잭션 경계를 제거하고, 호출 계층에서 `suspendTransaction`을 적용하도록 정리
+- 기본 CRUD/paging 메서드는 Repository 내부에서 `suspendTransaction`을 열어 일관된 호출 계약 제공
+- 대량 스트리밍은 `streamAll(database)` 에서 호출자가 사용할 `R2dbcDatabase`를 명시
 
 ## 핵심 API
 
@@ -66,13 +67,12 @@ interface UserRepository : SuspendExposedCrudRepository<Users, UserDto, Long> {
 
 ## 트랜잭션 경계
 
-Repository는 트랜잭션을 열지 않습니다. 서비스/컨트롤러 계층에서 `suspendTransaction`을 적용해야 합니다.
+기본 CRUD/paging 메서드는 Repository 내부에서 트랜잭션을 엽니다. 여러 연산을 하나의 트랜잭션으로 묶거나
+호출 계층에서 명시적인 경계를 제어하고 싶다면 직접 `suspendTransaction`으로 감싸면 됩니다.
 
 ```kotlin
 suspend fun create(dto: UserDto): UserDto =
-    suspendTransaction(r2dbcDatabase) {
-        userRepository.save(dto)
-    }
+    userRepository.save(dto)
 ```
 
 ## 테스트
