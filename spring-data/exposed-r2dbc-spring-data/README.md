@@ -13,7 +13,7 @@ JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수
 
 - 제네릭을 `Entity` 중심에서 `IdTable + Domain` 중심으로 개편
 - `HasIdentifier<ID>` 계약 도입으로 ID 매핑 단순화
-- `SimpleSuspendExposedRepository`를 `org.jetbrains.exposed.v1.r2dbc.*` DSL로 통일
+- `SimpleExposedR2dbcRepository`를 `org.jetbrains.exposed.v1.r2dbc.*` DSL로 통일
 - 기본 CRUD/paging 메서드는 Repository 내부에서 `suspendTransaction`을 열어 일관된 호출 계약 제공
 - 대량 스트리밍은 `streamAll(database)` 에서 호출자가 사용할 `R2dbcDatabase`를 명시
 

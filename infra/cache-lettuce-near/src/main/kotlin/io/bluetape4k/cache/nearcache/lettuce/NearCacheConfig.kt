@@ -1,5 +1,6 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
@@ -10,7 +11,7 @@ import java.time.Duration
  * @param K 키 타입
  * @param V 값 타입
  */
-data class NearCacheConfig<K : Any, V : Any>(
+data class NearCacheConfig<K: Any, V: Any>(
     val cacheName: String = "lettuce-near-cache",
     val maxLocalSize: Long = 10_000,
     val frontExpireAfterWrite: Duration = Duration.ofMinutes(30),
@@ -24,11 +25,11 @@ data class NearCacheConfig<K : Any, V : Any>(
         maxLocalSize.requirePositiveNumber("maxLocalSize")
         require(':' !in cacheName) {
             "cacheName must not contain ':' to avoid Redis key prefix collision, but was: '$cacheName'. " +
-                "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
+                    "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
         }
-        validatePositiveDuration("frontExpireAfterWrite", frontExpireAfterWrite)
-        validatePositiveDuration("frontExpireAfterAccess", frontExpireAfterAccess)
-        validatePositiveDuration("redisTtl", redisTtl)
+        frontExpireAfterAccess?.requireGt(Duration.ZERO, "frontExpireAfterAccess")
+        frontExpireAfterAccess?.requireGt(Duration.ZERO, "frontExpireAfterAccess")
+        redisTtl?.requireGt(Duration.ZERO, "redisTtl")
     }
 
     /**
@@ -45,10 +46,10 @@ data class NearCacheConfig<K : Any, V : Any>(
 /**
  * [NearCacheConfig] DSL 빌더.
  */
-inline fun <K : Any, V : Any> nearCacheConfig(block: NearCacheConfigBuilder<K, V>.() -> Unit): NearCacheConfig<K, V> =
+inline fun <K: Any, V: Any> nearCacheConfig(block: NearCacheConfigBuilder<K, V>.() -> Unit): NearCacheConfig<K, V> =
     NearCacheConfigBuilder<K, V>().apply(block).build()
 
-class NearCacheConfigBuilder<K : Any, V : Any> {
+class NearCacheConfigBuilder<K: Any, V: Any> {
     var cacheName: String = "lettuce-near-cache"
     var maxLocalSize: Long = 10_000
     var frontExpireAfterWrite: Duration = Duration.ofMinutes(30)
@@ -67,11 +68,4 @@ class NearCacheConfigBuilder<K : Any, V : Any> {
             useRespProtocol3 = useRespProtocol3,
             recordStats = recordStats,
         )
-}
-
-private fun validatePositiveDuration(name: String, duration: Duration?) {
-    if (duration == null) return
-    require(!duration.isZero && !duration.isNegative) {
-        "$name must be a positive duration, but was: $duration"
-    }
 }

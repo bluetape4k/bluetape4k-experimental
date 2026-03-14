@@ -77,6 +77,10 @@ class LettuceNearSuspendCache<V : Any>(
 
     private val closed = atomic(false)
     val isClosed by closed
+    private val setArgsPx: SetArgs? = config.redisTtl?.let { SetArgs.Builder.px(it) }
+    private val setArgsNx: SetArgs = SetArgs.Builder.nx()
+    private val setArgsNxPx: SetArgs? = config.redisTtl?.let { SetArgs.Builder.nx().px(it) }
+    private val setArgsXxKeepTtl: SetArgs = SetArgs.Builder.xx().keepttl()
 
     private val frontCache: LocalCache<String, V> = CaffeineLocalCache(config)
     private val connection: StatefulRedisConnection<String, V> = redisClient.connect(codec)
@@ -113,16 +117,14 @@ class LettuceNearSuspendCache<V : Any>(
      */
     suspend fun getAll(keys: Set<String>): Map<String, V> {
         val result = frontCache.getAll(keys).toMutableMap()
-        val missedKeys = keys - result.keys
+        val missedKeys = (keys - result.keys).toList()
 
         if (missedKeys.isNotEmpty()) {
-            val pipeline = connection.async()
-            val futures = missedKeys.associateWith { key ->
-                pipeline.get(config.redisKey(key))
-            }
-            connection.flushCommands()
-            futures.forEach { (key, future) ->
-                future.get()?.let { value ->
+            val values = connection.async().mget(*missedKeys.map(config::redisKey).toTypedArray()).get()
+            values.forEachIndexed { index, keyValue ->
+                if (keyValue.hasValue()) {
+                    val value = keyValue.value
+                    val key = missedKeys[index]
                     result[key] = value
                     frontCache.put(key, value)
                 }
@@ -154,10 +156,8 @@ class LettuceNearSuspendCache<V : Any>(
     suspend fun putAll(map: Map<String, V>) {
         if (map.isEmpty()) return
 
-        val normalizedMap = LinkedHashMap<String, V>(map.size)
-        map.forEach { (key, value) ->
-            key.requireNotBlank("key")
-            normalizedMap[key] = value
+        val normalizedMap = map.entries.associate { (key, value) ->
+            key.requireNotBlank("key") to value
         }
         setRedisBulk(normalizedMap)
         frontCache.putAll(normalizedMap)
@@ -176,11 +176,7 @@ class LettuceNearSuspendCache<V : Any>(
         if (existing != null) return existing
 
         val rKey = config.redisKey(key)
-        val status = if (config.redisTtl != null) {
-            commands.set(rKey, value, SetArgs.Builder.nx().ex(config.redisTtl.seconds))
-        } else {
-            commands.set(rKey, value, SetArgs.Builder.nx())
-        }
+        val status = setNxRedis(key, value)
         val setted = status == "OK"
         return if (setted) {
             frontCache.put(key, value)
@@ -216,7 +212,7 @@ class LettuceNearSuspendCache<V : Any>(
         key: String,
         value: V,
     ): Boolean {
-        val ok = commands.set(config.redisKey(key), value, SetArgs.Builder.xx().keepttl()) != null
+        val ok = commands.set(config.redisKey(key), value, setArgsXxKeepTtl) != null
         if (ok) {
             frontCache.put(key, value)
             registerTrackingKey(key)
@@ -354,11 +350,24 @@ class LettuceNearSuspendCache<V : Any>(
         value: V,
     ) {
         val rKey = config.redisKey(key)
-        val ttl = config.redisTtl
-        if (ttl != null) {
-            commands.set(rKey, value, SetArgs.Builder.px(ttl))
+        val setArgs = setArgsPx
+        if (setArgs != null) {
+            commands.set(rKey, value, setArgs)
         } else {
             commands.set(rKey, value)
+        }
+    }
+
+    private suspend fun setNxRedis(
+        key: String,
+        value: V,
+    ): String? {
+        val rKey = config.redisKey(key)
+        val setArgs = setArgsNxPx
+        return if (setArgs != null) {
+            commands.set(rKey, value, setArgs)
+        } else {
+            commands.set(rKey, value, setArgsNx)
         }
     }
 

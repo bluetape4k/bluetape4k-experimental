@@ -26,6 +26,10 @@ import org.springframework.context.annotation.Bean
 @EnableConfigurationProperties(LettuceNearCacheSpringProperties::class)
 class LettuceNearCacheHibernateAutoConfiguration {
 
+    companion object {
+        private const val HIBERNATE_LETTUCE_PREFIX = "hibernate.cache.lettuce."
+    }
+
     @Bean
     fun lettuceNearCacheHibernatePropertiesCustomizer(
         props: LettuceNearCacheSpringProperties,
@@ -36,27 +40,27 @@ class LettuceNearCacheHibernateAutoConfiguration {
         hibernateProperties["hibernate.cache.use_second_level_cache"] = "true"
 
         // Redis 연결 설정
-        hibernateProperties["hibernate.cache.lettuce.redis_uri"] = props.redisUri
-        hibernateProperties["hibernate.cache.lettuce.codec"] = props.codec
-        hibernateProperties["hibernate.cache.lettuce.use_resp3"] = props.useResp3.toString()
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}redis_uri"] = props.redisUri
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}codec"] = props.codec
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}use_resp3"] = props.useResp3.toString()
 
         // 로컬(Caffeine) 캐시 설정
-        hibernateProperties["hibernate.cache.lettuce.local.max_size"] = props.local.maxSize.toString()
-        hibernateProperties["hibernate.cache.lettuce.local.expire_after_write"] =
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}local.max_size"] = props.local.maxSize.toString()
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}local.expire_after_write"] =
             toHibernateDuration(props.local.expireAfterWrite)
 
         // Redis TTL 설정
-        hibernateProperties["hibernate.cache.lettuce.redis_ttl.default"] =
+        hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}redis_ttl.default"] =
             toHibernateDuration(props.redisTtl.default)
         props.redisTtl.regions.forEach { (region, ttl) ->
-            hibernateProperties["hibernate.cache.lettuce.redis_ttl.$region"] = toHibernateDuration(ttl)
+            hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}redis_ttl.$region"] = toHibernateDuration(ttl)
         }
 
         // Metrics/통계 설정
         if (props.metrics.enabled) {
             hibernateProperties["hibernate.generate_statistics"] = "true"
             if (props.metrics.enableCaffeineStats) {
-                hibernateProperties["hibernate.cache.lettuce.local.record_stats"] = "true"
+                hibernateProperties["${HIBERNATE_LETTUCE_PREFIX}local.record_stats"] = "true"
             }
         }
     }

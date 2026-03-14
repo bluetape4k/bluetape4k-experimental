@@ -14,7 +14,7 @@ MD_FILE="$RESULT_DIR/exposed-r2dbc-$TAG.md"
 mkdir -p "$RESULT_DIR"
 
 ./gradlew :benchmarks:benchmarkCustomReport \
-  -Pbenchmark.include='.*SimpleSuspendExposedRepository.*Benchmark.*' \
+  -Pbenchmark.include='.*SimpleExposedR2dbcRepository.*Benchmark.*' \
   -Pbenchmark.tag="$TAG" \
   -Pbenchmark.resultFile="$JSON_FILE" \
   -Pbenchmark.outputMd="$MD_FILE" \

@@ -1,11 +1,11 @@
 package io.bluetape4k.examples.exposed.webflux
 
-import io.bluetape4k.spring.data.exposed.r2dbc.config.EnableSuspendExposedRepositories
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.config.EnableExposedR2dbcRepositories
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-@EnableSuspendExposedRepositories(
+@EnableExposedR2dbcRepositories(
     basePackages = ["io.bluetape4k.examples.exposed.webflux.repository"]
 )
 class WebfluxDemoApplication

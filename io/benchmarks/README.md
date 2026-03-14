@@ -65,7 +65,7 @@ Exposed R2DBC repository benchmark 만 실행:
 
 ```bash
 ./gradlew :benchmarks:benchmarkCustom \
-  -Pbenchmark.include='.*SimpleSuspendExposedRepository.*Benchmark.*' \
+  -Pbenchmark.include='.*SimpleExposedR2dbcRepository.*Benchmark.*' \
   -Pbenchmark.warmups=2 \
   -Pbenchmark.iterations=5 \
   -Pbenchmark.tag=exposed-r2dbc-baseline
@@ -153,7 +153,7 @@ JSON 결과를 Markdown 으로 변환:
 - 개선 전/후 비교용 수집은 `jmhJson`, `comboJmhJson`
 - cache 계열 회귀나 atomic 연산 비교는 `benchmarkCustom -Pbenchmark.include='.*LettuceNearCacheBenchmark.*'`
 - suspend cache 회귀는 `benchmarkCustom -Pbenchmark.include='.*LettuceNearSuspendCacheBenchmark.*'`
-- Exposed R2DBC CRUD/paging 비교는 `benchmarkCustom -Pbenchmark.include='.*SimpleSuspendExposedRepository.*Benchmark.*'`
+- Exposed R2DBC CRUD/paging 비교는 `benchmarkCustom -Pbenchmark.include='.*SimpleExposedR2dbcRepository.*Benchmark.*'`
 - 메모리 pressure 확인은 `jmhGc`, `comboJmhGc`
 - CI에 넣기 전에는 로컬에서 최소 2회 이상 재실행해 분산을 확인
 - 결과 비교 시 JDK 버전, Mac/CI 머신, 실행 옵션을 함께 기록
