@@ -72,7 +72,7 @@ subprojects {
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
                 "-jvm-default=enable",
-                "-Xinline-classes",
+                // "-Xinline-classes",   // Kotlin 2.+ 에서는 불필요
                 "-Xstring-concat=indy",
                 "-Xcontext-parameters",
                 "-Xannotation-default-target=param-property",
