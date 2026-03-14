@@ -25,6 +25,7 @@ You are running with oh-my-codex (OMX), a multi-agent orchestration layer for Co
 - Simplicity first. 요청 범위를 넘어 옆 코드를 정리하거나 구조를 확장하지 않는다.
 - Surgical changes. 변경된 모든 줄은 요청 또는 검증 필요성과 직접 연결되어야 한다.
 - Goal-driven execution. 가능하면 재현 테스트 또는 검증 근거를 먼저 만들고 수정 후 통과까지 확인한다.
+- bluetape4k Kotlin 코드를 작성하거나 리뷰할 때는 가능하면 user skill `bluetape4k-patterns`를 먼저 읽고, 인자 검증/로깅/코루틴/트랜잭션 경계 규칙을 우선 적용한다.
 
 ### CLI 도구 선호
 
@@ -195,24 +196,25 @@ Coordination:
 <keyword_detection>
 When the user's message contains a magic keyword, activate the corresponding skill IMMEDIATELY. Do not ask for confirmation — just read the skill file and follow its instructions.
 
-| Keyword(s)                                                                                        | Skill              | Action                                                                                                                                                      |
-|---------------------------------------------------------------------------------------------------|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| "ralph", "don't stop", "must complete", "keep going"                                              | `$ralph`           | Read `~/.agents/skills/ralph/SKILL.md`, execute persistence loop                                                                                            |
-| "autopilot", "build me", "I want a"                                                               | `$autopilot`       | Read `~/.agents/skills/autopilot/SKILL.md`, execute autonomous pipeline                                                                                     |
-| "ultrawork", "ulw", "parallel"                                                                    | `$ultrawork`       | Read `~/.agents/skills/ultrawork/SKILL.md`, execute parallel agents                                                                                         |
-| "ultraqa"                                                                                         | `$ultraqa`         | Read `~/.agents/skills/ultraqa/SKILL.md`, run QA cycling workflow                                                                                           |
-| "analyze", "investigate"                                                                          | `$analyze`         | Read `~/.agents/skills/analyze/SKILL.md`, run deep analysis                                                                                                 |
-| "plan this", "plan the", "let's plan"                                                             | `$plan`            | Read `~/.agents/skills/plan/SKILL.md`, start planning workflow                                                                                              |
-| "interview", "deep interview", "gather requirements", "interview me", "don't assume", "ouroboros" | `$deep-interview`  | Read `~/.agents/skills/deep-interview/SKILL.md`, run Ouroboros-inspired Socratic ambiguity-gated interview workflow                                         |
-| "ralplan", "consensus plan"                                                                       | `$ralplan`         | Read `~/.agents/skills/ralplan/SKILL.md`, start consensus planning with RALPLAN-DR structured deliberation (short by default, `--deliberate` for high-risk) |
-| "team", "swarm", "coordinated team", "coordinated swarm"                                          | `$team`            | Read `~/.agents/skills/team/SKILL.md`, start team orchestration (swarm compatibility alias)                                                                 |
-| "ecomode", "eco", "budget"                                                                        | `$ecomode`         | Read `~/.agents/skills/ecomode/SKILL.md`, enable token-efficient mode                                                                                       |
-| "cancel", "stop", "abort"                                                                         | `$cancel`          | Read `~/.agents/skills/cancel/SKILL.md`, cancel active modes                                                                                                |
-| "tdd", "test first"                                                                               | `$tdd`             | Read `~/.agents/skills/tdd/SKILL.md`, start test-driven workflow                                                                                            |
-| "fix build", "type errors"                                                                        | `$build-fix`       | Read `~/.agents/skills/build-fix/SKILL.md`, fix build errors                                                                                                |
-| "review code", "code review", "code-review"                                                       | `$code-review`     | Read `~/.agents/skills/code-review/SKILL.md`, run code review                                                                                               |
-| "security review"                                                                                 | `$security-review` | Read `~/.agents/skills/security-review/SKILL.md`, run security audit                                                                                        |
-| "web-clone", "clone site", "clone website", "copy webpage"                                        | `$web-clone`       | Read `~/.agents/skills/web-clone/SKILL.md`, start website cloning pipeline                                                                                  |
+| Keyword(s)                                                                                          | Skill                  | Action                                                                                                                                                      |
+|-----------------------------------------------------------------------------------------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| "ralph", "don't stop", "must complete", "keep going"                                                | `$ralph`               | Read `~/.agents/skills/ralph/SKILL.md`, execute persistence loop                                                                                            |
+| "autopilot", "build me", "I want a"                                                                 | `$autopilot`           | Read `~/.agents/skills/autopilot/SKILL.md`, execute autonomous pipeline                                                                                     |
+| "ultrawork", "ulw", "parallel"                                                                      | `$ultrawork`           | Read `~/.agents/skills/ultrawork/SKILL.md`, execute parallel agents                                                                                         |
+| "ultraqa"                                                                                           | `$ultraqa`             | Read `~/.agents/skills/ultraqa/SKILL.md`, run QA cycling workflow                                                                                           |
+| "analyze", "investigate"                                                                            | `$analyze`             | Read `~/.agents/skills/analyze/SKILL.md`, run deep analysis                                                                                                 |
+| "plan this", "plan the", "let's plan"                                                               | `$plan`                | Read `~/.agents/skills/plan/SKILL.md`, start planning workflow                                                                                              |
+| "interview", "deep interview", "gather requirements", "interview me", "don't assume", "ouroboros"   | `$deep-interview`      | Read `~/.agents/skills/deep-interview/SKILL.md`, run Ouroboros-inspired Socratic ambiguity-gated interview workflow                                         |
+| "ralplan", "consensus plan"                                                                         | `$ralplan`             | Read `~/.agents/skills/ralplan/SKILL.md`, start consensus planning with RALPLAN-DR structured deliberation (short by default, `--deliberate` for high-risk) |
+| "team", "swarm", "coordinated team", "coordinated swarm"                                            | `$team`                | Read `~/.agents/skills/team/SKILL.md`, start team orchestration (swarm compatibility alias)                                                                 |
+| "ecomode", "eco", "budget"                                                                          | `$ecomode`             | Read `~/.agents/skills/ecomode/SKILL.md`, enable token-efficient mode                                                                                       |
+| "cancel", "stop", "abort"                                                                           | `$cancel`              | Read `~/.agents/skills/cancel/SKILL.md`, cancel active modes                                                                                                |
+| "tdd", "test first"                                                                                 | `$tdd`                 | Read `~/.agents/skills/tdd/SKILL.md`, start test-driven workflow                                                                                            |
+| "fix build", "type errors"                                                                          | `$build-fix`           | Read `~/.agents/skills/build-fix/SKILL.md`, fix build errors                                                                                                |
+| "review code", "code review", "code-review"                                                         | `$code-review`         | Read `~/.agents/skills/code-review/SKILL.md`, run code review                                                                                               |
+| "security review"                                                                                   | `$security-review`     | Read `~/.agents/skills/security-review/SKILL.md`, run security audit                                                                                        |
+| "bluetape4k", "bluetape4k patterns", "requireNotBlank", "KLogging", "AtomicFU", "코루틴 패턴", "트랜잭션 경계" | `$bluetape4k-patterns` | Read `~/.agents/skills/bluetape4k-patterns/SKILL.md`, apply bluetape4k Kotlin implementation and review conventions before coding or review work            |
+| "web-clone", "clone site", "clone website", "copy webpage"                                          | `$web-clone`           | Read `~/.agents/skills/web-clone/SKILL.md`, start website cloning pipeline                                                                                  |
 
 Detection rules:
 
@@ -250,6 +252,8 @@ Workflow Skills:
 - `ultraqa`: QA cycling -- test, verify, fix, repeat
 - `plan`: Strategic planning with optional RALPLAN-DR consensus mode
 - `deep-interview`: Socratic deep interview with Ouroboros-inspired mathematical ambiguity gating before execution
+- `bluetape4k-patterns`: bluetape4k Kotlin 코드 작성/리뷰 시 사용하는 구현 패턴 모음. 인자 검증, `KLogging`,
+  `AtomicFU`, coroutine dispatcher 경계, transaction 경계, Spring Boot 자동 설정 규칙을 우선 참고한다.
 -
 `ralplan`: Iterative consensus planning with RALPLAN-DR structured deliberation (planner + architect + critic); supports
 `--deliberate` for high-risk work
@@ -483,8 +487,6 @@ This project uses Gradle with Kotlin DSL (`build.gradle.kts`, `settings.gradle.k
 
 ### infra 모듈 주의사항
 
-- `LettuceBinaryCodecs` 사용 금지. protobuf optional 의존성 때문에 `NoClassDefFoundError`가 날 수 있다.
-- 대신 `LettuceBinaryCodec(BinarySerializers.LZ4Fory)`를 사용한다.
 - Fory/LZ4는 optional일 수 있으므로 `Libs.fory_kotlin`, `Libs.lz4_java`의 명시적 추가 필요성을 확인한다.
 - Hibernate 7 관련 `DomainDataRegionConfig`, `DomainDataRegionBuildingContext`는 `org.hibernate.cache.cfg.spi` 패키지를 사용한다.
 - Hibernate 7 + H2 조합은 `Libs.h2_v2` 사용 여부를 확인한다.

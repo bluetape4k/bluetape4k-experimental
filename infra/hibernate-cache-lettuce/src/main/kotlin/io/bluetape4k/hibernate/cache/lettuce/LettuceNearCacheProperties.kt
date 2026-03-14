@@ -4,6 +4,9 @@ import io.bluetape4k.cache.nearcache.lettuce.NearCacheConfig
 import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodec
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import org.hibernate.cache.spi.RegionFactory
 import java.time.Duration
 
 /**
@@ -30,6 +33,17 @@ data class LettuceNearCacheProperties(
     val useResp3: Boolean = true,
     val recordLocalStats: Boolean = false,
 ) {
+    init {
+        redisUri.requireNotBlank("redisUri")
+        localMaxSize.requirePositiveNumber("localMaxSize")
+        validatePositiveDuration("localExpireAfterWrite", localExpireAfterWrite)
+        validatePositiveDuration("redisTtlDefault", redisTtlDefault)
+        regionTtls.forEach { (regionName, ttl) ->
+            regionName.requireNotBlank("regionTtls.key")
+            validatePositiveDuration("regionTtls[$regionName]", ttl)
+        }
+    }
+
     companion object {
         private const val PREFIX = "hibernate.cache.lettuce."
 
@@ -37,22 +51,35 @@ data class LettuceNearCacheProperties(
             fun str(key: String, default: String): String =
                 configValues["$PREFIX$key"]?.toString() ?: default
 
-            fun long(key: String, default: Long): Long =
-                configValues["$PREFIX$key"]?.toString()?.toLongOrNull() ?: default
+            fun long(key: String, default: Long): Long {
+                val propertyName = "$PREFIX$key"
+                val raw = configValues[propertyName]?.toString() ?: return default
+                return raw.toLongOrNull()?.requirePositiveNumber(propertyName)
+                    ?: throw IllegalArgumentException("Invalid positive number for '$propertyName': $raw")
+            }
 
-            fun bool(key: String, default: Boolean): Boolean =
-                configValues["$PREFIX$key"]?.toString()?.toBooleanStrictOrNull() ?: default
+            fun bool(key: String, default: Boolean): Boolean {
+                val propertyName = "$PREFIX$key"
+                val raw = configValues[propertyName]?.toString() ?: return default
+                return raw.toBooleanStrictOrNull()
+                    ?: throw IllegalArgumentException("Invalid boolean for '$propertyName': $raw")
+            }
 
             fun duration(key: String, default: Duration?): Duration? {
-                val raw = configValues["$PREFIX$key"]?.toString() ?: return default
-                return parseDuration(raw) ?: default
+                val propertyName = "$PREFIX$key"
+                val raw = configValues[propertyName]?.toString() ?: return default
+                return parseDuration(raw)
+                    ?: throw IllegalArgumentException("Invalid duration for '$propertyName': $raw")
             }
 
             val regionTtls = configValues.entries
                 .filter { it.key.startsWith("${PREFIX}redis_ttl.") && !it.key.endsWith(".default") }
                 .associate { (k, v) ->
-                    k.removePrefix("${PREFIX}redis_ttl.") to
-                            (parseDuration(v.toString()) ?: Duration.ofSeconds(120))
+                    val regionName = k.removePrefix("${PREFIX}redis_ttl.")
+                    regionName to (
+                            parseDuration(v.toString())
+                                ?: throw IllegalArgumentException("Invalid duration for '$k': ${v.toString()}")
+                            )
                 }
 
             return LettuceNearCacheProperties(
@@ -97,11 +124,11 @@ data class LettuceNearCacheProperties(
         "zstdjdk"    -> LettuceBinaryCodecs.zstdJdk()
         "zstdkryo"   -> LettuceBinaryCodecs.zstdKryo()
         "zstdfory"   -> LettuceBinaryCodecs.zstdFory()
-        else         -> LettuceBinaryCodecs.Default
+        else -> throw IllegalArgumentException("Unsupported lettuce codec: $codec")
     }
 
     fun buildNearCacheConfig(regionName: String): NearCacheConfig<String, Any> {
-        val ttl = regionTtls[regionName] ?: redisTtlDefault
+        val ttl = resolveRedisTtl(regionName)
         return NearCacheConfig(
             cacheName = regionName,
             maxLocalSize = localMaxSize,
@@ -110,5 +137,19 @@ data class LettuceNearCacheProperties(
             useRespProtocol3 = useResp3,
             recordStats = recordLocalStats,
         )
+    }
+
+    private fun resolveRedisTtl(regionName: String): Duration? =
+        if (regionName == RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME) {
+            null
+        } else {
+            regionTtls[regionName] ?: redisTtlDefault
+        }
+
+    private fun validatePositiveDuration(name: String, duration: Duration?) {
+        if (duration == null) return
+        require(!duration.isZero && !duration.isNegative) {
+            "$name must be a positive duration, but was: $duration"
+        }
     }
 }

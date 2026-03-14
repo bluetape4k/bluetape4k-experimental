@@ -10,8 +10,10 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.hibernate.boot.MetadataSources
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder
+import org.hibernate.cache.spi.RegionFactory
 import org.hibernate.cache.spi.access.AccessType
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 
 class LettuceNearCacheRegionFactoryTest {
 
@@ -71,6 +73,35 @@ class LettuceNearCacheRegionFactoryTest {
         props.localMaxSize shouldBeEqualTo 5000L
         props.useResp3 shouldBeEqualTo false
         props.regionTtls.containsKey("myRegion").shouldBeTrue()
+    }
+
+    @Test
+    fun `timestamps region은 Redis TTL을 강제 비활성화한다`() {
+        val props = LettuceNearCacheProperties.from(
+            mapOf("hibernate.cache.lettuce.redis_ttl.default" to "300s")
+        )
+
+        val config = props.buildNearCacheConfig(RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME)
+
+        config.redisTtl shouldBeEqualTo null
+    }
+
+    @Test
+    fun `잘못된 local max size 설정은 즉시 실패한다`() {
+        assertFailsWith<IllegalArgumentException> {
+            LettuceNearCacheProperties.from(
+                mapOf("hibernate.cache.lettuce.local.max_size" to "0")
+            )
+        }
+    }
+
+    @Test
+    fun `잘못된 duration 설정은 즉시 실패한다`() {
+        assertFailsWith<IllegalArgumentException> {
+            LettuceNearCacheProperties.from(
+                mapOf("hibernate.cache.lettuce.redis_ttl.default" to "nonsense")
+            )
+        }
     }
 
     @Test

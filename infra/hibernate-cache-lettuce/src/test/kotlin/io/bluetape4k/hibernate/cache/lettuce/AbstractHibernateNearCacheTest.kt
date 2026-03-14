@@ -1,10 +1,17 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.RedisServers.redis
+import io.bluetape4k.hibernate.cache.lettuce.model.CompositePerson
 import io.bluetape4k.hibernate.cache.lettuce.model.Department
 import io.bluetape4k.hibernate.cache.lettuce.model.Employee
+import io.bluetape4k.hibernate.cache.lettuce.model.NaturalUser
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
 import io.bluetape4k.hibernate.cache.lettuce.model.Project
+import io.lettuce.core.KeyScanCursor
+import io.lettuce.core.RedisClient
+import io.lettuce.core.ScanArgs
+import io.lettuce.core.ScanCursor
+import io.lettuce.core.codec.StringCodec
 import org.hibernate.SessionFactory
 import org.hibernate.boot.MetadataSources
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder
@@ -21,11 +28,12 @@ abstract class AbstractHibernateNearCacheTest {
     companion object {
 
         lateinit var sessionFactory: SessionFactory
+        lateinit var redisUri: String
 
         @JvmStatic
         @BeforeAll
         fun setupSessionFactory() {
-            val redisUri = "redis://${redis.host}:${redis.port}"
+            redisUri = "redis://${redis.host}:${redis.port}"
 
             val registry = StandardServiceRegistryBuilder()
                 .applySetting("hibernate.connection.driver_class", "org.h2.Driver")
@@ -48,6 +56,8 @@ abstract class AbstractHibernateNearCacheTest {
 
             sessionFactory = MetadataSources(registry)
                 .addAnnotatedClass(Person::class.java)
+                .addAnnotatedClass(CompositePerson::class.java)
+                .addAnnotatedClass(NaturalUser::class.java)
                 .addAnnotatedClass(Department::class.java)
                 .addAnnotatedClass(Employee::class.java)
                 .addAnnotatedClass(Project::class.java)
@@ -59,6 +69,24 @@ abstract class AbstractHibernateNearCacheTest {
         @AfterAll
         fun tearDownSessionFactory() {
             runCatching { sessionFactory.close() }
+        }
+    }
+
+    protected fun redisKeys(pattern: String): Set<String> {
+        val redisClient = RedisClient.create(redisUri)
+        return redisClient.use { client ->
+            client.connect(StringCodec.UTF8).use { connection ->
+                val commands = connection.sync()
+                val keys = linkedSetOf<String>()
+                var cursor: ScanCursor = ScanCursor.INITIAL
+                do {
+                    val result: KeyScanCursor<String> =
+                        commands.scan(cursor, ScanArgs.Builder.matches(pattern).limit(100))
+                    keys += result.keys
+                    cursor = result
+                } while (!result.isFinished)
+                keys
+            }
         }
     }
 }

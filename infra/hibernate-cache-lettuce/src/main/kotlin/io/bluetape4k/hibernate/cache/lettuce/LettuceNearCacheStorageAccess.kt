@@ -1,6 +1,9 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
+import org.hibernate.cache.internal.BasicCacheKeyImplementation
+import org.hibernate.cache.internal.CacheKeyImplementation
+import org.hibernate.cache.internal.NaturalIdCacheKey
 import org.hibernate.cache.spi.support.DomainDataStorageAccess
 import org.hibernate.engine.spi.SharedSessionContractImplementor
 
@@ -22,8 +25,45 @@ class LettuceNearCacheStorageAccess(
 ) : DomainDataStorageAccess {
 
     // nearCache가 cacheName(=regionName) prefix를 Redis key에 자동으로 추가하므로
-    // 여기서는 key를 문자열로 변환만 한다. (이중 prefix 방지)
-    private fun cacheKey(key: Any): String = key.toString()
+    // 여기서는 key를 stable string으로 정규화만 한다. (이중 prefix 방지)
+    private fun cacheKey(key: Any): String = when (key) {
+        is BasicCacheKeyImplementation -> "${key.entityOrRoleName}#${canonicalString(key.id)}"
+        is CacheKeyImplementation      -> "${key.entityOrRoleName}#${canonicalString(key.id)}"
+        is NaturalIdCacheKey           -> buildString {
+            append(key.entityName)
+            append("##NaturalId[")
+            append(canonicalNaturalIdValues(key.naturalIdValues))
+            append("]")
+        }
+        else                           -> canonicalString(key)
+    }
+
+    private fun canonicalNaturalIdValues(values: Any?): String = when (values) {
+        is Array<*>     -> values.joinToString(", ") { canonicalString(it) }
+        is BooleanArray -> values.joinToString(", ")
+        is ByteArray    -> values.joinToString(", ")
+        is CharArray    -> values.joinToString(", ")
+        is DoubleArray  -> values.joinToString(", ")
+        is FloatArray   -> values.joinToString(", ")
+        is IntArray     -> values.joinToString(", ")
+        is LongArray    -> values.joinToString(", ")
+        is ShortArray   -> values.joinToString(", ")
+        else            -> canonicalString(values)
+    }
+
+    private fun canonicalString(value: Any?): String = when (value) {
+        null            -> "null"
+        is Array<*>     -> value.joinToString(prefix = "[", postfix = "]") { canonicalString(it) }
+        is BooleanArray -> value.joinToString(prefix = "[", postfix = "]")
+        is ByteArray    -> value.joinToString(prefix = "[", postfix = "]")
+        is CharArray    -> value.joinToString(prefix = "[", postfix = "]")
+        is DoubleArray  -> value.joinToString(prefix = "[", postfix = "]")
+        is FloatArray   -> value.joinToString(prefix = "[", postfix = "]")
+        is IntArray     -> value.joinToString(prefix = "[", postfix = "]")
+        is LongArray    -> value.joinToString(prefix = "[", postfix = "]")
+        is ShortArray   -> value.joinToString(prefix = "[", postfix = "]")
+        else            -> value.toString()
+    }
 
     override fun getFromCache(key: Any, session: SharedSessionContractImplementor): Any? =
         nearCache.get(cacheKey(key))
