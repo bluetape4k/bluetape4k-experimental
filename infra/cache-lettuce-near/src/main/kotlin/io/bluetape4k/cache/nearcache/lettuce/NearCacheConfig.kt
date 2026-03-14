@@ -27,7 +27,7 @@ data class NearCacheConfig<K: Any, V: Any>(
             "cacheName must not contain ':' to avoid Redis key prefix collision, but was: '$cacheName'. " +
                     "Use '-' or '_' as separator instead (e.g. 'my-cache', 'cache_v2')."
         }
-        frontExpireAfterAccess?.requireGt(Duration.ZERO, "frontExpireAfterAccess")
+        frontExpireAfterWrite.requireGt(Duration.ZERO, "frontExpireAfterWrite")
         frontExpireAfterAccess?.requireGt(Duration.ZERO, "frontExpireAfterAccess")
         redisTtl?.requireGt(Duration.ZERO, "redisTtl")
     }

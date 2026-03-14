@@ -6,8 +6,8 @@ import io.lettuce.core.codec.StringCodec
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.RepeatedTest
@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
 import java.nio.ByteBuffer
 import java.time.Duration
+import kotlin.test.assertFailsWith
 
 class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
 
@@ -294,12 +295,12 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
 
     @Test
     fun `NearCacheConfig는 잘못된 duration을 즉시 거부한다`() {
-        runCatching {
+        assertFailsWith<IllegalArgumentException> {
             NearCacheConfig<String, String>(
                 cacheName = "invalid-config",
                 frontExpireAfterWrite = Duration.ZERO,
             )
-        }.exceptionOrNull().shouldNotBeNull()
+        }
     }
 
     // ---- redisSize ----
