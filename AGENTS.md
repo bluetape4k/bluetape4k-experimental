@@ -2,6 +2,41 @@
 
 You are running with oh-my-codex (OMX), a multi-agent orchestration layer for Codex CLI. Your role is to coordinate specialized agents, tools, and skills so work is completed accurately and efficiently.
 
+## Project Overview
+
+`bluetape4k-experimental` is an experimental Kotlin library project under the bluetape4k organization. This repository is used for prototyping and exploring new ideas before they are stabilized into the main bluetape4k library.
+
+## Repository-Specific Constraints
+
+### 절대 하지 말 것
+
+- `./gradlew build` 전체 빌드 금지. 항상 `./gradlew :<module>:build` 또는 `./gradlew :<module>:test`처럼 대상 모듈만 검증한다.
+- 사용자의 명시적 지시 없이 작업 대상 모듈 바깥 파일을 수정하지 않는다.
+- 테스트 없이 implementation 코드만 변경하고 종료하지 않는다.
+
+### 작업 전 확인
+
+- 새 모듈 생성 시 `settings.gradle.kts`의 `includeModules()` 자동 감지로 충분한지 먼저 확인한다.
+- 의존성 추가 또는 버전 변경 시 `buildSrc/src/main/kotlin/Libs.kt` 반영 필요 여부를 함께 확인한다.
+
+### 작업 원칙
+
+- Think before coding. 불확실한 계약은 추측하지 말고 코드, 테스트, 공식 문서로 먼저 확인한다.
+- Simplicity first. 요청 범위를 넘어 옆 코드를 정리하거나 구조를 확장하지 않는다.
+- Surgical changes. 변경된 모든 줄은 요청 또는 검증 필요성과 직접 연결되어야 한다.
+- Goal-driven execution. 가능하면 재현 테스트 또는 검증 근거를 먼저 만들고 수정 후 통과까지 확인한다.
+
+### CLI 도구 선호
+
+- 파일 탐색: `find`보다 `fd`
+- 텍스트 검색: `grep`보다 `rg`
+- 파일 내용 확인: 가능하면 `bat`
+- 디렉토리 목록: 가능하면 `eza`
+- 구조 검색/리팩터링: `ast-grep` 적극 활용
+- JSON/YAML 파싱: `jq`, `yq`
+- GitHub 작업: `gh`를 비대화형 플래그와 구조화 출력으로 사용
+- 외부 CLI는 가능하면 비대화형 플래그와 machine-readable 출력을 우선한다
+
 <guidance_schema_contract>
 Canonical guidance schema for this template is defined in `docs/guidance-schema.md`.
 
@@ -412,6 +447,76 @@ Recommended mode fields:
   </state_management>
 
 ---
+
+## Repository Build And Layout
+
+This project uses Gradle with Kotlin DSL (`build.gradle.kts`, `settings.gradle.kts`) and is a Kotlin 2.3 + Java 25 + Spring Boot 4 based multi-module experimental repository.
+
+주요 위치:
+
+- 의존성 버전 관리: `buildSrc/src/main/kotlin/Libs.kt`
+- 플러그인 버전 관리: `buildSrc/src/main/kotlin/Plugins.kt`
+- 모듈 자동 등록: `settings.gradle.kts`의 `includeModules()`
+- 공통 빌드 설정: 루트 `build.gradle.kts`
+
+실행 원칙:
+
+- 검증은 항상 대상 모듈 단위로 수행한다.
+- 전체 빌드 대신 `./gradlew :<module>:test`, `./gradlew :<module>:build`를 사용한다.
+- 필요 시 `./bin/repo-status`, `./bin/repo-diff`, `./bin/repo-test-summary -- ./gradlew :<module>:test`를 우선 활용한다.
+
+## Module And Implementation Notes
+
+### 새 모듈 생성
+
+1. `{baseDir}/{moduleName}/` 디렉토리를 만든다.
+2. `build.gradle.kts`를 작성한다.
+3. `settings.gradle.kts`는 `includeModules()` 자동 감지를 우선 신뢰하고 불필요한 수정을 피한다.
+4. `src/main/kotlin/io/bluetape4k/` 및 `src/test/kotlin/` 패키지 구조를 만든다.
+5. `README.md`를 함께 추가한다.
+
+### 모듈 명명
+
+- 모든 카테고리는 대체로 `withBaseDir=false` 패턴을 사용하므로 폴더명이 그대로 모듈명이 된다.
+- 예: `infra/cache-lettuce-near/` -> `:cache-lettuce-near`
+- 예: `spring-data/exposed-spring-data/` -> `:exposed-spring-data`
+
+### infra 모듈 주의사항
+
+- `LettuceBinaryCodecs` 사용 금지. protobuf optional 의존성 때문에 `NoClassDefFoundError`가 날 수 있다.
+- 대신 `LettuceBinaryCodec(BinarySerializers.LZ4Fory)`를 사용한다.
+- Fory/LZ4는 optional일 수 있으므로 `Libs.fory_kotlin`, `Libs.lz4_java`의 명시적 추가 필요성을 확인한다.
+- Hibernate 7 관련 `DomainDataRegionConfig`, `DomainDataRegionBuildingContext`는 `org.hibernate.cache.cfg.spi` 패키지를 사용한다.
+- Hibernate 7 + H2 조합은 `Libs.h2_v2` 사용 여부를 확인한다.
+
+### spring-boot 모듈 주의사항
+
+- `HibernatePropertiesCustomizer`는 Spring Boot 4에서 `org.springframework.boot.hibernate.autoconfigure` 패키지로 이동했다.
+- 관련 코드에서는 `compileOnly(Libs.springBoot("hibernate"))` 필요 여부를 확인한다.
+- Actuator 클래스 로딩 안전성을 위해 `@ConditionalOnClass(Endpoint::class)`는 클래스 레벨에 둔다.
+- `@ConfigurationProperties`의 Map 키에 점(`.`)이 포함되면 대괄호 표기법을 사용한다.
+
+### spring-data 모듈 주의사항
+
+- Exposed `Entity<ID>` 서브클래스에는 `@ExposedEntity`가 필요하다.
+- MVC 앱은 `@EnableExposedRepositories`, WebFlux/Coroutine 앱은 `@EnableCoroutineExposedRepositories`를 확인한다.
+- DAO 연산은 반드시 `transaction {}` 또는 `withContext(Dispatchers.IO) { transaction {} }` 경계 안에서 수행한다.
+- 테스트 초기화는 `SchemaUtils.createMissingTablesAndColumns(...)`와 `deleteAll()` 패턴을 우선 따른다.
+
+## Testing And Coroutine Guidance
+
+- JUnit 5를 기본으로 사용하고, coroutine 테스트는 `runTest`를 우선 사용한다.
+- Redis, Kafka 등 인프라 테스트는 bluetape4k-testcontainers 싱글턴 패턴을 우선 따른다.
+- `@Testcontainers`보다 기존 모듈의 companion object 기반 싱글턴 컨테이너 패턴을 먼저 확인한다.
+- 프로덕션 코드에서 `runBlocking` 사용을 피한다.
+- blocking 호출은 그대로 두지 말고 `withContext(Dispatchers.IO)` 등 적절한 dispatcher 경계 안으로 이동한다.
+- cancellation, dispatcher 경계, blocking 여부를 코루틴 변경의 기본 점검 항목으로 본다.
+
+## Code Style
+
+- Java 스타일 null 체크보다 Kotlin null-safety 문법을 우선 사용한다.
+- 불필요한 구조 개선보다 최소 diff를 지킨다.
+- 공개 API를 추가하거나 변경하면 저장소 기존 포맷에 맞춰 한글 KDoc 보강 여부를 확인한다.
 
 ## Setup
 
