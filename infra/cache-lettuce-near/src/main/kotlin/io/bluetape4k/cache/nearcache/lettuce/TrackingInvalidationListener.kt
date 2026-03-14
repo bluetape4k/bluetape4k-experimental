@@ -116,7 +116,7 @@ class TrackingInvalidationListener<V: Any>(
             runCatching {
                 connection.sync().clientTracking(trackingDisabled)
             }.onFailure { e ->
-                log.warn(e) { "Failed to disable CLIENT TRACKING: ${e.message}" }
+                log.warn { "Failed to disable CLIENT TRACKING: ${e.message}" }
             }
             connection.removeListener(pushListener)
             log.debug { "CLIENT TRACKING disabled and listener removed for cacheName=$cacheName" }

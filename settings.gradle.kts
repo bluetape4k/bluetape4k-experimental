@@ -17,7 +17,7 @@ rootProject.name = "$baseProjectName-experimental"
 include("shared")
 
 includeModules("kotlin", false, false)
-includeModules("spring-boot", false, false)
+includeModules("spring-boot", false, true)
 includeModules("spring-data", false, false)
 includeModules("coroutines", false, false)
 includeModules("ai", false, false)

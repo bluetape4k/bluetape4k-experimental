@@ -300,10 +300,12 @@ object Libs {
     val bluetape4k_cache_lettuce = bluetape4k("cache-lettuce")
     val bluetape4k_cache_redisson = bluetape4k("cache-redisson")
     val bluetape4k_kafka = bluetape4k("kafka")
+    val bluetape4k_lettuce = bluetape4k("lettuce")
     val bluetape4k_micrometer = bluetape4k("micrometer")
     val bluetape4k_nats = bluetape4k("nats")
     val bluetape4k_otel = bluetape4k("otel")
     val bluetape4k_redis = bluetape4k("redis")
+    val bluetape4k_redisson = bluetape4k("redisson")
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Spring
