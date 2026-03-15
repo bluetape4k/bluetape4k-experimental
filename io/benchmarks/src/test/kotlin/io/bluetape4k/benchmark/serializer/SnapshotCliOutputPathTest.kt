@@ -5,7 +5,6 @@ import org.amshove.kluent.shouldBeTrue
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
-import kotlin.test.assertTrue
 
 class SnapshotCliOutputPathTest {
 
@@ -15,8 +14,8 @@ class SnapshotCliOutputPathTest {
 
         try {
             writeSerializerMetricsSnapshot(outputFile.name)
-            assertTrue(outputFile.exists())
-            assertTrue(outputFile.length() > 0)
+            outputFile.exists().shouldBeTrue()
+            outputFile.length() shouldBeGreaterThan 0
         } finally {
             outputFile.delete()
         }
