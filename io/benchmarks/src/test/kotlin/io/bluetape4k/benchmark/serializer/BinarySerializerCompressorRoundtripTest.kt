@@ -1,7 +1,8 @@
 package io.bluetape4k.benchmark.serializer
 
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class BinarySerializerCompressorRoundtripTest {
 
@@ -14,7 +15,9 @@ class BinarySerializerCompressorRoundtripTest {
             SerializerCompressorRegistry.combinations.forEach { candidate ->
                 val restored =
                     candidate.serializer.deserialize<BenchmarkPayload>(candidate.serializer.serialize(payload))
-                assertEquals(expected, BenchmarkFixtures.fingerprint(restored!!), "${candidate.name}-$scale")
+                        .shouldNotBeNull()
+
+                BenchmarkFixtures.fingerprint(restored) shouldBeEqualTo expected
             }
         }
     }

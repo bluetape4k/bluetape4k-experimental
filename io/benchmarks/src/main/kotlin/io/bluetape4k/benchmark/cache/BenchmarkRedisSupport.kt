@@ -1,6 +1,7 @@
 package io.bluetape4k.benchmark.cache
 
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.utils.ShutdownQueue
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
@@ -27,10 +28,15 @@ object BenchmarkRedisSupport {
             RedisServer.Launcher.LettuceLib.getRedisURI(redis.host, redis.port)
         ).also { client ->
             client.options = clientRESP3Protocol
+        }.apply {
+            ShutdownQueue.register { this.shutdown() }
         }
 
     fun newDirectConnection(): StatefulRedisConnection<String, String> =
         RedisServer.Launcher.LettuceLib.getRedisClient().connect(StringCodec.UTF8)
+            .apply {
+                ShutdownQueue.register(this)
+            }
 
     fun flushDb(commands: RedisCommands<String, String>) {
         commands.flushdb()

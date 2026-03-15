@@ -1,5 +1,7 @@
 package io.bluetape4k.benchmark.serializer
 
+import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldBeTrue
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
@@ -28,8 +30,8 @@ class SnapshotCliOutputPathTest {
         try {
             writeSerializerCompressorMetricsSnapshot(output.toString())
 
-            assertTrue(Files.exists(output))
-            assertTrue(Files.size(output) > 0)
+            Files.exists(output).shouldBeTrue()
+            Files.size(output) shouldBeGreaterThan 0
         } finally {
             Files.deleteIfExists(output)
             Files.deleteIfExists(output.parent)
