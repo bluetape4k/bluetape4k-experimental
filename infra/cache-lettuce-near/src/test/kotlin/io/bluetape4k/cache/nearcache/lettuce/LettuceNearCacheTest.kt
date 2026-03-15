@@ -1,5 +1,7 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
 import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
@@ -8,6 +10,7 @@ import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.RepeatedTest
@@ -15,6 +18,8 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
 import java.nio.ByteBuffer
 import java.time.Duration
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertFailsWith
 
 class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
@@ -89,6 +94,30 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
 
         cache.get("remote-key") shouldBeEqualTo "remote-val"
         cache.localCacheSize() shouldBeEqualTo 1L  // front populated
+    }
+
+    @Test
+    fun `get - MultithreadingTester 동일 key 첫 조회 경쟁에서도 read-through 결과가 유지된다`() {
+        val key = "contended-read-through"
+        directCommands.set("${cache.cacheName}:$key", "remote-val")
+        cache.clearLocal()
+
+        val observed = Collections.synchronizedList(mutableListOf<String>())
+        MultithreadingTester()
+            .workers(8)
+            .rounds(1)
+            .addAll(
+                List(8) {
+                    {
+                        observed += cache.get(key).shouldNotBeNull()
+                    }
+                }
+            )
+            .run()
+
+        observed.size shouldBeEqualTo 8
+        observed.forEach { it shouldBeEqualTo "remote-val" }
+        cache.localCacheSize() shouldBeEqualTo 1L
     }
 
     @Test
@@ -172,6 +201,36 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
     }
 
     @Test
+    fun `putIfAbsent - MultithreadingTester 경쟁 상황에서도 단 한 번만 저장된다`() {
+        val key = "contended-put-if-absent"
+        val winnerCount = AtomicInteger(0)
+        val observedValues = Collections.synchronizedList(mutableListOf<String>())
+        val candidates = (1..8).map { "value-$it" }
+
+        MultithreadingTester()
+            .workers(candidates.size)
+            .rounds(1)
+            .addAll(
+                candidates.map { candidate ->
+                    {
+                        val existing = cache.putIfAbsent(key, candidate)
+                        if (existing == null) {
+                            winnerCount.incrementAndGet()
+                        } else {
+                            observedValues += existing
+                        }
+                    }
+                }
+            )
+            .run()
+
+        winnerCount.get() shouldBeEqualTo 1
+        val stored = cache.get(key).shouldNotBeNull()
+        observedValues.forEach { it shouldBeEqualTo stored }
+        directCommands.get("${cache.cacheName}:$key") shouldBeEqualTo stored
+    }
+
+    @Test
     fun `replace - 캐시 값 교체`() {
         verifyReplace(
             put = { k, v -> cache.put(k, v) },
@@ -186,6 +245,24 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
         cache.replace("k", "wrong", "new") shouldBeEqualTo false
         cache.replace("k", "old", "new") shouldBeEqualTo true
         cache.get("k") shouldBeEqualTo "new"
+    }
+
+    @Test
+    fun `get - StructuredTaskScopeTester 병렬 조회에서도 값 일관성을 유지한다`() {
+        assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
+
+        val key = "structured-read-through"
+        directCommands.set("${cache.cacheName}:$key", "structured-value")
+
+        StructuredTaskScopeTester()
+            .rounds(32)
+            .add {
+                cache.get(key) shouldBeEqualTo "structured-value"
+            }
+            .run()
+
+        cache.localCacheSize() shouldBeEqualTo 1L
+        cache.get(key) shouldBeEqualTo "structured-value"
     }
 
     @Test
@@ -343,4 +420,9 @@ class LettuceNearCacheTest: AbstractLettuceNearCacheTest() {
             .any { it is IllegalStateException && it.message == "encode failure for test" }
             .shouldBeTrue()
     }
+
+    private fun structuredTaskScopeAvailable(): Boolean =
+        runCatching {
+            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
+        }.isSuccess
 }

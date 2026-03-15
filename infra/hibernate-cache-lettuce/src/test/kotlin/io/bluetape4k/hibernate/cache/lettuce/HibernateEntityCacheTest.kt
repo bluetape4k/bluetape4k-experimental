@@ -1,5 +1,7 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
@@ -7,8 +9,10 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
 import org.hibernate.cache.spi.RegionFactory
 import org.hibernate.engine.spi.SessionFactoryImplementor
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.util.Collections
 
 /**
  * Hibernate Entity 2nd Level Cache 통합 테스트.
@@ -56,6 +60,43 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
 
         val stats = sessionFactory.statistics
         stats.secondLevelCacheHitCount shouldBeGreaterThan 0L
+    }
+
+    @Test
+    fun `동일 Entity를 MultithreadingTester로 병렬 조회해도 2nd level cache hit가 누적된다`() {
+        val personId = sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            val p = Person().apply { name = "Parallel Alice"; age = 31 }
+            session.persist(p)
+            session.transaction.commit()
+            p.id!!
+        }
+
+        // warm-up to populate 2nd level cache
+        sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            session.find(Person::class.java, personId).shouldNotBeNull()
+            session.transaction.commit()
+        }
+        sessionFactory.statistics.clear()
+
+        val loadedNames = Collections.synchronizedList(mutableListOf<String>())
+        MultithreadingTester()
+            .workers(6)
+            .rounds(3)
+            .add {
+                sessionFactory.openSession().use { session ->
+                    session.beginTransaction()
+                    val loaded = session.find(Person::class.java, personId).shouldNotBeNull()
+                    loadedNames += loaded.name
+                    session.transaction.commit()
+                }
+            }
+            .run()
+
+        loadedNames.size shouldBeEqualTo 18
+        loadedNames.forEach { it shouldBeEqualTo "Parallel Alice" }
+        sessionFactory.statistics.secondLevelCacheHitCount shouldBeGreaterThan 0L
     }
 
     @Test
@@ -169,4 +210,38 @@ class HibernateEntityCacheTest : AbstractHibernateNearCacheTest() {
         cache.backCacheSize() shouldBeEqualTo 0L
         cache.containsKey(personId.toString()) shouldBeEqualTo false
     }
+
+    @Test
+    fun `동일 Entity를 StructuredTaskScopeTester로 병렬 조회해도 값 일관성을 유지한다`() {
+        assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
+
+        val personId = sessionFactory.openSession().use { session ->
+            session.beginTransaction()
+            val p = Person().apply { name = "Structured Bob"; age = 29 }
+            session.persist(p)
+            session.transaction.commit()
+            p.id!!
+        }
+
+        val loadedNames = Collections.synchronizedList(mutableListOf<String>())
+        StructuredTaskScopeTester()
+            .rounds(6)
+            .add {
+                sessionFactory.openSession().use { session ->
+                    session.beginTransaction()
+                    val loaded = session.find(Person::class.java, personId).shouldNotBeNull()
+                    loadedNames += loaded.name
+                    session.transaction.commit()
+                }
+            }
+            .run()
+
+        loadedNames.size shouldBeEqualTo 6
+        loadedNames.forEach { it shouldBeEqualTo "Structured Bob" }
+    }
+
+    private fun structuredTaskScopeAvailable(): Boolean =
+        runCatching {
+            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
+        }.isSuccess
 }

@@ -36,6 +36,7 @@ dependencies {
 
     // Test
     testImplementation(Libs.hibernate_testing)
+    testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers)
     testImplementation(Libs.h2_v2)

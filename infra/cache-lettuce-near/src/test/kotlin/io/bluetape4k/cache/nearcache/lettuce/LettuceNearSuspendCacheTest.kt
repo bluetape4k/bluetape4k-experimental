@@ -1,5 +1,6 @@
 package io.bluetape4k.cache.nearcache.lettuce
 
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.lettuce.core.codec.RedisCodec
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.Test
 import org.testcontainers.utility.Base58
 import java.nio.ByteBuffer
 import java.time.Duration
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 
 class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
 
@@ -173,6 +176,36 @@ class LettuceNearSuspendCacheTest : AbstractLettuceNearCacheTest() {
             val ttl = directCommands.ttl("${ttlCacheName}:ttl-key")
             (ttl > 0L).shouldBeTrue()
         }
+    }
+
+    @Test
+    fun `putIfAbsent - SuspendedJobTester 경쟁 상황에서도 단 한 번만 저장된다`() = runTest {
+        val key = "suspend-contended-put-if-absent"
+        val winnerCount = AtomicInteger(0)
+        val observedValues = Collections.synchronizedList(mutableListOf<String>())
+        val candidates = (1..8).map { "value-$it" }
+
+        SuspendedJobTester()
+            .workers(candidates.size)
+            .rounds(1)
+            .addAll(
+                candidates.map { candidate ->
+                    suspend {
+                        val existing = cache.putIfAbsent(key, candidate)
+                        if (existing == null) {
+                            winnerCount.incrementAndGet()
+                        } else {
+                            observedValues += existing
+                        }
+                    }
+                }
+            )
+            .run()
+
+        winnerCount.get() shouldBeEqualTo 1
+        val stored = cache.get(key).shouldNotBeNull()
+        observedValues.forEach { it shouldBeEqualTo stored }
+        directCommands.get("${cache.cacheName}:$key") shouldBeEqualTo stored
     }
 
     @Test

@@ -24,6 +24,7 @@ dependencies {
     testImplementation(Libs.springBootStarter("data-jpa"))
     testImplementation(Libs.springBootStarter("actuator"))
     testImplementation(Libs.micrometer_core)
+    testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.hikaricp)

@@ -1,5 +1,8 @@
 package io.bluetape4k.spring.data.exposed.r2dbc
 
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.User
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.StreamingUserSuspendRepository
@@ -21,10 +24,13 @@ import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 
 class SimpleExposedR2dbcRepositoryTest : AbstractExposedR2dbcRepositoryTest() {
     @Autowired
@@ -78,6 +84,36 @@ class SimpleExposedR2dbcRepositoryTest : AbstractExposedR2dbcRepositoryTest() {
         }
 
     @Test
+    fun `save - SuspendedJobTester 경쟁 상황에서도 모든 엔티티를 저장한다`() =
+        runTest {
+            val savedIds = Collections.synchronizedList(mutableListOf<Long>())
+            val workerSize = 6
+
+            SuspendedJobTester()
+                .workers(workerSize)
+                .rounds(1)
+                .addAll(
+                    (1..workerSize).map { index ->
+                        suspend {
+                            val saved = userRepository.save(
+                                User(
+                                    id = null,
+                                    name = "Concurrent-$index",
+                                    email = "concurrent-$index@example.com",
+                                    age = 20 + index,
+                                )
+                            )
+                            saved.id.shouldNotBeNull().also(savedIds::add)
+                        }
+                    }
+                )
+                .run()
+
+            savedIds.distinct().size shouldBeEqualTo workerSize
+            userRepository.count() shouldBeEqualTo workerSize.toLong()
+        }
+
+    @Test
     fun `findAllList returns all entities`() =
         runTest {
             createUser("Alice", "alice@example.com", 30)
@@ -94,6 +130,49 @@ class SimpleExposedR2dbcRepositoryTest : AbstractExposedR2dbcRepositoryTest() {
 
             val all = streamingUserRepository.streamAll(r2dbcDatabase).toList()
             all shouldHaveSize 2
+        }
+
+    @Test
+    fun `findAllAsList - MultithreadingTester 병렬 조회에서도 같은 개수를 본다`() =
+        runTest {
+            repeat(4) { index ->
+                createUser("Parallel-$index", "parallel-$index@example.com", 30 + index)
+            }
+
+            val readCount = AtomicInteger(0)
+            MultithreadingTester()
+                .workers(4)
+                .rounds(3)
+                .add {
+                    val users = runBlocking { userRepository.findAllAsList() }
+                    users shouldHaveSize 4
+                    readCount.incrementAndGet()
+                }
+                .run()
+
+            readCount.get() shouldBeEqualTo 12
+        }
+
+    @Test
+    fun `streamAll - StructuredTaskScopeTester 병렬 collector 에서도 전체 row 를 유지한다`() =
+        runTest {
+            assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
+
+            repeat(3) { index ->
+                createUser("Structured-$index", "structured-$index@example.com", 40 + index)
+            }
+
+            val collectedCounts = Collections.synchronizedList(mutableListOf<Int>())
+            StructuredTaskScopeTester()
+                .rounds(4)
+                .add {
+                    val users = runBlocking { streamingUserRepository.streamAll(r2dbcDatabase).toList() }
+                    collectedCounts += users.size
+                }
+                .run()
+
+            collectedCounts shouldHaveSize 4
+            collectedCounts.forEach { it shouldBeEqualTo 3 }
         }
 
     @Test
@@ -178,4 +257,9 @@ class SimpleExposedR2dbcRepositoryTest : AbstractExposedR2dbcRepositoryTest() {
             userRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
             userRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
         }
+
+    private fun structuredTaskScopeAvailable(): Boolean =
+        runCatching {
+            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
+        }.isSuccess
 }

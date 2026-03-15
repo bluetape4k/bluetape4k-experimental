@@ -95,7 +95,9 @@ private fun shortBenchmarkName(benchmark: String): String =
     benchmark.substringAfterLast('.')
 
 private fun formatParams(params: Map<String, String>): String =
-    if (params.isEmpty()) "-" else params.entries.joinToString(", ") { "${it.key}=${it.value}" }
+    if (params.isEmpty()) "-" else params.entries
+        .sortedBy { it.key }
+        .joinToString(", ") { "${it.key}=${it.value}" }
 
 private fun formatScore(row: JmhRow): String =
     "%.3f %s".format(row.primaryMetric.score, row.primaryMetric.scoreUnit)

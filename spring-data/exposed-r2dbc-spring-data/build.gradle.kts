@@ -14,6 +14,7 @@ dependencies {
 
     testImplementation(Libs.exposed_migration_r2dbc)
     testImplementation(Libs.flyway_core)
+    testImplementation(Libs.bluetape4k_junit5)
 
     api(Libs.bluetape4k_exposed_core)
     api(Libs.bluetape4k_exposed_r2dbc)

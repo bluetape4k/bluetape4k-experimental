@@ -1,5 +1,7 @@
 package io.bluetape4k.spring.data.exposed
 
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.spring.data.exposed.domain.UserEntity
 import io.bluetape4k.spring.data.exposed.domain.Users
 import io.bluetape4k.spring.data.exposed.repository.UserRepository
@@ -12,10 +14,14 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 
 @Transactional
 class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
@@ -52,6 +58,24 @@ class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
         createUser("Bob", "bob@example.com", 25)
         val all = userRepository.findAll()
         all shouldHaveSize 2
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun `findAll - MultithreadingTester 병렬 조회에서도 같은 개수를 반환한다`() {
+        repeat(5) { i -> createUser("Parallel$i", "parallel$i@example.com", 20 + i) }
+        val readCount = AtomicInteger(0)
+
+        MultithreadingTester()
+            .workers(4)
+            .rounds(3)
+            .add {
+                userRepository.findAll() shouldHaveSize 5
+                readCount.incrementAndGet()
+            }
+            .run()
+
+        readCount.get() shouldBeEqualTo 12
     }
 
     @Test
@@ -113,4 +137,28 @@ class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
         page.content shouldHaveSize 3
         page.totalElements shouldBeEqualTo 10L
     }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    fun `findAll with paging - StructuredTaskScopeTester 병렬 조회에서도 totalElements 가 유지된다`() {
+        assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
+        repeat(6) { i -> createUser("Structured$i", "structured$i@example.com", 30 + i) }
+        val totals = Collections.synchronizedList(mutableListOf<Long>())
+
+        StructuredTaskScopeTester()
+            .rounds(4)
+            .add {
+                val page = userRepository.findAll(PageRequest.of(0, 2))
+                totals += page.totalElements
+            }
+            .run()
+
+        totals shouldHaveSize 4
+        totals.forEach { it shouldBeEqualTo 6L }
+    }
+
+    private fun structuredTaskScopeAvailable(): Boolean =
+        runCatching {
+            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
+        }.isSuccess
 }

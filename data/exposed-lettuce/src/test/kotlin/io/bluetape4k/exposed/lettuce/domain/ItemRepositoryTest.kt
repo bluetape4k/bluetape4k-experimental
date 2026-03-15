@@ -2,6 +2,8 @@ package io.bluetape4k.exposed.lettuce.domain
 
 import io.bluetape4k.exposed.lettuce.map.LettuceCacheConfig
 import io.bluetape4k.exposed.lettuce.repository.AbstractJdbcLettuceRepositoryTest
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeEqualTo
@@ -15,10 +17,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.Collections
 
 class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
 
@@ -72,6 +76,31 @@ class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
     }
 
     @Test
+    fun `save - MultithreadingTester 병렬 독립 저장에서도 모든 항목이 유지된다`() {
+        val items = (1..6).map { index ->
+            repo.createInDb("Bulk-$index", BigDecimal("${index}.00"))
+        }
+
+        MultithreadingTester()
+            .workers(items.size)
+            .rounds(1)
+            .addAll(
+                items.map { item ->
+                    {
+                        repo.save(item.id, item)
+                    }
+                }
+            )
+            .run()
+
+        val result = repo.findAll(items.map { it.id }.toSet())
+        result.size shouldBeEqualTo items.size
+        items.forEach { item ->
+            result[item.id].shouldNotBeNull().name shouldBeEqualTo item.name
+        }
+    }
+
+    @Test
     fun `findById - 캐시 미스 시 DB에서 Read-through 로드`() {
         val created = repo.createInDb("Gadget", BigDecimal("49.99"))
         log.debug { " created item:$created" }
@@ -83,6 +112,49 @@ class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
         found.shouldNotBeNull()
         found.name shouldBeEqualTo "Gadget"
         found.price shouldBeEqualTo BigDecimal("49.99")
+    }
+
+    @Test
+    fun `findById - MultithreadingTester 동일 ID 첫 조회 경쟁에서도 DB read-through 결과가 유지된다`() {
+        val created = repo.createInDb("Contended", BigDecimal("29.99"))
+        repo.clearCache()
+        val names = Collections.synchronizedList(mutableListOf<String>())
+
+        MultithreadingTester()
+            .workers(8)
+            .rounds(1)
+            .addAll(
+                List(8) {
+                    {
+                        val found = repo.findById(created.id).shouldNotBeNull()
+                        names += found.name
+                    }
+                }
+            )
+            .run()
+
+        names.size shouldBeEqualTo 8
+        names.forEach { it shouldBeEqualTo "Contended" }
+    }
+
+    @Test
+    fun `findById - StructuredTaskScopeTester 병렬 조회에서도 동일 값을 반환한다`() {
+        assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
+
+        val created = repo.createInDb("Structured", BigDecimal("19.99"))
+        repo.clearCache()
+        val names = Collections.synchronizedList(mutableListOf<String>())
+
+        StructuredTaskScopeTester()
+            .rounds(8)
+            .add {
+                val found = repo.findById(created.id).shouldNotBeNull()
+                names += found.name
+            }
+            .run()
+
+        names.size shouldBeEqualTo 8
+        names.forEach { it shouldBeEqualTo "Structured" }
     }
 
     @Test
@@ -180,4 +252,9 @@ class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
 
         noneRepo.close()
     }
+
+    private fun structuredTaskScopeAvailable(): Boolean =
+        runCatching {
+            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
+        }.isSuccess
 }
