@@ -37,7 +37,7 @@ class HibernateTransactionRollbackTest: AbstractHibernateNearCacheTest() {
         }
 
         if (personId != null) {
-            sessionFactory.cache.containsEntity(Person::class.java, personId!!).shouldBeFalse()
+            sessionFactory.cache.containsEntity(Person::class.java, personId).shouldBeFalse()
         }
     }
 

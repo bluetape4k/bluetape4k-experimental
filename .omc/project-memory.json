@@ -365,6 +365,18 @@
       "type": "file"
     },
     {
+      "path": "settings.gradle.kts",
+      "accessCount": 2,
+      "lastAccessed": 1773775437019,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/hibernate-lettuce/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773775445224,
+      "type": "file"
+    },
+    {
       "path": ".omx/plans/autopilot-spec.md",
       "accessCount": 1,
       "lastAccessed": 1773706743114,
@@ -383,12 +395,6 @@
       "type": "file"
     },
     {
-      "path": "settings.gradle.kts",
-      "accessCount": 1,
-      "lastAccessed": 1773743144333,
-      "type": "file"
-    },
-    {
       "path": "examples/exposed-jpa-benchmark/README.md",
       "accessCount": 1,
       "lastAccessed": 1773743161117,
@@ -398,12 +404,6 @@
       "path": "io/benchmarks/README.md",
       "accessCount": 1,
       "lastAccessed": 1773743162101,
-      "type": "file"
-    },
-    {
-      "path": "spring-boot/hibernate-lettuce/README.md",
-      "accessCount": 1,
-      "lastAccessed": 1773743162549,
       "type": "file"
     },
     {
