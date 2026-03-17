@@ -204,9 +204,39 @@
   "hotPaths": [
     {
       "path": "",
-      "accessCount": 5,
-      "lastAccessed": 1773706673636,
+      "accessCount": 8,
+      "lastAccessed": 1773743268854,
       "type": "directory"
+    },
+    {
+      "path": "infra/cache-lettuce-near/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773743299696,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/exposed-spring-data/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773743300683,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/exposed-r2dbc-spring-data/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773743301081,
+      "type": "file"
+    },
+    {
+      "path": "examples/exposed-spring-data-mvc-demo/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773743403573,
+      "type": "file"
+    },
+    {
+      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1773743403958,
+      "type": "file"
     },
     {
       "path": ".omx/plans/autopilot-spec.md",
@@ -224,6 +254,108 @@
       "path": ".omx/state/sessions/omx-1773567525098-89bzvq/AGENTS.md",
       "accessCount": 1,
       "lastAccessed": 1773706844756,
+      "type": "file"
+    },
+    {
+      "path": "settings.gradle.kts",
+      "accessCount": 1,
+      "lastAccessed": 1773743144333,
+      "type": "file"
+    },
+    {
+      "path": "examples/exposed-jpa-benchmark/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743161117,
+      "type": "file"
+    },
+    {
+      "path": "infra/hibernate-cache-lettuce/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743161899,
+      "type": "file"
+    },
+    {
+      "path": "io/benchmarks/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743162101,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/hibernate-lettuce/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743162549,
+      "type": "file"
+    },
+    {
+      "path": "utils/ulid/src/main/kotlin/io/bluetape4k/ulid/ULID.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743272619,
+      "type": "file"
+    },
+    {
+      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/repository/AbstractJdbcLettuceRepository.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743273537,
+      "type": "file"
+    },
+    {
+      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/MapLoader.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743273690,
+      "type": "file"
+    },
+    {
+      "path": "examples/spring-boot-hibernate-lettuce-demo/src/main/kotlin/io/bluetape4k/examples/cache/lettuce/domain/Product.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743274528,
+      "type": "file"
+    },
+    {
+      "path": "examples/spring-boot-hibernate-lettuce-demo/src/main/kotlin/io/bluetape4k/examples/cache/lettuce/controller/CacheController.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743274984,
+      "type": "file"
+    },
+    {
+      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/WriteMode.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743286485,
+      "type": "file"
+    },
+    {
+      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/LettuceCacheConfig.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743286880,
+      "type": "file"
+    },
+    {
+      "path": "utils/ulid/src/main/kotlin/io/bluetape4k/ulid/KotlinUuidSupport.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773743287978,
+      "type": "file"
+    },
+    {
+      "path": "utils/ulid/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743370339,
+      "type": "file"
+    },
+    {
+      "path": "data/exposed-lettuce/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743370569,
+      "type": "file"
+    },
+    {
+      "path": "shared/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743370807,
+      "type": "file"
+    },
+    {
+      "path": "examples/spring-boot-hibernate-lettuce-demo/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1773743381313,
       "type": "file"
     }
   ],
