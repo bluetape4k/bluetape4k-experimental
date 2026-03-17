@@ -136,6 +136,7 @@ object Versions {
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
     const val hibernate = "7.2.6.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
+    const val hibernate_h6 = "6.6.15.Final"       // Hibernate 6.6.x (Jakarta EE, H6 지원)
     const val hibernate_reactive = "4.2.5.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
     const val hibernate_validator = "9.1.0.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
@@ -1242,6 +1243,10 @@ object Libs {
     val hibernate_jpamodelgen = hibernate("jpamodelgen")
     val hibernate_hikaricp = hibernate("hikaricp")
     val hibernate_spatial = hibernate("spatial")
+
+    fun hibernateH6(module: String) = "org.hibernate.orm:hibernate-$module:${Versions.hibernate_h6}"
+    val hibernate_h6_core = hibernateH6("core")
+    val hibernate_h6_testing = hibernateH6("testing")
 
     const val hibernate_reactive_core = "org.hibernate.reactive:hibernate-reactive-core:${Versions.hibernate_reactive}"
     const val javassist = "org.javassist:javassist:3.30.2-GA"  // https://mvnrepository.com/artifact/org.javassist/javassist
