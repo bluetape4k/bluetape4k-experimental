@@ -108,6 +108,9 @@ class HibernateReadWriteStrategyTest : AbstractHibernateNearCacheTest() {
             s.transaction.commit()
         }
 
+        // READ_WRITE 전략은 삭제 후 soft-lock 을 캐시에 남길 수 있으므로 명시적으로 evict 후 확인
+        sessionFactory.cache.evictEntityData(VersionedItem::class.java, itemId)
+
         sessionFactory.cache
             .containsEntity(VersionedItem::class.java, itemId)
             .let { assert(!it) { "삭제된 엔티티가 캐시에 남아있음" } }
