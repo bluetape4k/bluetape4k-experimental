@@ -65,7 +65,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.3 이상에서 사용하세요
-    const val bluetape4k = "1.5.0-SNAPSHOT"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+    const val bluetape4k = "1.5.0-Beta1"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
     const val kotlin = "2.3.20-RC3"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -260,11 +260,7 @@ object Libs {
     val bluetape4k_http = bluetape4k("http")
     val bluetape4k_io = bluetape4k("io")
     val bluetape4k_jackson = bluetape4k("jackson")
-    val bluetape4k_jackson_binary = bluetape4k("jackson-binary")
-    val bluetape4k_jackson_text = bluetape4k("jackson-text")
     val bluetape4k_jackson3 = bluetape4k("jackson3")
-    val bluetape4k_jackson3_binary = bluetape4k("jackson3-binary")
-    val bluetape4k_jackson3_text = bluetape4k("jackson3-text")
     val bluetape4k_netty = bluetape4k("netty")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
     val bluetape4k_tink = bluetape4k("tink")
@@ -309,42 +305,20 @@ object Libs {
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Spring
+    val bluetape4k_spring_boot3 = bluetape4k("spring-boot3")
     val bluetape4k_spring_cassandra = bluetape4k("spring-cassandra")
-    val bluetape4k_spring_core = bluetape4k("spring-core")
-    val bluetape4k_spring_jpa = bluetape4k("spring-jpa")
+    val bluetape4k_spring_data_redis = bluetape4k("spring-data-redis")
     val bluetape4k_spring_mongodb = bluetape4k("spring-mongodb")
     val bluetape4k_spring_r2dbc = bluetape4k("spring-r2dbc")
-    val bluetape4k_spring_retrofit2 = bluetape4k("spring-retrofit2")
-    val bluetape4k_spring_tests = bluetape4k("spring-tests")
-    val bluetape4k_spring_webflux = bluetape4k("spring-webflux")
 
     // AWS
-    val bluetape4k_aws_cloudwatch = bluetape4k("aws-cloudwatch")
-    val bluetape4k_aws_core = bluetape4k("aws-core")
-    val bluetape4k_aws_dynamodb = bluetape4k("aws-dynamodb")
-    val bluetape4k_aws_kinesis = bluetape4k("aws-kinesis")
-    val bluetape4k_aws_s3 = bluetape4k("aws-s3")
-    val bluetape4k_aws_ses = bluetape4k("aws-ses")
-    val bluetape4k_aws_sns = bluetape4k("aws-sns")
-    val bluetape4k_aws_sqs = bluetape4k("aws-sqs")
-    val bluetape4k_aws_sts = bluetape4k("aws-sts")
-
-    val bluetape4k_aws_kotlin_cloudwatch = bluetape4k("aws-kotlin-cloudwatch")
-    val bluetape4k_aws_kotlin_core = bluetape4k("aws-kotlin-core")
-    val bluetape4k_aws_kotlin_dynamodb = bluetape4k("aws-kotlin-dynamodb")
-    val bluetape4k_aws_kotlin_kinesis = bluetape4k("aws-kotlin-kinesis")
-    val bluetape4k_aws_kotlin_s3 = bluetape4k("aws-kotlin-s3")
-    val bluetape4k_aws_kotlin_ses = bluetape4k("aws-kotlin-ses")
-    val bluetape4k_aws_kotlin_sns = bluetape4k("aws-kotlin-sns")
-    val bluetape4k_aws_kotlin_sqs = bluetape4k("aws-kotlin-sqs")
-    val bluetape4k_aws_kotlin_sts = bluetape4k("aws-kotlin-sts")
+    val bluetape4k_aws = bluetape4k("aws")
+    val bluetape4k_aws_kotlin = bluetape4k("aws-kotlin")
 
     // UTILS
     val bluetape4k_ahocorasick = bluetape4k("ahocorasick")
     val bluetape4k_captcha = bluetape4k("captcha")
-    val bluetape4k_geocode = bluetape4k("geocode")
-    val bluetape4k_geohash = bluetape4k("geohash")
-    val bluetape4k_geoip2 = bluetape4k("geoip2")
+    val bluetape4k_geo = bluetape4k("geo")
     val bluetape4k_idgenerators = bluetape4k("idgenerators")
     val bluetape4k_images = bluetape4k("images")
     val bluetape4k_javatimes = bluetape4k("javatimes")
@@ -360,9 +334,7 @@ object Libs {
     val bluetape4k_tokenizer_korean = bluetape4k("tokenizer-korean")
 
     // VERTX
-    val bluetape4k_vertx_core = bluetape4k("vertx-core")
-    val bluetape4k_vertx_resilience4j = bluetape4k("vertx-resilience4j")
-    val bluetape4k_vertx_sqlclient = bluetape4k("vertx-sqlclient")
+    val bluetape4k_vertx = bluetape4k("vertx")
 
     // kotlin
     fun kotlin(module: String, version: String = Versions.kotlin) = "org.jetbrains.kotlin:kotlin-$module:$version"
