@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773706253726,
+  "projectRoot": "/Users/debop/work/bluetape4k/bluetape4k-experimental",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Kotlin",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "build.gradle.kts"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "gradle",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "bin",
+      "docs",
+      "examples"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "ai": {
+      "path": "ai",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253717,
+      "keyFiles": []
+    },
+    "bin": {
+      "path": "bin",
+      "purpose": "Executable scripts",
+      "fileCount": 3,
+      "lastAccessed": 1773706253717,
+      "keyFiles": [
+        "repo-diff",
+        "repo-status",
+        "repo-test-summary"
+      ]
+    },
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1773706253717,
+      "keyFiles": []
+    },
+    "buildSrc": {
+      "path": "buildSrc",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253719,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "coroutines": {
+      "path": "coroutines",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253720,
+      "keyFiles": []
+    },
+    "data": {
+      "path": "data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1773706253721,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1773706253721,
+      "keyFiles": []
+    },
+    "examples": {
+      "path": "examples",
+      "purpose": "Example code",
+      "fileCount": 0,
+      "lastAccessed": 1773706253721,
+      "keyFiles": []
+    },
+    "gradle": {
+      "path": "gradle",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773706253721,
+      "keyFiles": []
+    },
+    "infra": {
+      "path": "infra",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253722,
+      "keyFiles": []
+    },
+    "io": {
+      "path": "io",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253722,
+      "keyFiles": []
+    },
+    "kotlin": {
+      "path": "kotlin",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253722,
+      "keyFiles": []
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253723,
+      "keyFiles": [
+        "build.gradle.kts"
+      ]
+    },
+    "spring-boot": {
+      "path": "spring-boot",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253723,
+      "keyFiles": []
+    },
+    "spring-data": {
+      "path": "spring-data",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773706253723,
+      "keyFiles": []
+    },
+    "templates": {
+      "path": "templates",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773706253723,
+      "keyFiles": []
+    },
+    "utils": {
+      "path": "utils",
+      "purpose": "Utility functions",
+      "fileCount": 0,
+      "lastAccessed": 1773706253723,
+      "keyFiles": []
+    },
+    "buildSrc/build": {
+      "path": "buildSrc/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1773706253724,
+      "keyFiles": []
+    },
+    "buildSrc/src": {
+      "path": "buildSrc/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1773706253724,
+      "keyFiles": []
+    },
+    "shared/build": {
+      "path": "shared/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1773706253725,
+      "keyFiles": []
+    },
+    "templates/test": {
+      "path": "templates/test",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1773706253726,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "",
+      "accessCount": 5,
+      "lastAccessed": 1773706673636,
+      "type": "directory"
+    },
+    {
+      "path": ".omx/plans/autopilot-spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1773706743114,
+      "type": "file"
+    },
+    {
+      "path": ".omx/plans/autopilot-impl.md",
+      "accessCount": 1,
+      "lastAccessed": 1773706743231,
+      "type": "file"
+    },
+    {
+      "path": ".omx/state/sessions/omx-1773567525098-89bzvq/AGENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1773706844756,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
