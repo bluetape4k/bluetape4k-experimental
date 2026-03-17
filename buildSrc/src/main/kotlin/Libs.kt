@@ -259,9 +259,10 @@ object Libs {
     val bluetape4k_grpc = bluetape4k("grpc")
     val bluetape4k_http = bluetape4k("http")
     val bluetape4k_io = bluetape4k("io")
-    val bluetape4k_jackson = bluetape4k("jackson")
+    val bluetape4k_jackson2 = bluetape4k("jackson2")
     val bluetape4k_jackson3 = bluetape4k("jackson3")
     val bluetape4k_netty = bluetape4k("netty")
+    val bluetape4k_okio = bluetape4k("okio")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
     val bluetape4k_tink = bluetape4k("tink")
 
@@ -272,7 +273,7 @@ object Libs {
     val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
     val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
-    val bluetape4k_exposed_jackson = bluetape4k("exposed-jackson")
+    val bluetape4k_exposed_jackson2 = bluetape4k("exposed-jackson2")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
     val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
@@ -326,6 +327,7 @@ object Libs {
     val bluetape4k_math = bluetape4k("math")
     val bluetape4k_measured = bluetape4k("measured")
     val bluetape4k_money = bluetape4k("money")
+    val bluetape4k_mutiny = bluetape4k("mutiny")
     val bluetape4k_units = bluetape4k("units")
 
     // TOKENIZER
