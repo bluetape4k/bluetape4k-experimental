@@ -1,9 +1,9 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
 import io.bluetape4k.exposed.core.HasIdentifier
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedPagingRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.toExposedOrderBy
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.StreamingSuspendExposedRepository
-import io.bluetape4k.spring.data.exposed.repository.support.toExposedOrderBy
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedPagingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -47,7 +47,7 @@ class SimpleExposedR2dbcRepository<R: HasIdentifier<ID>, ID: Any>(
     private val toDomainMapper: (ResultRow) -> R,
     private val persistValuesProvider: (R) -> Map<Column<*>, Any?>,
 ): SuspendExposedPagingRepository<IdTable<ID>, R, ID>,
-    StreamingSuspendExposedRepository<IdTable<ID>, R, ID> {
+   StreamingSuspendExposedRepository<IdTable<ID>, R, ID> {
 
     override fun toDomain(row: ResultRow): R = toDomainMapper(row)
 

@@ -22,7 +22,7 @@ import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Spring 컨텍스트 없이 repository 구현체를 직접 세워
  * 내부 `suspendTransaction` 비용과 기본 CRUD/paging 성능을 비교할 수 있게 구성합니다.
  */
-object BenchmarkUsers : LongIdTable("benchmark_users") {
+object BenchmarkUsers: LongIdTable("benchmark_users") {
     val name = varchar("name", 255)
     val email = varchar("email", 255)
     val age = integer("age")
@@ -43,7 +43,7 @@ data class BenchmarkUser(
     val name: String,
     val email: String,
     val age: Int,
-) : HasIdentifier<Long>
+): HasIdentifier<Long>
 
 private fun benchmarkUserFrom(row: ResultRow): BenchmarkUser =
     BenchmarkUser(

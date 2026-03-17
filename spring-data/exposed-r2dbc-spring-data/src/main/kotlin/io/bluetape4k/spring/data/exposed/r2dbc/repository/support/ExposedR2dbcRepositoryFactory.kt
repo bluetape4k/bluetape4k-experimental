@@ -19,7 +19,7 @@ import java.lang.invoke.MethodHandles
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
-import java.util.Optional
+import java.util.*
 
 /**
  * [ExposedR2dbcRepositoryFactory]는 테이블 기반 코루틴 Exposed Repository 프록시를 생성합니다.

@@ -1,41 +1,37 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
     kotlin("plugin.allopen")
     id(Plugins.kotlinx_benchmark) version Plugins.Versions.kotlinx_benchmark
 }
 
-import org . gradle . api . tasks . SourceSetContainer
-import org . gradle . kotlin . dsl . getByType
-import org.gradle.api.provider.Provider
-import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+dependencies {
+    implementation(project(":cache-lettuce"))
+    implementation(project(":exposed-r2dbc-spring-data"))
+    implementation(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_junit5)
+    implementation(Libs.commons_compress)
+    implementation(Libs.kryo5)
+    implementation(Libs.fory_kotlin)
+    implementation(Libs.lz4_java)
+    implementation(Libs.snappy_java)
+    implementation(Libs.zstd_jni)
+    implementation(Libs.chronicle_wire)
+    implementation(Libs.jackson_module_kotlin)
+    implementation(Libs.jackson_dataformat_msgpack)
 
-        dependencies {
-            implementation(project(":cache-lettuce-near"))
-            implementation(project(":exposed-r2dbc-spring-data"))
-            implementation(Libs.bluetape4k_io)
-            implementation(Libs.bluetape4k_junit5)
-            implementation(Libs.commons_compress)
-            implementation(Libs.kryo5)
-            implementation(Libs.fory_kotlin)
-            implementation(Libs.lz4_java)
-            implementation(Libs.snappy_java)
-            implementation(Libs.zstd_jni)
-            implementation(Libs.chronicle_wire)
-            implementation(Libs.jackson_module_kotlin)
-            implementation(Libs.jackson_dataformat_msgpack)
+    implementation(Libs.kotlinx_benchmark_runtime)
+    implementation(Libs.kotlinx_benchmark_runtime_jvm)
+    implementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.exposed_migration_r2dbc)
+    implementation(Libs.bluetape4k_testcontainers)
+    implementation(Libs.testcontainers)
+    implementation(Libs.h2_v2)
+    implementation(Libs.r2dbc_h2)
 
-            implementation(Libs.kotlinx_benchmark_runtime)
-            implementation(Libs.kotlinx_benchmark_runtime_jvm)
-            implementation(Libs.kotlinx_coroutines_core)
-            implementation(Libs.exposed_migration_r2dbc)
-            implementation(Libs.bluetape4k_testcontainers)
-            implementation(Libs.testcontainers)
-            implementation(Libs.h2_v2)
-            implementation(Libs.r2dbc_h2)
-
-            testImplementation(kotlin("test"))
-        }
+    testImplementation(kotlin("test"))
+}
 
 allOpen {
     annotation("kotlinx.benchmark.State")

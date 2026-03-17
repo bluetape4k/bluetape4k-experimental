@@ -61,7 +61,7 @@ class CacheController(private val entityManagerFactory: EntityManagerFactory) {
         return ResponseEntity.ok("Evicted all local caches (L1 only, ${factory.getCaches().size} regions)")
     }
 
-    private fun getRegionFactory(): LettuceNearCacheRegionFactory? {
+    private fun getRegionFactory(): io.bluetape4k.hibernate.cache.lettuce.LettuceNearCacheRegionFactory? {
         return runCatching {
             val sessionFactory = entityManagerFactory.unwrap(SessionFactoryImplementor::class.java)
             sessionFactory.serviceRegistry.getService(RegionFactory::class.java)

@@ -5,7 +5,7 @@ plugins {
 dependencies {
     api(Libs.springData("commons"))
 
-    api(project(":exposed-spring-data"))  // EntityInformation, ExposedMappingContext 재사용
+    api(project(":exposed-jdbc-spring-data"))  // EntityInformation, ExposedMappingContext 재사용
     api(Libs.kotlin_reflect)
     api(Libs.exposed_core)
     api(Libs.exposed_r2dbc)

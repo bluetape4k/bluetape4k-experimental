@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 /**
  * 상품 DTO에 대한 suspend CRUD Repository 입니다.
  */
-interface ProductSuspendRepository : SuspendExposedCrudRepository<Products, ProductDto, Long> {
+interface ProductSuspendRepository: SuspendExposedCrudRepository<Products, ProductDto, Long> {
 
     override fun toDomain(row: ResultRow): ProductDto =
         ProductDto(

@@ -1,4 +1,4 @@
-# spring-data-exposed-r2dbc-spring-data
+# Module exposed-r2dbc-spring-data
 
 JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수 있게 해주는 코루틴 모듈입니다.
 

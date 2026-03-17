@@ -1,13 +1,13 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.config
 
-import io.bluetape4k.spring.data.exposed.config.ExposedSpringDataAutoConfiguration as JdbcExposedSpringDataAutoConfiguration
-import io.bluetape4k.spring.data.exposed.mapping.ExposedMappingContext
+import io.bluetape4k.spring.data.exposed.jdbc.mapping.ExposedMappingContext
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import io.bluetape4k.spring.data.exposed.jdbc.config.ExposedSpringDataAutoConfiguration as JdbcExposedSpringDataAutoConfiguration
 
 /**
  * 코루틴 기반 Spring Data Exposed 자동 설정입니다.

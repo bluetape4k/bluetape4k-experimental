@@ -1,6 +1,6 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.config
 
-import io.bluetape4k.spring.data.exposed.annotation.ExposedEntity
+import io.bluetape4k.spring.data.exposed.jdbc.annotation.ExposedEntity
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.SuspendExposedCrudRepository
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.ExposedR2dbcRepositoryFactoryBean
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
