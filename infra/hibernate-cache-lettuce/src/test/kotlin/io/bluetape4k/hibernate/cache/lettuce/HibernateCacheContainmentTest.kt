@@ -19,7 +19,7 @@ class HibernateCacheContainmentTest : AbstractHibernateNearCacheTest() {
     }
 
     @Test
-    fun `persist 후 containsEntity가 true`() {
+    fun `persist 및 로드 후 containsEntity가 true`() {
         val personId =
             sessionFactory.openSession().use { s ->
                 s.beginTransaction()
@@ -32,6 +32,13 @@ class HibernateCacheContainmentTest : AbstractHibernateNearCacheTest() {
                 s.transaction.commit()
                 p.id!!
             }
+
+        // 새 세션에서 읽어 2LC에 적재
+        sessionFactory.openSession().use { s ->
+            s.beginTransaction()
+            s.find(Person::class.java, personId)
+            s.transaction.commit()
+        }
 
         sessionFactory.cache.containsEntity(Person::class.java, personId).shouldBeTrue()
 
@@ -97,6 +104,15 @@ class HibernateCacheContainmentTest : AbstractHibernateNearCacheTest() {
                 }
             }
 
+        // 새 세션에서 읽어 2LC에 적재
+        ids.forEach { id ->
+            sessionFactory.openSession().use { s ->
+                s.beginTransaction()
+                s.find(Person::class.java, id)
+                s.transaction.commit()
+            }
+        }
+
         ids.forEach { id ->
             sessionFactory.cache.containsEntity(Person::class.java, id).shouldBeTrue()
         }
@@ -151,6 +167,13 @@ class HibernateCacheContainmentTest : AbstractHibernateNearCacheTest() {
                 s.transaction.commit()
                 p.id!!
             }
+
+        // 새 세션에서 읽어 2LC에 적재
+        sessionFactory.openSession().use { s ->
+            s.beginTransaction()
+            s.find(Person::class.java, personId)
+            s.transaction.commit()
+        }
 
         sessionFactory.cache.evictQueryRegions()
         sessionFactory.cache.containsEntity(Person::class.java, personId).shouldBeTrue()
