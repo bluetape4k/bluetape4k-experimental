@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1773706253726,
+  "lastScanned": 1773892879613,
   "projectRoot": "/Users/debop/work/bluetape4k/bluetape4k-experimental",
   "techStack": {
     "languages": [
@@ -49,14 +49,14 @@
       "path": "ai",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253717,
+      "lastAccessed": 1773892879606,
       "keyFiles": []
     },
     "bin": {
       "path": "bin",
       "purpose": "Executable scripts",
       "fileCount": 3,
-      "lastAccessed": 1773706253717,
+      "lastAccessed": 1773892879607,
       "keyFiles": [
         "repo-diff",
         "repo-status",
@@ -67,14 +67,14 @@
       "path": "build",
       "purpose": "Build output",
       "fileCount": 0,
-      "lastAccessed": 1773706253717,
+      "lastAccessed": 1773892879607,
       "keyFiles": []
     },
     "buildSrc": {
       "path": "buildSrc",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253719,
+      "lastAccessed": 1773892879608,
       "keyFiles": [
         "build.gradle.kts"
       ]
@@ -83,64 +83,65 @@
       "path": "coroutines",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253720,
+      "lastAccessed": 1773892879608,
       "keyFiles": []
     },
     "data": {
       "path": "data",
       "purpose": "Data files",
       "fileCount": 1,
-      "lastAccessed": 1773706253721,
+      "lastAccessed": 1773892879608,
       "keyFiles": []
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 0,
-      "lastAccessed": 1773706253721,
+      "lastAccessed": 1773892879608,
       "keyFiles": []
     },
     "examples": {
       "path": "examples",
       "purpose": "Example code",
       "fileCount": 0,
-      "lastAccessed": 1773706253721,
+      "lastAccessed": 1773892879608,
       "keyFiles": []
     },
     "gradle": {
       "path": "gradle",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773706253721,
+      "lastAccessed": 1773892879608,
       "keyFiles": []
     },
     "infra": {
       "path": "infra",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253722,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "io": {
       "path": "io",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253722,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "kotlin": {
       "path": "kotlin",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253722,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "shared": {
       "path": "shared",
       "purpose": null,
-      "fileCount": 1,
-      "lastAccessed": 1773706253723,
+      "fileCount": 2,
+      "lastAccessed": 1773892879609,
       "keyFiles": [
+        "README.md",
         "build.gradle.kts"
       ]
     },
@@ -148,358 +149,358 @@
       "path": "spring-boot",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253723,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "spring-data": {
       "path": "spring-data",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773706253723,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "templates": {
       "path": "templates",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773706253723,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "utils": {
       "path": "utils",
       "purpose": "Utility functions",
       "fileCount": 0,
-      "lastAccessed": 1773706253723,
+      "lastAccessed": 1773892879609,
       "keyFiles": []
     },
     "buildSrc/build": {
       "path": "buildSrc/build",
       "purpose": "Build output",
       "fileCount": 0,
-      "lastAccessed": 1773706253724,
+      "lastAccessed": 1773892879610,
       "keyFiles": []
     },
     "buildSrc/src": {
       "path": "buildSrc/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1773706253724,
+      "lastAccessed": 1773892879610,
       "keyFiles": []
     },
     "shared/build": {
       "path": "shared/build",
       "purpose": "Build output",
       "fileCount": 0,
-      "lastAccessed": 1773706253725,
+      "lastAccessed": 1773892879613,
       "keyFiles": []
     },
     "templates/test": {
       "path": "templates/test",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1773706253726,
+      "lastAccessed": 1773892879613,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/AbstractHibernateNearCacheTest.kt",
-      "accessCount": 12,
-      "lastAccessed": 1773749248010,
-      "type": "file"
-    },
-    {
       "path": "",
       "accessCount": 8,
-      "lastAccessed": 1773743268854,
+      "lastAccessed": 1773899511078,
       "type": "directory"
     },
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateEntityCacheTest.kt",
-      "accessCount": 6,
-      "lastAccessed": 1773749727831,
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/Appointments.kt",
+      "accessCount": 5,
+      "lastAccessed": 1773899347477,
       "type": "file"
     },
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateCacheContainmentTest.kt",
-      "accessCount": 6,
-      "lastAccessed": 1773749731218,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateReadWriteStrategyTest.kt",
-      "accessCount": 6,
-      "lastAccessed": 1773749739020,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/model/RelationEntities.kt",
-      "accessCount": 4,
-      "lastAccessed": 1773748821198,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/model/Person.kt",
-      "accessCount": 4,
-      "lastAccessed": 1773749076021,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/model/VersionedEntities.kt",
-      "accessCount": 3,
-      "lastAccessed": 1773748860111,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/RedisServers.kt",
-      "accessCount": 3,
-      "lastAccessed": 1773749255006,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateQueryCacheTest.kt",
-      "accessCount": 3,
-      "lastAccessed": 1773749728565,
-      "type": "file"
-    },
-    {
-      "path": "infra/cache-lettuce-near/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773743299696,
-      "type": "file"
-    },
-    {
-      "path": "spring-data/exposed-spring-data/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773743300683,
-      "type": "file"
-    },
-    {
-      "path": "spring-data/exposed-r2dbc-spring-data/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773743301081,
-      "type": "file"
-    },
-    {
-      "path": "examples/exposed-spring-data-mvc-demo/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773743403573,
-      "type": "file"
-    },
-    {
-      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773743403958,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/README.md",
-      "accessCount": 2,
-      "lastAccessed": 1773747710819,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/model/ElementCollectionEntities.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773748872645,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/main/kotlin/io/bluetape4k/hibernate/cache/lettuce/LettuceNearCacheProperties.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749232475,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/main/kotlin/io/bluetape4k/hibernate/cache/lettuce/LettuceNearCacheRegionFactory.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749237592,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/main/kotlin/io/bluetape4k/hibernate/cache/lettuce/LettuceNearCacheStorageAccess.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749237969,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/LettuceNearCacheRegionFactoryTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749248306,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateRelationCacheTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749729369,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateAdvancedKeyCacheTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749729677,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateCacheStatisticsTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749730444,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateTransactionRollbackTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749739345,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateElementCollectionCacheTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749740232,
-      "type": "file"
-    },
-    {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/HibernateQueryCacheAdvancedTest.kt",
-      "accessCount": 2,
-      "lastAccessed": 1773749741068,
+      "path": "scheduling/appointment-event/src/main/kotlin/io/bluetape4k/scheduling/appointment/event/AppointmentEventLogger.kt",
+      "accessCount": 5,
+      "lastAccessed": 1773899996893,
       "type": "file"
     },
     {
       "path": "settings.gradle.kts",
+      "accessCount": 4,
+      "lastAccessed": 1773898225851,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/AppointmentDto.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899251351,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/service/model/TimeRange.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899345639,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/Clinics.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899353953,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/TreatmentTypes.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899354398,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/TreatmentEquipments.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899355161,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/Equipments.kt",
+      "accessCount": 4,
+      "lastAccessed": 1773899355586,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-event/src/test/kotlin/io/bluetape4k/scheduling/appointment/event/EventLogTest.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773898771839,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/OperatingHoursTable.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899272831,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/BreakTimes.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899273209,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/ClinicClosures.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899274121,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/Doctors.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899275082,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/DoctorSchedules.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899275453,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/DoctorAbsences.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899276416,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/statemachine/AppointmentState.kt",
+      "accessCount": 3,
+      "lastAccessed": 1773899987484,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/exposed-r2dbc-spring-data/src/test/kotlin/io/bluetape4k/spring/data/exposed/r2dbc/domain/UserEntity.kt",
       "accessCount": 2,
-      "lastAccessed": 1773775437019,
+      "lastAccessed": 1773898167644,
       "type": "file"
     },
     {
-      "path": "spring-boot/hibernate-lettuce/README.md",
+      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/src/main/kotlin/io/bluetape4k/examples/exposed/webflux/domain/ProductEntity.kt",
       "accessCount": 2,
-      "lastAccessed": 1773775445224,
+      "lastAccessed": 1773898308328,
       "type": "file"
     },
     {
-      "path": ".omx/plans/autopilot-spec.md",
-      "accessCount": 1,
-      "lastAccessed": 1773706743114,
+      "path": "scheduling",
+      "accessCount": 2,
+      "lastAccessed": 1773898711568,
+      "type": "directory"
+    },
+    {
+      "path": "scheduling/appointment-core/src/test/kotlin/io/bluetape4k/scheduling/appointment/statemachine/AppointmentStateMachineTest.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899136020,
       "type": "file"
     },
     {
-      "path": ".omx/plans/autopilot-impl.md",
-      "accessCount": 1,
-      "lastAccessed": 1773706743231,
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/tables/AppointmentNotes.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899347876,
       "type": "file"
     },
     {
-      "path": ".omx/state/sessions/omx-1773567525098-89bzvq/AGENTS.md",
-      "accessCount": 1,
-      "lastAccessed": 1773706844756,
+      "path": "scheduling/appointment-core/src/test/kotlin/io/bluetape4k/scheduling/appointment/model/tables/TableSchemaTest.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899348978,
       "type": "file"
     },
     {
-      "path": "examples/exposed-jpa-benchmark/README.md",
-      "accessCount": 1,
-      "lastAccessed": 1773743161117,
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/statemachine/AppointmentStateMachine.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899986530,
       "type": "file"
     },
     {
-      "path": "io/benchmarks/README.md",
-      "accessCount": 1,
-      "lastAccessed": 1773743162101,
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/statemachine/AppointmentEvent.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899987661,
       "type": "file"
     },
     {
-      "path": "utils/ulid/src/main/kotlin/io/bluetape4k/ulid/ULID.kt",
-      "accessCount": 1,
-      "lastAccessed": 1773743272619,
+      "path": "scheduling/appointment-event/src/main/kotlin/io/bluetape4k/scheduling/appointment/event/AppointmentDomainEvent.kt",
+      "accessCount": 2,
+      "lastAccessed": 1773899996015,
       "type": "file"
     },
     {
-      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/repository/AbstractJdbcLettuceRepository.kt",
+      "path": "spring-data",
       "accessCount": 1,
-      "lastAccessed": 1773743273537,
+      "lastAccessed": 1773894329858,
+      "type": "directory"
+    },
+    {
+      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/src/main/kotlin/io/bluetape4k/examples/exposed/webflux/repository/ProductSuspendRepository.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773894336611,
       "type": "file"
     },
     {
-      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/MapLoader.kt",
+      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/src/main/kotlin/io/bluetape4k/examples/exposed/webflux/controller/ProductController.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743273690,
+      "lastAccessed": 1773894337459,
       "type": "file"
     },
     {
-      "path": "examples/spring-boot-hibernate-lettuce-demo/src/main/kotlin/io/bluetape4k/examples/cache/lettuce/domain/Product.kt",
+      "path": "spring-data/exposed-r2dbc-spring-data/src/main/kotlin/io/bluetape4k/spring/data/exposed/r2dbc/repository/SuspendExposedCrudRepository.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743274528,
+      "lastAccessed": 1773894344940,
       "type": "file"
     },
     {
-      "path": "examples/spring-boot-hibernate-lettuce-demo/src/main/kotlin/io/bluetape4k/examples/cache/lettuce/controller/CacheController.kt",
+      "path": "examples/exposed-r2dbc-spring-data-webflux-demo/src/main/kotlin/io/bluetape4k/examples/exposed/webflux/config/ExposedR2dbcConfig.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743274984,
+      "lastAccessed": 1773894354743,
       "type": "file"
     },
     {
-      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/WriteMode.kt",
+      "path": "examples/exposed-jpa-benchmark/src/main/kotlin/io/bluetape4k/examples/benchmark/domain/exposed/Tables.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743286485,
+      "lastAccessed": 1773898162700,
       "type": "file"
     },
     {
-      "path": "data/exposed-lettuce/src/main/kotlin/io/bluetape4k/exposed/lettuce/map/LettuceCacheConfig.kt",
+      "path": "data/exposed-lettuce/src/test/kotlin/io/bluetape4k/exposed/lettuce/domain/Items.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743286880,
+      "lastAccessed": 1773898163366,
       "type": "file"
     },
     {
-      "path": "utils/ulid/src/main/kotlin/io/bluetape4k/ulid/KotlinUuidSupport.kt",
+      "path": "data/exposed-lettuce/src/test/kotlin/io/bluetape4k/exposed/lettuce/domain/ItemRepositoryTest.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743287978,
+      "lastAccessed": 1773898163539,
       "type": "file"
     },
     {
-      "path": "utils/ulid/README.md",
+      "path": "spring-data/exposed-jdbc-spring-data/src/test/kotlin/io/bluetape4k/spring/data/exposed/jdbc/domain/Users.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743370339,
+      "lastAccessed": 1773898166729,
       "type": "file"
     },
     {
-      "path": "data/exposed-lettuce/README.md",
+      "path": "examples/exposed-jdbc-spring-data-mvc-demo/src/main/kotlin/io/bluetape4k/examples/exposed/mvc/domain/ProductEntity.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743370569,
+      "lastAccessed": 1773898167166,
       "type": "file"
     },
     {
-      "path": "shared/README.md",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/ClinicDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743370807,
+      "lastAccessed": 1773898352949,
       "type": "file"
     },
     {
-      "path": "examples/spring-boot-hibernate-lettuce-demo/README.md",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/OperatingHoursDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773743381313,
+      "lastAccessed": 1773898354309,
       "type": "file"
     },
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/resources/junit-platform.properties",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/BreakTimeDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773747720452,
+      "lastAccessed": 1773898355759,
       "type": "file"
     },
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/resources/logback-test.xml",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/ClinicClosureDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773747720634,
+      "lastAccessed": 1773898357521,
       "type": "file"
     },
     {
-      "path": "infra/hibernate-cache-lettuce/src/test/kotlin/io/bluetape4k/hibernate/cache/lettuce/model/AdvancedEntities.kt",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/DoctorDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773747729013,
+      "lastAccessed": 1773898359626,
       "type": "file"
     },
     {
-      "path": "docs/superpowers/plans/2026-03-17-hibernate-cache-lettuce-tests.md",
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/DoctorScheduleDto.kt",
       "accessCount": 1,
-      "lastAccessed": 1773748280550,
+      "lastAccessed": 1773898361145,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/DoctorAbsenceDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898362814,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/EquipmentDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898364783,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/TreatmentTypeDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898367173,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/TreatmentEquipmentDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898368813,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-core/src/main/kotlin/io/bluetape4k/scheduling/appointment/model/dto/AppointmentNoteDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898372224,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-event/src/main/kotlin/io/bluetape4k/scheduling/appointment/event/AppointmentEventLogs.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898669701,
+      "type": "file"
+    },
+    {
+      "path": "scheduling/appointment-event/src/main/kotlin/io/bluetape4k/scheduling/appointment/event/AppointmentEventLogDto.kt",
+      "accessCount": 1,
+      "lastAccessed": 1773898671856,
       "type": "file"
     }
   ],
