@@ -7,4 +7,5 @@ object Clinics : LongIdTable("scheduling_clinics") {
     val slotDurationMinutes = integer("slot_duration_minutes").default(30)
     val timezone = varchar("timezone", 50).default("Asia/Seoul")
     val maxConcurrentPatients = integer("max_concurrent_patients").default(1)
+    val openOnHolidays = bool("open_on_holidays").default(false)
 }

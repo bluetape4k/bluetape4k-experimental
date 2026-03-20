@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 class TableSchemaTest {
     private val allTables =
         arrayOf(
+            Holidays,
             Clinics,
             OperatingHoursTable,
             BreakTimes,

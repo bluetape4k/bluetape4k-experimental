@@ -6,6 +6,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.ConsultationMethod
+import io.bluetape4k.scheduling.appointment.model.tables.Holidays
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorAbsences
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorSchedules
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
@@ -45,6 +46,7 @@ class SlotCalculationServiceTest {
             db = Database.connect("jdbc:h2:mem:slot_test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
             transaction {
                 SchemaUtils.create(
+                    Holidays,
                     Clinics,
                     OperatingHoursTable,
                     BreakTimes,
@@ -79,6 +81,7 @@ class SlotCalculationServiceTest {
             BreakTimes.deleteAll()
             OperatingHoursTable.deleteAll()
             Clinics.deleteAll()
+            Holidays.deleteAll()
         }
     }
 
@@ -90,6 +93,7 @@ class SlotCalculationServiceTest {
         clinicClose: LocalTime = LocalTime.of(18, 0),
         slotDurationMinutes: Int = 30,
         maxConcurrentPatients: Int = 1,
+        openOnHolidays: Boolean = false,
         doctorStart: LocalTime = LocalTime.of(9, 0),
         doctorEnd: LocalTime = LocalTime.of(18, 0),
         treatmentDurationMinutes: Int = 30,
@@ -108,6 +112,7 @@ class SlotCalculationServiceTest {
                         it[name] = "Test Clinic"
                         it[Clinics.slotDurationMinutes] = slotDurationMinutes
                         it[Clinics.maxConcurrentPatients] = maxConcurrentPatients
+                        it[Clinics.openOnHolidays] = openOnHolidays
                     }[Clinics.id]
                     .value
 
@@ -580,5 +585,46 @@ class SlotCalculationServiceTest {
         phoneSlots.forEach { slot ->
             assertTrue(slot.equipmentIds.isEmpty())
         }
+    }
+
+    @Test
+    fun `17 - 공휴일에는 기본적으로 빈 슬롯 반환`() {
+        val (clinicId, doctorId, treatmentTypeId) = insertBaseData()
+
+        // MONDAY를 공휴일로 등록
+        transaction {
+            Holidays.insert {
+                it[holidayDate] = MONDAY
+                it[name] = "테스트 공휴일"
+            }
+        }
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        assertTrue(slots.isEmpty(), "공휴일에는 기본적으로 예약 슬롯이 없어야 합니다")
+    }
+
+    @Test
+    fun `18 - openOnHolidays 설정된 병원은 공휴일에도 슬롯 제공`() {
+        val (clinicId, doctorId, treatmentTypeId) =
+            insertBaseData(openOnHolidays = true)
+
+        // MONDAY를 공휴일로 등록
+        transaction {
+            Holidays.insert {
+                it[holidayDate] = MONDAY
+                it[name] = "테스트 공휴일"
+            }
+        }
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        assertEquals(18, slots.size, "openOnHolidays 병원은 공휴일에도 정상 영업해야 합니다")
     }
 }

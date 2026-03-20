@@ -8,6 +8,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.DoctorAbsences
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorSchedules
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import io.bluetape4k.scheduling.appointment.model.tables.Equipments
+import io.bluetape4k.scheduling.appointment.model.tables.Holidays
 import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
@@ -43,6 +44,19 @@ class SlotCalculationService {
 
             val slotDurationMinutes = clinicRow[Clinics.slotDurationMinutes]
             val clinicMaxConcurrent = clinicRow[Clinics.maxConcurrentPatients]
+            val openOnHolidays = clinicRow[Clinics.openOnHolidays]
+
+            // 1-1. Check if date is a national holiday
+            if (!openOnHolidays) {
+                val isHoliday =
+                    Holidays
+                        .selectAll()
+                        .where { Holidays.holidayDate eq query.date }
+                        .count() > 0
+                if (isHoliday) {
+                    return@transaction emptyList()
+                }
+            }
 
             // 2. Check ClinicClosures for full-day closure
             val closures =

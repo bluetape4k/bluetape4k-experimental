@@ -10,6 +10,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.DoctorAbsences
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorSchedules
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import io.bluetape4k.scheduling.appointment.model.tables.Equipments
+import io.bluetape4k.scheduling.appointment.model.tables.Holidays
 import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import io.bluetape4k.scheduling.appointment.model.tables.RescheduleCandidates
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
@@ -44,6 +45,7 @@ class ClosureRescheduleServiceTest {
         private val TUESDAY = LocalDate.of(2026, 3, 24)
 
         private val allTables = arrayOf(
+            Holidays,
             Clinics,
             OperatingHoursTable,
             BreakTimes,
@@ -87,6 +89,7 @@ class ClosureRescheduleServiceTest {
             BreakTimes.deleteAll()
             OperatingHoursTable.deleteAll()
             Clinics.deleteAll()
+            Holidays.deleteAll()
         }
     }
 
