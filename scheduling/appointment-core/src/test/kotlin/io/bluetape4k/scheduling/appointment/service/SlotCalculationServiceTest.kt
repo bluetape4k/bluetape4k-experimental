@@ -5,12 +5,16 @@ import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
+import io.bluetape4k.scheduling.appointment.model.tables.ConsultationMethod
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorAbsences
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorSchedules
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
+import io.bluetape4k.scheduling.appointment.model.tables.ProviderType
+import io.bluetape4k.scheduling.appointment.model.tables.TreatmentCategory
 import io.bluetape4k.scheduling.appointment.model.tables.Equipments
 import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
+import io.bluetape4k.scheduling.appointment.model.tables.ConsultationTopics
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
 import io.bluetape4k.scheduling.appointment.service.model.SlotQuery
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -51,6 +55,7 @@ class SlotCalculationServiceTest {
                     Equipments,
                     TreatmentTypes,
                     TreatmentEquipments,
+                    ConsultationTopics,
                     Appointments,
                     AppointmentNotes
                 )
@@ -64,6 +69,7 @@ class SlotCalculationServiceTest {
             AppointmentNotes.deleteAll()
             Appointments.deleteAll()
             TreatmentEquipments.deleteAll()
+            ConsultationTopics.deleteAll()
             TreatmentTypes.deleteAll()
             Equipments.deleteAll()
             DoctorAbsences.deleteAll()
@@ -90,6 +96,10 @@ class SlotCalculationServiceTest {
         requiresEquipment: Boolean = false,
         doctorMaxConcurrent: Int? = null,
         treatmentMaxConcurrent: Int? = null,
+        providerType: String = ProviderType.DOCTOR,
+        treatmentCategory: String = TreatmentCategory.TREATMENT,
+        requiredProviderType: String = ProviderType.DOCTOR,
+        consultationMethod: String? = null,
     ): Triple<Long, Long, Long> =
         transaction {
             val clinicId =
@@ -114,6 +124,7 @@ class SlotCalculationServiceTest {
                     .insert {
                         it[Doctors.clinicId] = clinicId
                         it[name] = "Dr. Kim"
+                        it[Doctors.providerType] = providerType
                         it[Doctors.maxConcurrentPatients] = doctorMaxConcurrent
                     }[Doctors.id]
                     .value
@@ -130,7 +141,10 @@ class SlotCalculationServiceTest {
                     .insert {
                         it[TreatmentTypes.clinicId] = clinicId
                         it[name] = "General Checkup"
+                        it[category] = treatmentCategory
                         it[defaultDurationMinutes] = treatmentDurationMinutes
+                        it[TreatmentTypes.requiredProviderType] = requiredProviderType
+                        it[TreatmentTypes.consultationMethod] = consultationMethod
                         it[TreatmentTypes.requiresEquipment] = requiresEquipment
                         it[TreatmentTypes.maxConcurrentPatients] = treatmentMaxConcurrent
                     }[TreatmentTypes.id]
@@ -486,6 +500,85 @@ class SlotCalculationServiceTest {
         // 각 슬롯의 endTime은 startTime + 60분
         slots.forEach { slot ->
             assertEquals(slot.startTime.plusMinutes(60), slot.endTime)
+        }
+    }
+
+    @Test
+    fun `13 - 의사가 상담 진료 유형에 배정되면 빈 슬롯 반환`() {
+        // DOCTOR가 CONSULTATION(CONSULTANT 필요) 진료에 배정 → provider type 불일치
+        val (clinicId, doctorId, treatmentTypeId) =
+            insertBaseData(
+                providerType = ProviderType.DOCTOR,
+                treatmentCategory = TreatmentCategory.CONSULTATION,
+                requiredProviderType = ProviderType.CONSULTANT,
+                consultationMethod = ConsultationMethod.IN_PERSON
+            )
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        assertTrue(slots.isEmpty(), "의사는 상담 진료를 수행할 수 없어야 합니다")
+    }
+
+    @Test
+    fun `14 - 전문상담사가 상담 진료 유형에 배정되면 슬롯 정상 반환`() {
+        // CONSULTANT가 CONSULTATION 진료에 배정 → provider type 일치
+        val (clinicId, consultantId, treatmentTypeId) =
+            insertBaseData(
+                providerType = ProviderType.CONSULTANT,
+                treatmentCategory = TreatmentCategory.CONSULTATION,
+                requiredProviderType = ProviderType.CONSULTANT,
+                consultationMethod = ConsultationMethod.IN_PERSON
+            )
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, consultantId, treatmentTypeId, MONDAY)
+            )
+
+        assertEquals(18, slots.size, "상담사는 상담 슬롯을 정상적으로 제공해야 합니다")
+    }
+
+    @Test
+    fun `15 - 전문상담사가 진료 유형에 배정되면 빈 슬롯 반환`() {
+        // CONSULTANT가 TREATMENT(DOCTOR 필요) 진료에 배정 → provider type 불일치
+        val (clinicId, consultantId, treatmentTypeId) =
+            insertBaseData(
+                providerType = ProviderType.CONSULTANT,
+                treatmentCategory = TreatmentCategory.TREATMENT,
+                requiredProviderType = ProviderType.DOCTOR
+            )
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, consultantId, treatmentTypeId, MONDAY)
+            )
+
+        assertTrue(slots.isEmpty(), "상담사는 진료를 수행할 수 없어야 합니다")
+    }
+
+    @Test
+    fun `16 - 전화 상담은 장비 불필요, 영상통화는 장비 필요`() {
+        // 전화 상담 - 장비 불필요
+        val (clinicId1, consultantId1, phoneConsultationId) =
+            insertBaseData(
+                providerType = ProviderType.CONSULTANT,
+                treatmentCategory = TreatmentCategory.CONSULTATION,
+                requiredProviderType = ProviderType.CONSULTANT,
+                consultationMethod = ConsultationMethod.PHONE,
+                requiresEquipment = false
+            )
+
+        val phoneSlots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId1, consultantId1, phoneConsultationId, MONDAY)
+            )
+
+        assertEquals(18, phoneSlots.size, "전화 상담은 장비 없이 가능해야 합니다")
+        phoneSlots.forEach { slot ->
+            assertTrue(slot.equipmentIds.isEmpty())
         }
     }
 }

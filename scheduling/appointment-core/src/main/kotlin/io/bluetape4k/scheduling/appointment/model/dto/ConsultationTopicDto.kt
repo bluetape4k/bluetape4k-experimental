@@ -2,11 +2,10 @@ package io.bluetape4k.scheduling.appointment.model.dto
 
 import io.bluetape4k.exposed.core.HasIdentifier
 
-data class DoctorDto(
+data class ConsultationTopicDto(
     override val id: Long? = null,
     val clinicId: Long,
     val name: String,
-    val specialty: String? = null,
-    val providerType: String = "DOCTOR",
-    val maxConcurrentPatients: Int? = null,
+    val description: String? = null,
+    val defaultDurationMinutes: Int = 30,
 ) : HasIdentifier<Long>

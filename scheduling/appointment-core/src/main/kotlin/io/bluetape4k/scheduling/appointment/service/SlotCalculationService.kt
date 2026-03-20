@@ -151,15 +151,23 @@ class SlotCalculationService {
             val duration = query.requestedDurationMinutes ?: treatmentRow[TreatmentTypes.defaultDurationMinutes]
             val requiresEquipment = treatmentRow[TreatmentTypes.requiresEquipment]
             val treatmentMaxConcurrent = treatmentRow[TreatmentTypes.maxConcurrentPatients]
+            val requiredProviderType = treatmentRow[TreatmentTypes.requiredProviderType]
 
-            // Load doctor's maxConcurrentPatients
+            // Load doctor's maxConcurrentPatients and providerType
             val doctorRow =
                 Doctors
                     .selectAll()
                     .where {
                         Doctors.id eq query.doctorId
-                    }.firstOrNull()
-            val doctorMaxConcurrent = doctorRow?.get(Doctors.maxConcurrentPatients)
+                    }.firstOrNull() ?: return@transaction emptyList()
+
+            // 9-1. Validate provider type matches treatment requirement
+            val doctorProviderType = doctorRow[Doctors.providerType]
+            if (doctorProviderType != requiredProviderType) {
+                return@transaction emptyList()
+            }
+
+            val doctorMaxConcurrent = doctorRow[Doctors.maxConcurrentPatients]
 
             // 12. Resolve maxConcurrent
             val maxConcurrent = resolveMaxConcurrent(clinicMaxConcurrent, doctorMaxConcurrent, treatmentMaxConcurrent)

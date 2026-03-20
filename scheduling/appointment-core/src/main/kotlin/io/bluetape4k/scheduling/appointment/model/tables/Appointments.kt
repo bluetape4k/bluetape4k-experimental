@@ -18,6 +18,8 @@ object Appointments : LongIdTable("scheduling_appointments") {
     val appointmentDate = date("appointment_date")
     val startTime = time("start_time")
     val endTime = time("end_time")
+    val consultationTopicId = optReference("consultation_topic_id", ConsultationTopics, onDelete = ReferenceOption.SET_NULL)
+    val consultationMethod = varchar("consultation_method", 30).nullable()
     val status = varchar("status", 30).default("REQUESTED")
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
     val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)

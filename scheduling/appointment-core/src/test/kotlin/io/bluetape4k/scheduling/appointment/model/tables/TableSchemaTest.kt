@@ -18,6 +18,7 @@ class TableSchemaTest {
             Equipments,
             TreatmentTypes,
             TreatmentEquipments,
+            ConsultationTopics,
             Appointments,
             AppointmentNotes
         )

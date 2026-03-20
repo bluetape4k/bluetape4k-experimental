@@ -11,6 +11,8 @@ data class AppointmentDto(
     val doctorId: Long,
     val treatmentTypeId: Long,
     val equipmentId: Long? = null,
+    val consultationTopicId: Long? = null,
+    val consultationMethod: String? = null,
     val patientName: String,
     val patientPhone: String? = null,
     val patientExternalId: String? = null,
