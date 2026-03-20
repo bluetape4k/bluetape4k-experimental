@@ -13,6 +13,7 @@ data class AppointmentDto(
     val equipmentId: Long? = null,
     val consultationTopicId: Long? = null,
     val consultationMethod: String? = null,
+    val rescheduleFromId: Long? = null,
     val patientName: String,
     val patientPhone: String? = null,
     val patientExternalId: String? = null,

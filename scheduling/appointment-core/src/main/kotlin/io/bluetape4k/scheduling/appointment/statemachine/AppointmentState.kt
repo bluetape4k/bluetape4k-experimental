@@ -13,7 +13,11 @@ package io.bluetape4k.scheduling.appointment.statemachine
  *           → COMPLETED (진료완료)
  *         → CANCELLED
  *       → NO_SHOW (미내원)
+ *       → PENDING_RESCHEDULE (재배정 대기)
+ *         → RESCHEDULED (재배정 완료)
+ *         → CANCELLED
  *       → CANCELLED
+ *     → PENDING_RESCHEDULE
  *     → CANCELLED
  *   → CANCELLED
  * ```
@@ -41,6 +45,12 @@ sealed class AppointmentState(
 
     /** 미내원 */
     data object NO_SHOW : AppointmentState("NO_SHOW")
+
+    /** 재배정 대기 (임시휴진 등으로 인한 자동 전환) */
+    data object PENDING_RESCHEDULE : AppointmentState("PENDING_RESCHEDULE")
+
+    /** 재배정 완료 */
+    data object RESCHEDULED : AppointmentState("RESCHEDULED")
 
     /** 취소 */
     data object CANCELLED : AppointmentState("CANCELLED")

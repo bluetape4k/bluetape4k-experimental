@@ -20,7 +20,8 @@ class TableSchemaTest {
             TreatmentEquipments,
             ConsultationTopics,
             Appointments,
-            AppointmentNotes
+            AppointmentNotes,
+            RescheduleCandidates
         )
 
     @Test

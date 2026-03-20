@@ -30,6 +30,11 @@ class AppointmentStateMachine(
 
             // REQUESTED → CONFIRMED
             put(AppointmentState.REQUESTED to AppointmentEvent.Confirm::class.java, AppointmentState.CONFIRMED)
+            // REQUESTED → PENDING_RESCHEDULE (임시휴진)
+            put(
+                AppointmentState.REQUESTED to AppointmentEvent.RequestReschedule::class.java,
+                AppointmentState.PENDING_RESCHEDULE
+            )
             // REQUESTED → CANCELLED
             put(AppointmentState.REQUESTED to AppointmentEvent.Cancel::class.java, AppointmentState.CANCELLED)
 
@@ -41,6 +46,19 @@ class AppointmentStateMachine(
             put(AppointmentState.CONFIRMED to AppointmentEvent.Cancel::class.java, AppointmentState.CANCELLED)
             // CONFIRMED → PENDING (재예약)
             put(AppointmentState.CONFIRMED to AppointmentEvent.Reschedule::class.java, AppointmentState.PENDING)
+            // CONFIRMED → PENDING_RESCHEDULE (임시휴진)
+            put(
+                AppointmentState.CONFIRMED to AppointmentEvent.RequestReschedule::class.java,
+                AppointmentState.PENDING_RESCHEDULE
+            )
+
+            // PENDING_RESCHEDULE → RESCHEDULED (재배정 확정)
+            put(
+                AppointmentState.PENDING_RESCHEDULE to AppointmentEvent.ConfirmReschedule::class.java,
+                AppointmentState.RESCHEDULED
+            )
+            // PENDING_RESCHEDULE → CANCELLED
+            put(AppointmentState.PENDING_RESCHEDULE to AppointmentEvent.Cancel::class.java, AppointmentState.CANCELLED)
 
             // CHECKED_IN → IN_PROGRESS
             put(
