@@ -40,12 +40,31 @@ graph TB
             EL --> Logger
         end
 
-        subgraph solver["appointment-solver (Phase 3+)"]
-            TS["Timefold Solver<br/>(stub)"]
+        subgraph solver["appointment-solver"]
+            direction TB
+            AP["AppointmentPlanning<br/>(Planning Entity)"]
+            SS["ScheduleSolution"]
+            HC["HardConstraints (11)"]
+            SC["SoftConstraints (6)"]
+            MF["AppointmentMoveFilter"]
+            SolverSvc["SolverService"]
+
+            AP --> SS
+            HC --> SolverSvc
+            SC --> SolverSvc
+            MF --> SolverSvc
         end
 
-        subgraph api["appointment-api (Phase 3+)"]
-            WF["WebFlux REST<br/>(stub)"]
+        subgraph api["appointment-api"]
+            direction TB
+            AC["AppointmentController"]
+            SlotC["SlotController"]
+            RC["RescheduleController"]
+            GEH["GlobalExceptionHandler"]
+            Gatling["Gatling Stress Tests<br/>(3 simulations)"]
+
+            AC --> SlotC
+            AC --> RC
         end
     end
 
@@ -70,8 +89,8 @@ graph TB
 |--------|-----------|------|------|
 | `appointment-core` | `:appointment-core` | 도메인 모델 + 상태 머신 + 슬롯 계산 + 재배정 | **Phase 1-2 완료** |
 | `appointment-event` | `:appointment-event` | 이벤트 정의 + 이벤트 로그 DB 저장 | **Phase 1 완료** |
-| `appointment-solver` | `:appointment-solver` | Timefold 기반 최적화 | Phase 3+ stub |
-| `appointment-api` | `:appointment-api` | WebFlux REST API | Phase 3+ stub |
+| `appointment-solver` | `:appointment-solver` | Timefold Solver 기반 배치 최적화 (2단계 전략) | **Phase 3 완료** |
+| `appointment-api` | `:appointment-api` | Spring MVC REST API + Gatling 스트레스 테스트 | **Phase 4 완료** |
 
 ---
 
@@ -181,7 +200,8 @@ erDiagram
         long id PK
         string name
         int slot_duration_minutes "default 30"
-        string timezone "default Asia/Seoul"
+        string timezone "default UTC"
+        string locale "default ko-KR"
         int max_concurrent_patients "default 1"
         boolean open_on_holidays "default false"
     }
@@ -646,10 +666,50 @@ scheduling/
 │           └── EventLogTest.kt
 ├── appointment-solver/
 │   ├── README.md
-│   └── build.gradle.kts
+│   ├── build.gradle.kts
+│   └── src/
+│       ├── main/kotlin/io/bluetape4k/scheduling/appointment/solver/
+│       │   ├── constraint/
+│       │   │   ├── AppointmentConstraintProvider.kt
+│       │   │   ├── HardConstraints.kt          # 11 Hard Constraints
+│       │   │   └── SoftConstraints.kt          # 6 Soft Constraints
+│       │   ├── domain/
+│       │   │   ├── AppointmentPlanning.kt       # Planning Entity
+│       │   │   ├── ScheduleSolution.kt          # Planning Solution
+│       │   │   ├── ClinicFact.kt
+│       │   │   ├── DoctorFact.kt
+│       │   │   └── TreatmentFact.kt
+│       │   ├── move/
+│       │   │   ├── AppointmentMoveFilter.kt     # Custom Move Filter
+│       │   │   ├── AppointmentDifficultyComparator.kt
+│       │   │   └── TimeSlotStrengthComparator.kt
+│       │   └── service/
+│       │       ├── AppointmentSolverConfig.kt   # 2-phase optimization
+│       │       ├── SolverService.kt
+│       │       ├── SolverResult.kt
+│       │       └── SolutionConverter.kt
+│       └── test/kotlin/io/bluetape4k/scheduling/appointment/solver/
+│           ├── constraint/ConstraintVerifierTest.kt  # 20 tests
+│           ├── benchmark/BenchmarkTest.kt            # 3 tests
+│           └── service/SolverServiceTest.kt          # 4 tests
 └── appointment-api/
     ├── README.md
-    └── build.gradle.kts
+    ├── build.gradle.kts
+    └── src/
+        ├── main/kotlin/io/bluetape4k/scheduling/appointment/api/
+        │   ├── controller/
+        │   │   ├── AppointmentController.kt     # CRUD + 기간별 조회
+        │   │   ├── SlotController.kt            # 가용 슬롯 조회
+        │   │   └── RescheduleController.kt      # 휴진 재배정
+        │   ├── config/
+        │   │   ├── DatabaseConfig.kt            # 스키마 초기화
+        │   │   └── TestDataSeeder.kt            # 시드 데이터
+        │   └── dto/                             # API 요청/응답 DTO
+        ├── test/kotlin/                         # 6 API tests
+        └── gatling/java/                        # Gatling 스트레스 테스트
+            ├── AppointmentApiSimulation.java     # CRUD + Slot + Create
+            ├── ClosureRescheduleSimulation.java  # 휴진 재배정 (TP95 < 1s)
+            └── DateRangeQuerySimulation.java     # 주간/월간 조회 (TP95 < 500ms)
 ```
 
 ---
@@ -664,20 +724,20 @@ scheduling/
 ### Build & Test
 
 ```bash
-# appointment-core 테스트
-./gradlew :appointment-core:test
+# 전체 스케줄링 모듈 테스트
+./gradlew :appointment-core:test :appointment-event:test :appointment-solver:test :appointment-api:test
 
-# appointment-event 테스트
-./gradlew :appointment-event:test
+# 개별 모듈 테스트
+./gradlew :appointment-core:test      # 78 tests
+./gradlew :appointment-event:test     # 1 test
+./gradlew :appointment-solver:test    # 27 tests
+./gradlew :appointment-api:test       # 6 tests
 
-# 개별 테스트 실행
-./gradlew :appointment-core:test --tests "*.SlotCalculationServiceTest"
-./gradlew :appointment-core:test --tests "*.ClosureRescheduleServiceTest"
-./gradlew :appointment-core:test --tests "*.AppointmentStateMachineTest"
-./gradlew :appointment-core:test --tests "*.TimeRangeTest"
-./gradlew :appointment-core:test --tests "*.ResolveMaxConcurrentTest"
-./gradlew :appointment-core:test --tests "*.TableSchemaTest"
-./gradlew :appointment-event:test --tests "*.EventLogTest"
+# Gatling 스트레스 테스트 (앱 실행 필요)
+./gradlew :appointment-api:bootRun    # 먼저 앱 시작
+./gradlew :appointment-api:gatlingRun # 전체 시뮬레이션
+./gradlew :appointment-api:gatlingRun --simulation io.bluetape4k.scheduling.appointment.api.ClosureRescheduleSimulation
+./gradlew :appointment-api:gatlingRun --simulation io.bluetape4k.scheduling.appointment.api.DateRangeQuerySimulation
 ```
 
 ### Usage Example
@@ -774,6 +834,8 @@ state2 = sm.transition(state2, AppointmentEvent.ConfirmReschedule)
 - [x] **Phase 1**: 도메인 모델 (Tables, DTOs, State Machine, Events)
 - [x] **Phase 2**: 가용 슬롯 조회 서비스
 - [x] **Phase 2.5**: 의사/상담사 구분, 상담 방식/주제, 공휴일, 임시휴진 재배정
-- [ ] **Phase 3**: Timefold Solver 기반 자동 스케줄 최적화
-- [ ] **Phase 4**: WebFlux REST API + 예약 CRUD
-- [ ] **Phase 5**: Spring Boot Auto-Configuration + 알림 연동
+- [x] **Phase 3**: Timefold Solver 기반 자동 스케줄 최적화 (2단계 전략, MoveFilter, ConstraintVerifier 20개 테스트)
+- [x] **Phase 4**: Spring MVC REST API + Gatling 스트레스 테스트 (CRUD, 기간별 조회, 휴진 재배정)
+- [ ] **Phase 5**: 다국어/다시간대 지원 (UTC 기반 일시 처리, 클리닉별 locale/timezone 적용)
+- [ ] **Phase 6**: Spring Boot Auto-Configuration + 알림 연동
+- [ ] **Phase 7**: OpenAPI/Swagger 문서화 + 인증/인가 (JWT)

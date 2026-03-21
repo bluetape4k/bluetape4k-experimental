@@ -24,7 +24,7 @@ io.bluetape4k.scheduling.appointment
 | 테이블 | Record | 설명 |
 |--------|--------|------|
 | `Holidays` | `HolidayRecord` | 국가 공휴일 |
-| `Clinics` | `ClinicRecord` | 병원 정보 (슬롯 단위, 동시 수용, 공휴일 영업 여부) |
+| `Clinics` | `ClinicRecord` | 병원 정보 (슬롯 단위, timezone, locale, 동시 수용, 공휴일 영업 여부) |
 | `ClinicDefaultBreakTimes` | `ClinicDefaultBreakTimeRecord` | 병원 기본 휴식시간 (모든 영업일 적용, 복수 가능) |
 | `OperatingHoursTable` | `OperatingHoursRecord` | 요일별 영업시간 |
 | `BreakTimes` | `BreakTimeRecord` | 요일별 휴식시간 |
