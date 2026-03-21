@@ -33,7 +33,7 @@ fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir
         .filter { it.isDirectory }
         .forEach { moduleDir ->
             moduleDir.listFiles()
-                ?.filter { it.isDirectory }
+                ?.filter { it.isDirectory && !it.name.startsWith(".") }
                 ?.forEach { dir ->
                     val basePath = baseDir.replace("/", "-")
                     val projectName = when {

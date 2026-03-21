@@ -1,0 +1,25 @@
+<div class="week-grid">
+  <!-- Header row -->
+  <div class="time-header">시간</div>
+  @for (day of weekDays(); track day.dateStr) {
+    <div class="day-header" [class.today]="day.isToday" (click)="goToDay(day.dateStr)">
+      {{ day.label }}
+    </div>
+  }
+
+  <!-- Time slots -->
+  @for (slot of timeSlots; track slot.label) {
+    <div class="time-label">{{ slot.label }}</div>
+    @for (day of weekDays(); track day.dateStr) {
+      @let count = getCount(day.dateStr, slot);
+      <div
+        class="slot-cell"
+        [style.background-color]="cellColor(count)"
+        (click)="goToDay(day.dateStr)">
+        @if (count > 0) {
+          <span class="count-badge">{{ count }}</span>
+        }
+      </div>
+    }
+  }
+</div>

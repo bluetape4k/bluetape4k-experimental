@@ -1,0 +1,72 @@
+<div class="appointment-detail-container">
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+
+  @if (!loading() && appointment(); as appt) {
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>예약 상세</mat-card-title>
+        <app-status-badge [status]="$any(appt.status)"></app-status-badge>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">환자명</span>
+            <span class="value">{{ appt.patientName }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">연락처</span>
+            <span class="value">{{ appt.patientPhone ?? '-' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">담당 의사</span>
+            <span class="value">{{ doctorName() }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">진료 유형</span>
+            <span class="value">{{ treatmentTypeName() }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">예약 날짜</span>
+            <span class="value">{{ appt.appointmentDate }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">예약 시간</span>
+            <span class="value">{{ appt | timeRange }}</span>
+          </div>
+        </div>
+
+        <!-- Status transition buttons -->
+        @if (canManage() && transitions().length > 0) {
+          <mat-divider></mat-divider>
+          <div class="actions">
+            <span class="actions-label">상태 변경:</span>
+            @for (transition of transitions(); track transition.targetStatus) {
+              <button mat-flat-button
+                      [color]="transition.color"
+                      (click)="onStatusChange(transition)">
+                {{ transition.label }}
+              </button>
+            }
+          </div>
+        }
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          목록으로
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  }
+</div>
