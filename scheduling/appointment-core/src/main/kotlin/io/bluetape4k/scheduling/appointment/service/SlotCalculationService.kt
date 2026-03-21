@@ -45,6 +45,8 @@ class SlotCalculationService {
             val slotDurationMinutes = clinicRow[Clinics.slotDurationMinutes]
             val clinicMaxConcurrent = clinicRow[Clinics.maxConcurrentPatients]
             val openOnHolidays = clinicRow[Clinics.openOnHolidays]
+            val lunchStart = clinicRow[Clinics.lunchStartTime]
+            val lunchEnd = clinicRow[Clinics.lunchEndTime]
 
             // 1-1. Check if date is a national holiday
             if (!openOnHolidays) {
@@ -87,13 +89,21 @@ class SlotCalculationService {
             val clinicClose = opHours[OperatingHoursTable.closeTime]
 
             // 4. Get BreakTimes for clinic + dayOfWeek
-            val breakTimeRanges =
+            val dayBreakRanges =
                 BreakTimes
                     .selectAll()
                     .where {
                         (BreakTimes.clinicId eq query.clinicId) and
                             (BreakTimes.dayOfWeek eq dayOfWeek)
                     }.map { TimeRange(it[BreakTimes.startTime], it[BreakTimes.endTime]) }
+
+            // 4-1. 병원 점심시간 (모든 영업일에 동일 적용)
+            val breakTimeRanges =
+                if (lunchStart != null && lunchEnd != null) {
+                    dayBreakRanges + TimeRange(lunchStart, lunchEnd)
+                } else {
+                    dayBreakRanges
+                }
 
             // 5. Get partial closures (isFullDay=false)
             val partialClosureRanges =

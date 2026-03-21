@@ -1,6 +1,7 @@
 package io.bluetape4k.scheduling.appointment.model.tables
 
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.javatime.time
 
 object Clinics : LongIdTable("scheduling_clinics") {
     val name = varchar("name", 255)
@@ -8,4 +9,6 @@ object Clinics : LongIdTable("scheduling_clinics") {
     val timezone = varchar("timezone", 50).default("Asia/Seoul")
     val maxConcurrentPatients = integer("max_concurrent_patients").default(1)
     val openOnHolidays = bool("open_on_holidays").default(false)
+    val lunchStartTime = time("lunch_start_time").nullable()
+    val lunchEndTime = time("lunch_end_time").nullable()
 }

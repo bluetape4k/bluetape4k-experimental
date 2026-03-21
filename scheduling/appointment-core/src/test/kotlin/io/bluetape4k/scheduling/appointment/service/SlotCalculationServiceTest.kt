@@ -94,6 +94,8 @@ class SlotCalculationServiceTest {
         slotDurationMinutes: Int = 30,
         maxConcurrentPatients: Int = 1,
         openOnHolidays: Boolean = false,
+        lunchStartTime: LocalTime? = null,
+        lunchEndTime: LocalTime? = null,
         doctorStart: LocalTime = LocalTime.of(9, 0),
         doctorEnd: LocalTime = LocalTime.of(18, 0),
         treatmentDurationMinutes: Int = 30,
@@ -113,6 +115,8 @@ class SlotCalculationServiceTest {
                         it[Clinics.slotDurationMinutes] = slotDurationMinutes
                         it[Clinics.maxConcurrentPatients] = maxConcurrentPatients
                         it[Clinics.openOnHolidays] = openOnHolidays
+                        it[Clinics.lunchStartTime] = lunchStartTime
+                        it[Clinics.lunchEndTime] = lunchEndTime
                     }[Clinics.id]
                     .value
 
@@ -626,5 +630,59 @@ class SlotCalculationServiceTest {
             )
 
         assertEquals(18, slots.size, "openOnHolidays 병원은 공휴일에도 정상 영업해야 합니다")
+    }
+
+    @Test
+    fun `19 - 병원 점심시간이 모든 영업일에 적용된다`() {
+        // 12:00-13:00 점심시간 설정
+        val (clinicId, doctorId, treatmentTypeId) =
+            insertBaseData(
+                lunchStartTime = LocalTime.of(12, 0),
+                lunchEndTime = LocalTime.of(13, 0)
+            )
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        // 09:00~18:00 중 12:00~13:00 제외 → 8시간 = 16 슬롯 (30분 단위)
+        assertEquals(16, slots.size)
+        // 12:00, 12:30 슬롯이 없어야 함
+        assertTrue(slots.none { it.startTime == LocalTime.of(12, 0) })
+        assertTrue(slots.none { it.startTime == LocalTime.of(12, 30) })
+        // 11:30 슬롯은 있어야 함 (11:30~12:00)
+        assertTrue(slots.any { it.startTime == LocalTime.of(11, 30) })
+        // 13:00 슬롯은 있어야 함
+        assertTrue(slots.any { it.startTime == LocalTime.of(13, 0) })
+    }
+
+    @Test
+    fun `20 - 점심시간과 요일별 휴식시간이 동시에 적용된다`() {
+        // 점심 12:00-13:00 + 요일별 휴식 15:00-15:30
+        val (clinicId, doctorId, treatmentTypeId) =
+            insertBaseData(
+                lunchStartTime = LocalTime.of(12, 0),
+                lunchEndTime = LocalTime.of(13, 0)
+            )
+
+        transaction {
+            BreakTimes.insert {
+                it[BreakTimes.clinicId] = clinicId
+                it[dayOfWeek] = DayOfWeek.MONDAY
+                it[startTime] = LocalTime.of(15, 0)
+                it[endTime] = LocalTime.of(15, 30)
+            }
+        }
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        // 09:00~18:00 중 12:00~13:00, 15:00~15:30 제외 → 15 슬롯
+        assertEquals(15, slots.size)
+        assertTrue(slots.none { it.startTime == LocalTime.of(12, 0) })
+        assertTrue(slots.none { it.startTime == LocalTime.of(15, 0) })
     }
 }
