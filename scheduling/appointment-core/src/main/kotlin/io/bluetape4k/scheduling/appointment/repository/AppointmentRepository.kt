@@ -10,8 +10,10 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -115,4 +117,15 @@ class AppointmentRepository : LongJdbcRepository<AppointmentRecord> {
         Appointments.update(where = { Appointments.id eq appointmentId }) {
             it[status] = newStatus
         }
+
+    fun findByClinicAndDateRange(clinicId: Long, dateRange: ClosedRange<LocalDate>): List<AppointmentRecord> =
+        Appointments
+            .selectAll()
+            .where {
+                (Appointments.clinicId eq clinicId) and
+                    (Appointments.appointmentDate greaterEq dateRange.start) and
+                    (Appointments.appointmentDate lessEq dateRange.endInclusive) and
+                    (Appointments.status neq AppointmentStatus.CANCELLED) and
+                    (Appointments.status neq AppointmentStatus.NO_SHOW)
+            }.map { it.toAppointmentRecord() }
 }

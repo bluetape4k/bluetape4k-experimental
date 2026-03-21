@@ -12,6 +12,8 @@ import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -37,5 +39,26 @@ class DoctorRepository : LongJdbcRepository<DoctorRecord> {
             .where {
                 (DoctorAbsences.doctorId eq doctorId) and
                     (DoctorAbsences.absenceDate eq date)
+            }.map { it.toDoctorAbsenceRecord() }
+
+    fun findByClinicId(clinicId: Long): List<DoctorRecord> =
+        Doctors
+            .selectAll()
+            .where { Doctors.clinicId eq clinicId }
+            .map { it.toDoctorRecord() }
+
+    fun findAllSchedules(doctorId: Long): List<DoctorScheduleRecord> =
+        DoctorSchedules
+            .selectAll()
+            .where { DoctorSchedules.doctorId eq doctorId }
+            .map { it.toDoctorScheduleRecord() }
+
+    fun findAbsencesByDateRange(doctorId: Long, dateRange: ClosedRange<LocalDate>): List<DoctorAbsenceRecord> =
+        DoctorAbsences
+            .selectAll()
+            .where {
+                (DoctorAbsences.doctorId eq doctorId) and
+                    (DoctorAbsences.absenceDate greaterEq dateRange.start) and
+                    (DoctorAbsences.absenceDate lessEq dateRange.endInclusive)
             }.map { it.toDoctorAbsenceRecord() }
 }

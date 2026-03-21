@@ -3,6 +3,8 @@ package io.bluetape4k.scheduling.appointment.repository
 import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.scheduling.appointment.model.dto.EquipmentRecord
+import io.bluetape4k.scheduling.appointment.model.dto.TreatmentEquipmentRecord
 import io.bluetape4k.scheduling.appointment.model.dto.TreatmentTypeRecord
 import io.bluetape4k.scheduling.appointment.model.tables.Equipments
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
@@ -31,4 +33,30 @@ class TreatmentTypeRepository : LongJdbcRepository<TreatmentTypeRecord> {
             .selectAll()
             .where { Equipments.id inList equipmentIds }
             .associate { it[Equipments.id].value to it[Equipments.quantity] }
+
+    fun findByClinicId(clinicId: Long): List<TreatmentTypeRecord> =
+        TreatmentTypes
+            .selectAll()
+            .where { TreatmentTypes.clinicId eq clinicId }
+            .map { it.toTreatmentTypeRecord() }
+
+    fun findEquipmentsByClinicId(clinicId: Long): List<EquipmentRecord> =
+        Equipments
+            .selectAll()
+            .where { Equipments.clinicId eq clinicId }
+            .map { it.toEquipmentRecord() }
+
+    fun findAllTreatmentEquipments(clinicId: Long): List<TreatmentEquipmentRecord> {
+        val treatmentIds = TreatmentTypes
+            .selectAll()
+            .where { TreatmentTypes.clinicId eq clinicId }
+            .map { it[TreatmentTypes.id].value }
+
+        if (treatmentIds.isEmpty()) return emptyList()
+
+        return TreatmentEquipments
+            .selectAll()
+            .where { TreatmentEquipments.treatmentTypeId inList treatmentIds }
+            .map { it.toTreatmentEquipmentRecord() }
+    }
 }

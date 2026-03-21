@@ -16,6 +16,8 @@ import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -56,5 +58,26 @@ class ClinicRepository : LongJdbcRepository<ClinicRecord> {
             .where {
                 (ClinicClosures.clinicId eq clinicId) and
                     (ClinicClosures.closureDate eq date)
+            }.map { it.toClinicClosureRecord() }
+
+    fun findAllOperatingHours(clinicId: Long): List<OperatingHoursRecord> =
+        OperatingHoursTable
+            .selectAll()
+            .where { OperatingHoursTable.clinicId eq clinicId }
+            .map { it.toOperatingHoursRecord() }
+
+    fun findAllBreakTimes(clinicId: Long): List<BreakTimeRecord> =
+        BreakTimes
+            .selectAll()
+            .where { BreakTimes.clinicId eq clinicId }
+            .map { it.toBreakTimeRecord() }
+
+    fun findClosuresByDateRange(clinicId: Long, dateRange: ClosedRange<LocalDate>): List<ClinicClosureRecord> =
+        ClinicClosures
+            .selectAll()
+            .where {
+                (ClinicClosures.clinicId eq clinicId) and
+                    (ClinicClosures.closureDate greaterEq dateRange.start) and
+                    (ClinicClosures.closureDate lessEq dateRange.endInclusive)
             }.map { it.toClinicClosureRecord() }
 }

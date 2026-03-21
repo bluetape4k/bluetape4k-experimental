@@ -10,9 +10,13 @@ import io.bluetape4k.scheduling.appointment.model.dto.DoctorRecord
 import io.bluetape4k.scheduling.appointment.model.dto.DoctorScheduleRecord
 import io.bluetape4k.scheduling.appointment.model.dto.HolidayRecord
 import io.bluetape4k.scheduling.appointment.model.dto.OperatingHoursRecord
+import io.bluetape4k.scheduling.appointment.model.dto.EquipmentRecord
 import io.bluetape4k.scheduling.appointment.model.dto.RescheduleCandidateRecord
+import io.bluetape4k.scheduling.appointment.model.dto.TreatmentEquipmentRecord
 import io.bluetape4k.scheduling.appointment.model.dto.TreatmentTypeRecord
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
+import io.bluetape4k.scheduling.appointment.model.tables.Equipments
+import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicDefaultBreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
@@ -133,6 +137,20 @@ fun ResultRow.toAppointmentRecord() = AppointmentRecord(
     status = this[Appointments.status],
     createdAt = this[Appointments.createdAt],
     updatedAt = this[Appointments.updatedAt],
+)
+
+fun ResultRow.toEquipmentRecord() = EquipmentRecord(
+    id = this[Equipments.id].value,
+    clinicId = this[Equipments.clinicId].value,
+    name = this[Equipments.name],
+    usageDurationMinutes = this[Equipments.usageDurationMinutes],
+    quantity = this[Equipments.quantity],
+)
+
+fun ResultRow.toTreatmentEquipmentRecord() = TreatmentEquipmentRecord(
+    id = this[TreatmentEquipments.id].value,
+    treatmentTypeId = this[TreatmentEquipments.treatmentTypeId].value,
+    equipmentId = this[TreatmentEquipments.equipmentId].value,
 )
 
 fun ResultRow.toRescheduleCandidateRecord() = RescheduleCandidateRecord(
