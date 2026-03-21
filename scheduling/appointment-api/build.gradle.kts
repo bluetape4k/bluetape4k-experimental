@@ -11,9 +11,18 @@ dependencies {
 
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("security"))
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_spring_boot4_starter)
     implementation(Libs.bluetape4k_exposed_jdbc)
+
+    // JWT
+    implementation(Libs.jjwt_api)
+    runtimeOnly(Libs.jjwt_impl)
+    runtimeOnly(Libs.jjwt_jackson)
+
+    // OpenAPI / Swagger
+    implementation(Libs.springdoc_openapi_starter_webmvc_ui)
 
     runtimeOnly(Libs.h2_v2)
 
