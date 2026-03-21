@@ -66,21 +66,40 @@ graph TB
             AC --> SlotC
             AC --> RC
         end
+
+        subgraph notif["appointment-notification"]
+            direction TB
+            NC["NotificationChannel<br/>(interface)"]
+            DNC["DummyNotificationChannel"]
+            NEL["NotificationEventListener"]
+            ARS["AppointmentReminderScheduler"]
+            NHR["NotificationHistoryRepository"]
+
+            NC --> DNC
+            NEL --> NC
+            ARS --> NC
+            DNC --> NHR
+            ARS --> NHR
+        end
     end
 
     core --> event
     core --> solver
     core --> api
     event --> api
+    core --> notif
+    event --> notif
 
     DB[(H2 / PostgreSQL)]
     Tables --> DB
     EL --> DB
+    NHR --> DB
 
     style core fill:#e1f5fe,stroke:#0288d1
     style event fill:#fff3e0,stroke:#f57c00
     style solver fill:#f3e5f5,stroke:#9c27b0
     style api fill:#e8f5e9,stroke:#388e3c
+    style notif fill:#fce4ec,stroke:#c62828
 ```
 
 ### Module Dependencies
@@ -91,6 +110,7 @@ graph TB
 | `appointment-event` | `:appointment-event` | 이벤트 정의 + 이벤트 로그 DB 저장 | **Phase 1 완료** |
 | `appointment-solver` | `:appointment-solver` | Timefold Solver 기반 배치 최적화 (2단계 전략) | **Phase 3 완료** |
 | `appointment-api` | `:appointment-api` | Spring MVC REST API + Gatling 스트레스 테스트 | **Phase 4 완료** |
+| `appointment-notification` | `:appointment-notification` | 알림 채널 + 이벤트 리스너 + 리마인더 스케줄러 | **Phase 6 완료** |
 
 ---
 
@@ -837,5 +857,5 @@ state2 = sm.transition(state2, AppointmentEvent.ConfirmReschedule)
 - [x] **Phase 3**: Timefold Solver 기반 자동 스케줄 최적화 (2단계 전략, MoveFilter, ConstraintVerifier 20개 테스트)
 - [x] **Phase 4**: Spring MVC REST API + Gatling 스트레스 테스트 (CRUD, 기간별 조회, 휴진 재배정)
 - [ ] **Phase 5**: 다국어/다시간대 지원 (UTC 기반 일시 처리, 클리닉별 locale/timezone 적용)
-- [ ] **Phase 6**: Spring Boot Auto-Configuration + 알림 연동
+- [x] **Phase 6**: 알림 모듈 (이벤트 기반 알림 + 리마인더 스케줄러 + 플러그인 채널)
 - [ ] **Phase 7**: OpenAPI/Swagger 문서화 + 인증/인가 (JWT)

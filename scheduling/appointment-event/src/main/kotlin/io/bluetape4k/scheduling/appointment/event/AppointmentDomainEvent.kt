@@ -25,4 +25,10 @@ sealed class AppointmentDomainEvent(
         val clinicId: Long,
         val reason: String,
     ) : AppointmentDomainEvent(appointmentId)
+
+    data class Rescheduled(
+        val originalId: Long,
+        val newId: Long,
+        val clinicId: Long,
+    ) : AppointmentDomainEvent(originalId)
 }
