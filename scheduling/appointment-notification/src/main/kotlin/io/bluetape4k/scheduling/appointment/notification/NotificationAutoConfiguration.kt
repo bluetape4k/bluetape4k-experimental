@@ -31,33 +31,34 @@ import org.springframework.scheduling.annotation.EnableScheduling
     prefix = "scheduling.notification",
     name = ["enabled"],
     havingValue = "true",
-    matchIfMissing = true,
+    matchIfMissing = true
 )
 @EnableConfigurationProperties(
     NotificationProperties::class,
-    NotificationResilienceProperties::class,
+    NotificationResilienceProperties::class
 )
 @EnableScheduling
 class NotificationAutoConfiguration {
-
     companion object : KLogging()
 
+    /**
+     * Flyway 비활성 시 Exposed SchemaUtils로 알림 테이블 생성.
+     */
     @Bean
-    fun notificationSchemaInitializer(): ApplicationRunner = ApplicationRunner {
-        transaction {
-            SchemaUtils.createMissingTablesAndColumns(NotificationHistoryTable)
+    @ConditionalOnProperty(name = ["spring.flyway.enabled"], havingValue = "false", matchIfMissing = true)
+    fun notificationSchemaInitializer(): ApplicationRunner =
+        ApplicationRunner {
+            transaction {
+                SchemaUtils.createMissingTablesAndColumns(NotificationHistoryTable)
+            }
         }
-    }
 
     @Bean
-    fun notificationHistoryRepository(): NotificationHistoryRepository =
-        NotificationHistoryRepository()
+    fun notificationHistoryRepository(): NotificationHistoryRepository = NotificationHistoryRepository()
 
     @Bean
     @ConditionalOnMissingBean(NotificationChannel::class)
-    fun dummyNotificationChannel(
-        historyRepository: NotificationHistoryRepository,
-    ): NotificationChannel =
+    fun dummyNotificationChannel(historyRepository: NotificationHistoryRepository): NotificationChannel =
         DummyNotificationChannel(historyRepository)
 
     /**
@@ -80,9 +81,7 @@ class NotificationAutoConfiguration {
     @Bean
     @ConditionalOnClass(RedisClient::class)
     @ConditionalOnBean(StatefulRedisConnection::class)
-    fun notificationLeaderElection(
-        connection: StatefulRedisConnection<String, String>,
-    ): LettuceLeaderGroupElection {
+    fun notificationLeaderElection(connection: StatefulRedisConnection<String, String>): LettuceLeaderGroupElection {
         log.info { "HA 리더 선출 활성화: LettuceLeaderGroupElection" }
         return connection.leaderGroupElection()
     }
@@ -108,6 +107,6 @@ class NotificationAutoConfiguration {
             appointmentRepository,
             historyRepository,
             properties,
-            leaderElection,
+            leaderElection
         )
 }

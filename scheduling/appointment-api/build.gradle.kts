@@ -24,7 +24,14 @@ dependencies {
     // OpenAPI / Swagger
     implementation(Libs.springdoc_openapi_starter_webmvc_ui)
 
+    // Flyway
+    implementation(Libs.flyway_core)
+    runtimeOnly(Libs.flyway_database_postgresql)
+    runtimeOnly(Libs.flyway_mysql)
+
+    // Database drivers
     runtimeOnly(Libs.h2_v2)
+    runtimeOnly(Libs.postgresql_driver)
 
     testImplementation(Libs.springBootStarter("test"))
     testImplementation(Libs.springBoot("webmvc-test"))

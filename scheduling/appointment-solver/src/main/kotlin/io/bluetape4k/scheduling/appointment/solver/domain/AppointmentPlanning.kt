@@ -15,7 +15,7 @@ import java.time.LocalTime
  *
  * [pinned]가 true인 예약(CONFIRMED 등)은 Solver가 이동하지 않습니다.
  */
-@PlanningEntity(difficultyComparatorClass = AppointmentDifficultyComparator::class)
+@PlanningEntity(comparatorClass = AppointmentDifficultyComparator::class)
 class AppointmentPlanning(
     val id: Long = 0L,
     val clinicId: Long = 0L,

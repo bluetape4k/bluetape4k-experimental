@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/appointment
+    driver-class-name: org.postgresql.Driver
+    username: appointment
+    password: appointment
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
