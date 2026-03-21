@@ -1,0 +1,24 @@
+<div class="month-grid">
+  <!-- Weekday headers -->
+  @for (wd of weekdays; track wd) {
+    <div class="weekday-header">{{ wd }}</div>
+  }
+
+  <!-- Date cells -->
+  @for (cell of cells(); track cell.dateStr) {
+    <div
+      class="date-cell"
+      [class.outside-month]="!cell.isCurrentMonth"
+      [class.today]="cell.isToday"
+      (click)="goToDay(cell.dateStr)">
+      <span class="date-number">{{ cell.day }}</span>
+      <div class="appointment-list">
+        @for (apt of getAppointments(cell.dateStr); track apt.id) {
+          <div class="appointment-box" [class]="'status-' + apt.status.toLowerCase()">
+            {{ apt.patientName }} - {{ apt.startTime.slice(0, 5) }}
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

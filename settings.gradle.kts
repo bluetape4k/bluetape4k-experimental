@@ -25,6 +25,7 @@ includeModules("data", false, false)
 includeModules("io", false, false)
 includeModules("infra", false, false)
 includeModules("utils", false, false)
+includeModules("scheduling", false, false)
 includeModules("examples", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
@@ -32,7 +33,7 @@ fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir
         .filter { it.isDirectory }
         .forEach { moduleDir ->
             moduleDir.listFiles()
-                ?.filter { it.isDirectory }
+                ?.filter { it.isDirectory && !it.name.startsWith(".") }
                 ?.forEach { dir ->
                     val basePath = baseDir.replace("/", "-")
                     val projectName = when {
