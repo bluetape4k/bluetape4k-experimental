@@ -19,6 +19,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -26,7 +27,9 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -36,6 +39,17 @@ class AppointmentController(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     companion object : KLogging()
+
+    @GetMapping
+    fun getByDateRange(
+        @RequestParam clinicId: Long,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate,
+    ): ResponseEntity<ApiResponse<List<AppointmentResponse>>> {
+        log.debug { "GET /api/appointments?clinicId=$clinicId&startDate=$startDate&endDate=$endDate" }
+        val records = transaction { appointmentRepository.findByClinicAndDateRange(clinicId, startDate..endDate) }
+        return ResponseEntity.ok(ApiResponse.ok(records.map { it.toResponse() }))
+    }
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): ResponseEntity<ApiResponse<AppointmentResponse>> {

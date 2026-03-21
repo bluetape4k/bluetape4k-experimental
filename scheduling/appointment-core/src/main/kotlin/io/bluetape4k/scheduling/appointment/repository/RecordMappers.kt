@@ -35,6 +35,7 @@ fun ResultRow.toClinicRecord() = ClinicRecord(
     name = this[Clinics.name],
     slotDurationMinutes = this[Clinics.slotDurationMinutes],
     timezone = this[Clinics.timezone],
+    locale = this[Clinics.locale],
     maxConcurrentPatients = this[Clinics.maxConcurrentPatients],
     openOnHolidays = this[Clinics.openOnHolidays],
 )
