@@ -1,16 +1,14 @@
 package io.bluetape4k.scheduling.appointment.service
 
-import io.bluetape4k.scheduling.appointment.model.dto.RescheduleCandidateDto
-import io.bluetape4k.scheduling.appointment.model.tables.Appointments
-import io.bluetape4k.scheduling.appointment.model.tables.RescheduleCandidates
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.scheduling.appointment.model.dto.AppointmentRecord
+import io.bluetape4k.scheduling.appointment.model.dto.RescheduleCandidateRecord
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
+import io.bluetape4k.scheduling.appointment.repository.RescheduleCandidateRepository
 import io.bluetape4k.scheduling.appointment.service.model.SlotQuery
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.insert
+import io.bluetape4k.support.requireNotNull
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.time.LocalDate
 
 /**
@@ -22,9 +20,11 @@ import java.time.LocalDate
  */
 class ClosureRescheduleService(
     private val slotCalculationService: SlotCalculationService,
+    private val appointmentRepository: AppointmentRepository = AppointmentRepository(),
+    private val rescheduleCandidateRepository: RescheduleCandidateRepository = RescheduleCandidateRepository(),
 ) {
-    companion object {
-        private val ACTIVE_STATUSES = listOf("REQUESTED", "CONFIRMED")
+    companion object: KLogging() {
+        private val ACTIVE_STATUSES = AppointmentStatus.ACTIVE_STATUSES
     }
 
     /**
@@ -40,82 +40,47 @@ class ClosureRescheduleService(
         clinicId: Long,
         closureDate: LocalDate,
         searchDays: Int = 7,
-    ): Map<Long, List<RescheduleCandidateDto>> =
+    ): Map<Long, List<RescheduleCandidateRecord>> =
         transaction {
-            // 1. 해당 날짜의 활성 예약 조회
-            val affectedAppointments =
-                Appointments
-                    .selectAll()
-                    .where {
-                        (Appointments.clinicId eq clinicId) and
-                            (Appointments.appointmentDate eq closureDate) and
-                            (Appointments.status inList ACTIVE_STATUSES)
-                    }.toList()
+            val affected = appointmentRepository.findActiveByClinicAndDate(clinicId, closureDate, ACTIVE_STATUSES)
+            if (affected.isEmpty()) return@transaction emptyMap()
 
-            if (affectedAppointments.isEmpty()) {
-                return@transaction emptyMap()
-            }
+            appointmentRepository.updateStatusByClinicAndDate(
+                clinicId,
+                closureDate,
+                ACTIVE_STATUSES,
+                AppointmentStatus.PENDING_RESCHEDULE
+            )
 
-            // 2. 영향받는 예약을 PENDING_RESCHEDULE로 전환
-            Appointments.update(
-                where = {
-                    (Appointments.clinicId eq clinicId) and
-                        (Appointments.appointmentDate eq closureDate) and
-                        (Appointments.status inList ACTIVE_STATUSES)
-                }
-            ) {
-                it[status] = "PENDING_RESCHEDULE"
-            }
+            val result = mutableMapOf<Long, List<RescheduleCandidateRecord>>()
 
-            // 3. 각 예약에 대해 재배정 후보 탐색
-            val result = mutableMapOf<Long, List<RescheduleCandidateDto>>()
-
-            for (appointment in affectedAppointments) {
-                val appointmentId = appointment[Appointments.id].value
-                val doctorId = appointment[Appointments.doctorId].value
-                val treatmentTypeId = appointment[Appointments.treatmentTypeId].value
-
-                val candidates = mutableListOf<RescheduleCandidateDto>()
+            for (appointment in affected) {
+                val appointmentId = appointment.id!!
+                val candidates = mutableListOf<RescheduleCandidateRecord>()
                 var priority = 0
 
-                // closureDate 다음날부터 searchDays일간 탐색
                 for (dayOffset in 1..searchDays) {
                     val candidateDate = closureDate.plusDays(dayOffset.toLong())
                     val slots = slotCalculationService.findAvailableSlots(
-                        SlotQuery(clinicId, doctorId, treatmentTypeId, candidateDate)
+                        SlotQuery(clinicId, appointment.doctorId, appointment.treatmentTypeId, candidateDate)
                     )
 
                     for (slot in slots) {
-                        val candidateId =
-                            RescheduleCandidates
-                                .insert {
-                                    it[originalAppointmentId] = appointmentId
-                                    it[RescheduleCandidates.candidateDate] = candidateDate
-                                    it[startTime] = slot.startTime
-                                    it[endTime] = slot.endTime
-                                    it[RescheduleCandidates.doctorId] = doctorId
-                                    it[RescheduleCandidates.priority] = priority
-                                }[RescheduleCandidates.id]
-                                .value
-
-                        candidates.add(
-                            RescheduleCandidateDto(
-                                id = candidateId,
-                                originalAppointmentId = appointmentId,
-                                candidateDate = candidateDate,
-                                startTime = slot.startTime,
-                                endTime = slot.endTime,
-                                doctorId = doctorId,
-                                priority = priority,
-                            )
+                        val rcRecord = RescheduleCandidateRecord(
+                            originalAppointmentId = appointmentId,
+                            candidateDate = candidateDate,
+                            startTime = slot.startTime,
+                            endTime = slot.endTime,
+                            doctorId = appointment.doctorId,
+                            priority = priority,
                         )
+                        val saved = rescheduleCandidateRepository.save(rcRecord)
+                        candidates.add(saved)
                         priority++
                     }
                 }
-
                 result[appointmentId] = candidates
             }
-
             result
         }
 
@@ -128,59 +93,34 @@ class ClosureRescheduleService(
      */
     fun confirmReschedule(candidateId: Long): Long =
         transaction {
-            // 1. 후보 조회
-            val candidate =
-                RescheduleCandidates
-                    .selectAll()
-                    .where { RescheduleCandidates.id eq candidateId }
-                    .firstOrNull()
-                    ?: throw IllegalArgumentException("Reschedule candidate not found: $candidateId")
+            val candidate = rescheduleCandidateRepository.findByIdOrNull(candidateId)
+                ?: throw IllegalArgumentException("Reschedule candidate not found: $candidateId")
 
-            val originalAppointmentId = candidate[RescheduleCandidates.originalAppointmentId].value
-            val candidateDate = candidate[RescheduleCandidates.candidateDate]
-            val startTime = candidate[RescheduleCandidates.startTime]
-            val endTime = candidate[RescheduleCandidates.endTime]
-            val doctorId = candidate[RescheduleCandidates.doctorId].value
+            val original = appointmentRepository.findByIdOrNull(candidate.originalAppointmentId)
+                ?: throw IllegalArgumentException("Original appointment not found: ${candidate.originalAppointmentId}")
 
-            // 2. 원래 예약 조회
-            val originalAppointment =
-                Appointments
-                    .selectAll()
-                    .where { Appointments.id eq originalAppointmentId }
-                    .first()
+            val appointmentRecord = AppointmentRecord(
+                clinicId = original.clinicId,
+                doctorId = candidate.doctorId,
+                treatmentTypeId = original.treatmentTypeId,
+                equipmentId = original.equipmentId,
+                consultationTopicId = original.consultationTopicId,
+                consultationMethod = original.consultationMethod,
+                rescheduleFromId = original.id,
+                patientName = original.patientName,
+                patientPhone = original.patientPhone,
+                patientExternalId = original.patientExternalId,
+                appointmentDate = candidate.candidateDate,
+                startTime = candidate.startTime,
+                endTime = candidate.endTime,
+                status = AppointmentStatus.CONFIRMED,
+            )
 
-            // 3. 새 예약 생성
-            val newAppointmentId =
-                Appointments
-                    .insert {
-                        it[clinicId] = originalAppointment[Appointments.clinicId]
-                        it[Appointments.doctorId] = doctorId
-                        it[treatmentTypeId] = originalAppointment[Appointments.treatmentTypeId]
-                        it[equipmentId] = originalAppointment[Appointments.equipmentId]
-                        it[consultationTopicId] = originalAppointment[Appointments.consultationTopicId]
-                        it[consultationMethod] = originalAppointment[Appointments.consultationMethod]
-                        it[rescheduleFromId] = originalAppointmentId
-                        it[patientName] = originalAppointment[Appointments.patientName]
-                        it[patientPhone] = originalAppointment[Appointments.patientPhone]
-                        it[patientExternalId] = originalAppointment[Appointments.patientExternalId]
-                        it[appointmentDate] = candidateDate
-                        it[Appointments.startTime] = startTime
-                        it[Appointments.endTime] = endTime
-                        it[status] = "CONFIRMED"
-                    }[Appointments.id]
-                    .value
+            val newAppointment = appointmentRepository.save(appointmentRecord)
+            appointmentRepository.updateStatus(original.id!!, AppointmentStatus.RESCHEDULED)
+            rescheduleCandidateRepository.markSelected(candidateId)
 
-            // 4. 원래 예약을 RESCHEDULED로 전환
-            Appointments.update(where = { Appointments.id eq originalAppointmentId }) {
-                it[status] = "RESCHEDULED"
-            }
-
-            // 5. 선택된 후보 표시
-            RescheduleCandidates.update(where = { RescheduleCandidates.id eq candidateId }) {
-                it[selected] = true
-            }
-
-            newAppointmentId
+            newAppointment.id.requireNotNull("newAppointment.id")
         }
 
     /**
@@ -191,16 +131,8 @@ class ClosureRescheduleService(
      */
     fun autoReschedule(originalAppointmentId: Long): Long? =
         transaction {
-            val bestCandidate =
-                RescheduleCandidates
-                    .selectAll()
-                    .where {
-                        (RescheduleCandidates.originalAppointmentId eq originalAppointmentId) and
-                            (RescheduleCandidates.selected eq false)
-                    }.orderBy(RescheduleCandidates.priority)
-                    .firstOrNull()
-                    ?: return@transaction null
-
-            confirmReschedule(bestCandidate[RescheduleCandidates.id].value)
+            val best = rescheduleCandidateRepository.findBestCandidate(originalAppointmentId)
+                ?: return@transaction null
+            confirmReschedule(best.id!!)
         }
 }

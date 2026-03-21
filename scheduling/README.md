@@ -12,18 +12,21 @@ graph TB
     subgraph "scheduling/"
         subgraph core["appointment-core"]
             direction TB
-            Tables["Exposed Tables<br/>(16 tables)"]
-            DTOs["DTO Data Classes"]
+            Tables["Exposed Tables<br/>(17 tables)"]
+            Records["Record Data Classes<br/>(17 records)"]
+            Repos["Aggregate Repositories<br/>(6 repos)"]
             SM["AppointmentStateMachine"]
             TR["TimeRange Utilities"]
             CR["ConcurrencyResolver"]
             SCS["SlotCalculationService"]
             CRS["ClosureRescheduleService"]
 
-            Tables --> DTOs
+            Tables --> Records
+            Tables --> Repos
+            Records --> Repos
             TR --> SCS
             CR --> SCS
-            Tables --> SCS
+            Repos --> SCS
             SCS --> CRS
         end
 
@@ -153,6 +156,7 @@ erDiagram
     }
 
     CLINICS ||--o{ OPERATING_HOURS : has
+    CLINICS ||--o{ CLINIC_DEFAULT_BREAK_TIMES : has
     CLINICS ||--o{ BREAK_TIMES : has
     CLINICS ||--o{ CLINIC_CLOSURES : has
     CLINICS ||--o{ DOCTORS : employs
@@ -180,6 +184,14 @@ erDiagram
         string timezone "default Asia/Seoul"
         int max_concurrent_patients "default 1"
         boolean open_on_holidays "default false"
+    }
+
+    CLINIC_DEFAULT_BREAK_TIMES {
+        long id PK
+        long clinic_id FK
+        string name
+        time start_time
+        time end_time
     }
 
     OPERATING_HOURS {
@@ -554,42 +566,53 @@ sequenceDiagram
 scheduling/
 ├── README.md
 ├── appointment-core/
+│   ├── README.md
 │   ├── build.gradle.kts
 │   └── src/
 │       ├── main/kotlin/io/bluetape4k/scheduling/appointment/
 │       │   ├── model/
-│       │   │   ├── tables/                # 16 Exposed Table objects
-│       │   │   │   ├── Holidays.kt           # 공휴일
-│       │   │   │   ├── Clinics.kt            # + openOnHolidays
+│       │   │   ├── tables/                # 17 Exposed Table objects
+│       │   │   │   ├── Holidays.kt
+│       │   │   │   ├── Clinics.kt
+│       │   │   │   ├── ClinicDefaultBreakTimes.kt
 │       │   │   │   ├── OperatingHoursTable.kt
 │       │   │   │   ├── BreakTimes.kt
 │       │   │   │   ├── ClinicClosures.kt
-│       │   │   │   ├── Doctors.kt            # + ProviderType (DOCTOR/CONSULTANT)
+│       │   │   │   ├── Doctors.kt
 │       │   │   │   ├── DoctorSchedules.kt
 │       │   │   │   ├── DoctorAbsences.kt
 │       │   │   │   ├── Equipments.kt
-│       │   │   │   ├── TreatmentTypes.kt     # + TreatmentCategory, ConsultationMethod
+│       │   │   │   ├── TreatmentTypes.kt
 │       │   │   │   ├── TreatmentEquipments.kt
-│       │   │   │   ├── ConsultationTopics.kt # 상담 종류 (시술안내, 진료비 안내 등)
-│       │   │   │   ├── Appointments.kt       # + consultationTopicId, rescheduleFromId
+│       │   │   │   ├── ConsultationTopics.kt
+│       │   │   │   ├── Appointments.kt
 │       │   │   │   ├── AppointmentNotes.kt
-│       │   │   │   └── RescheduleCandidates.kt # 재배정 후보
-│       │   │   └── dto/                   # 16 DTO data classes
-│       │   │       ├── HolidayDto.kt
-│       │   │       ├── ClinicDto.kt
-│       │   │       ├── OperatingHoursDto.kt
-│       │   │       ├── BreakTimeDto.kt
-│       │   │       ├── ClinicClosureDto.kt
-│       │   │       ├── DoctorDto.kt
-│       │   │       ├── DoctorScheduleDto.kt
-│       │   │       ├── DoctorAbsenceDto.kt
-│       │   │       ├── EquipmentDto.kt
-│       │   │       ├── TreatmentTypeDto.kt
-│       │   │       ├── TreatmentEquipmentDto.kt
-│       │   │       ├── ConsultationTopicDto.kt
-│       │   │       ├── AppointmentDto.kt
-│       │   │       ├── AppointmentNoteDto.kt
-│       │   │       └── RescheduleCandidateDto.kt
+│       │   │   │   └── RescheduleCandidates.kt
+│       │   │   └── dto/                   # 17 Record data classes
+│       │   │       ├── HolidayRecord.kt
+│       │   │       ├── ClinicRecord.kt
+│       │   │       ├── ClinicDefaultBreakTimeRecord.kt
+│       │   │       ├── OperatingHoursRecord.kt
+│       │   │       ├── BreakTimeRecord.kt
+│       │   │       ├── ClinicClosureRecord.kt
+│       │   │       ├── DoctorRecord.kt
+│       │   │       ├── DoctorScheduleRecord.kt
+│       │   │       ├── DoctorAbsenceRecord.kt
+│       │   │       ├── EquipmentRecord.kt
+│       │   │       ├── TreatmentTypeRecord.kt
+│       │   │       ├── TreatmentEquipmentRecord.kt
+│       │   │       ├── ConsultationTopicRecord.kt
+│       │   │       ├── AppointmentRecord.kt
+│       │   │       ├── AppointmentNoteRecord.kt
+│       │   │       └── RescheduleCandidateRecord.kt
+│       │   ├── repository/               # Aggregate Root Repository (6개)
+│       │   │   ├── RecordMappers.kt         # ResultRow → Record 변환
+│       │   │   ├── ClinicRepository.kt
+│       │   │   ├── DoctorRepository.kt
+│       │   │   ├── TreatmentTypeRepository.kt
+│       │   │   ├── AppointmentRepository.kt
+│       │   │   ├── HolidayRepository.kt
+│       │   │   └── RescheduleCandidateRepository.kt
 │       │   ├── statemachine/              # 상태 머신 (10 states, 13 events)
 │       │   │   ├── AppointmentState.kt
 │       │   │   ├── AppointmentEvent.kt
@@ -606,23 +629,26 @@ scheduling/
 │           ├── model/tables/TableSchemaTest.kt
 │           ├── statemachine/AppointmentStateMachineTest.kt
 │           └── service/
-│               ├── SlotCalculationServiceTest.kt       # 18 tests
+│               ├── SlotCalculationServiceTest.kt       # 21 tests
 │               ├── ClosureRescheduleServiceTest.kt     # 6 tests
 │               ├── ResolveMaxConcurrentTest.kt
 │               └── model/TimeRangeTest.kt
 ├── appointment-event/
+│   ├── README.md
 │   ├── build.gradle.kts
 │   └── src/
 │       ├── main/kotlin/io/bluetape4k/scheduling/appointment/event/
 │       │   ├── AppointmentDomainEvent.kt
 │       │   ├── AppointmentEventLogs.kt
-│       │   ├── AppointmentEventLogDto.kt
+│       │   ├── AppointmentEventLogRecord.kt
 │       │   └── AppointmentEventLogger.kt
 │       └── test/kotlin/io/bluetape4k/scheduling/appointment/event/
 │           └── EventLogTest.kt
-├── appointment-solver/                     # Phase 3+ stub
+├── appointment-solver/
+│   ├── README.md
 │   └── build.gradle.kts
-└── appointment-api/                         # Phase 3+ stub
+└── appointment-api/
+    ├── README.md
     └── build.gradle.kts
 ```
 
@@ -734,10 +760,11 @@ state2 = sm.transition(state2, AppointmentEvent.ConfirmReschedule)
 | 상태 관리 | Kotlin sealed class | 컴파일 타임 안전성, StateMachine 마이그레이션 가능 |
 | 동시 예약 | 3단계 cascade (Clinic > Doctor > TreatmentType) | 세밀한 제어 가능 |
 | 이벤트 | Spring ApplicationEvent + DB 로그 | 느슨한 결합 + 감사 추적 |
-| 데이터 접근 | Exposed JDBC (서비스) + R2DBC (API 준비) | 서비스 계층은 동기, API는 비동기 지원 |
+| 데이터 접근 패턴 | Aggregate Root Repository (LongJdbcRepository) | DDD 원칙 준수, 서비스에서 직접 쿼리 제거 |
 | 테이블 접두사 | `scheduling_` | 다른 모듈과 네임스페이스 충돌 방지 |
 | Provider 구분 | Doctors 테이블에 providerType 컬럼 | 테이블 리네이밍 없이 유형 구분 |
 | 공휴일 | 별도 Holidays 테이블 + 병원별 opt-in | 전체 적용 + 예외 허용 |
+| 병원 휴식시간 | ClinicDefaultBreakTimes 별도 테이블 | 하루 여러 번 휴식 지원, 요일 무관 적용 |
 | 재배정 | 후보군 생성 + 관리자 선택/자동 모드 | 유연한 운영 정책 지원 |
 
 ---

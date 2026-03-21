@@ -15,6 +15,7 @@ dependencies {
     api(Libs.kotlinx_coroutines_reactor)
 
     implementation(Libs.exposed_jdbc)
+    implementation(Libs.bluetape4k_exposed_jdbc)
     testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.bluetape4k_exposed_r2dbc_tests)
     testImplementation(Libs.h2_v2)

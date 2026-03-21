@@ -1,9 +1,11 @@
 package io.bluetape4k.scheduling.appointment.service
 
 import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
+import io.bluetape4k.scheduling.appointment.model.tables.ClinicDefaultBreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.ConsultationMethod
 import io.bluetape4k.scheduling.appointment.model.tables.Holidays
@@ -18,13 +20,18 @@ import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
 import io.bluetape4k.scheduling.appointment.model.tables.ConsultationTopics
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
 import io.bluetape4k.scheduling.appointment.service.model.SlotQuery
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldContain
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +55,7 @@ class SlotCalculationServiceTest {
                 SchemaUtils.create(
                     Holidays,
                     Clinics,
+                    ClinicDefaultBreakTimes,
                     OperatingHoursTable,
                     BreakTimes,
                     ClinicClosures,
@@ -79,6 +87,7 @@ class SlotCalculationServiceTest {
             Doctors.deleteAll()
             ClinicClosures.deleteAll()
             BreakTimes.deleteAll()
+            ClinicDefaultBreakTimes.deleteAll()
             OperatingHoursTable.deleteAll()
             Clinics.deleteAll()
             Holidays.deleteAll()
@@ -94,8 +103,6 @@ class SlotCalculationServiceTest {
         slotDurationMinutes: Int = 30,
         maxConcurrentPatients: Int = 1,
         openOnHolidays: Boolean = false,
-        lunchStartTime: LocalTime? = null,
-        lunchEndTime: LocalTime? = null,
         doctorStart: LocalTime = LocalTime.of(9, 0),
         doctorEnd: LocalTime = LocalTime.of(18, 0),
         treatmentDurationMinutes: Int = 30,
@@ -115,8 +122,6 @@ class SlotCalculationServiceTest {
                         it[Clinics.slotDurationMinutes] = slotDurationMinutes
                         it[Clinics.maxConcurrentPatients] = maxConcurrentPatients
                         it[Clinics.openOnHolidays] = openOnHolidays
-                        it[Clinics.lunchStartTime] = lunchStartTime
-                        it[Clinics.lunchEndTime] = lunchEndTime
                     }[Clinics.id]
                     .value
 
@@ -172,9 +177,9 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00~18:00, 30분 간격, 30분 duration → 18 slots (09:00, 09:30, ..., 17:30)
-        assertEquals(18, slots.size)
-        assertEquals(LocalTime.of(9, 0), slots.first().startTime)
-        assertEquals(LocalTime.of(17, 30), slots.last().startTime)
+        slots shouldHaveSize 18
+        slots.first().startTime shouldBeEqualTo LocalTime.of(9, 0)
+        slots.last().startTime shouldBeEqualTo LocalTime.of(17, 30)
     }
 
     @Test
@@ -196,10 +201,10 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00~12:00 → 6 slots, 13:00~18:00 → 10 slots = 16
-        assertEquals(16, slots.size)
+        slots shouldHaveSize 16
         // 12:00, 12:30 슬롯이 없어야 함
-        assertTrue(slots.none { it.startTime == LocalTime.of(12, 0) })
-        assertTrue(slots.none { it.startTime == LocalTime.of(12, 30) })
+        slots.none { it.startTime == LocalTime.of(12, 0) }.shouldBeTrue()
+        slots.none { it.startTime == LocalTime.of(12, 30) }.shouldBeTrue()
     }
 
     @Test
@@ -220,7 +225,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        assertTrue(slots.isEmpty())
+        slots.shouldBeEmpty()
     }
 
     @Test
@@ -244,8 +249,8 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00~13:00 → 8 slots, 15:00~18:00 → 6 slots = 14
-        assertEquals(14, slots.size)
-        assertTrue(slots.none { it.startTime >= LocalTime.of(13, 0) && it.startTime < LocalTime.of(15, 0) })
+        slots shouldHaveSize 14
+        slots.none { it.startTime >= LocalTime.of(13, 0) && it.startTime < LocalTime.of(15, 0) }.shouldBeTrue()
     }
 
     @Test
@@ -262,9 +267,9 @@ class SlotCalculationServiceTest {
             )
 
         // 교차: 10:00~16:00 → 12 slots
-        assertEquals(12, slots.size)
-        assertEquals(LocalTime.of(10, 0), slots.first().startTime)
-        assertEquals(LocalTime.of(15, 30), slots.last().startTime)
+        slots shouldHaveSize 12
+        slots.first().startTime shouldBeEqualTo LocalTime.of(10, 0)
+        slots.last().startTime shouldBeEqualTo LocalTime.of(15, 30)
     }
 
     @Test
@@ -286,7 +291,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        assertTrue(slots.isEmpty())
+        slots.shouldBeEmpty()
     }
 
     @Test
@@ -309,8 +314,8 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00~14:00 → 10 slots, 16:00~18:00 → 4 slots = 14
-        assertEquals(14, slots.size)
-        assertTrue(slots.none { it.startTime >= LocalTime.of(14, 0) && it.startTime < LocalTime.of(16, 0) })
+        slots shouldHaveSize 14
+        slots.none { it.startTime >= LocalTime.of(14, 0) && it.startTime < LocalTime.of(16, 0) }.shouldBeTrue()
     }
 
     @Test
@@ -331,7 +336,7 @@ class SlotCalculationServiceTest {
                     it[appointmentDate] = MONDAY
                     it[startTime] = LocalTime.of(9, 0)
                     it[endTime] = LocalTime.of(9, 30)
-                    it[status] = "CONFIRMED"
+                    it[status] = AppointmentStatus.CONFIRMED
                 }
             }
         }
@@ -342,11 +347,11 @@ class SlotCalculationServiceTest {
             )
 
         val slot0900 = slots.first { it.startTime == LocalTime.of(9, 0) }
-        assertEquals(1, slot0900.remainingCapacity)
+        slot0900.remainingCapacity shouldBeEqualTo 1
 
         // 다른 슬롯은 capacity 3
         val slot0930 = slots.first { it.startTime == LocalTime.of(9, 30) }
-        assertEquals(3, slot0930.remainingCapacity)
+        slot0930.remainingCapacity shouldBeEqualTo 3
     }
 
     @Test
@@ -366,7 +371,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = "CONFIRMED"
+                it[status] = AppointmentStatus.CONFIRMED
             }
         }
 
@@ -376,8 +381,8 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00 슬롯은 제외되어야 함 → 17개
-        assertEquals(17, slots.size)
-        assertTrue(slots.none { it.startTime == LocalTime.of(9, 0) })
+        slots shouldHaveSize 17
+        slots.none { it.startTime == LocalTime.of(9, 0) }.shouldBeTrue()
     }
 
     @Test
@@ -419,7 +424,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = "CONFIRMED"
+                it[status] = AppointmentStatus.CONFIRMED
             }
         }
 
@@ -429,8 +434,8 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00 슬롯은 장비 부족으로 제외
-        assertTrue(slots.none { it.startTime == LocalTime.of(9, 0) })
-        assertEquals(17, slots.size)
+        slots.none { it.startTime == LocalTime.of(9, 0) }.shouldBeTrue()
+        slots shouldHaveSize 17
     }
 
     @Test
@@ -473,7 +478,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = "CONFIRMED"
+                it[status] = AppointmentStatus.CONFIRMED
             }
         }
 
@@ -484,8 +489,8 @@ class SlotCalculationServiceTest {
 
         // 09:00 슬롯 여전히 가용 (quantity 2, used 1)
         val slot0900 = slots.firstOrNull { it.startTime == LocalTime.of(9, 0) }
-        assertTrue(slot0900 != null)
-        assertTrue(slot0900!!.equipmentIds.contains(equipmentId))
+        slot0900.shouldNotBeNull()
+        slot0900.equipmentIds shouldContain equipmentId
     }
 
     @Test
@@ -503,12 +508,12 @@ class SlotCalculationServiceTest {
         // 09:00~18:00, 30분 간격으로 시작, 60분 duration
         // 시작 가능: 09:00, 09:30, ..., 17:00 (17:00+60=18:00 OK, 17:30+60=18:30 > 18:00 NG)
         // → 17개 슬롯
-        assertEquals(17, slots.size)
-        assertEquals(LocalTime.of(9, 0), slots.first().startTime)
-        assertEquals(LocalTime.of(17, 0), slots.last().startTime)
+        slots shouldHaveSize 17
+        slots.first().startTime shouldBeEqualTo LocalTime.of(9, 0)
+        slots.last().startTime shouldBeEqualTo LocalTime.of(17, 0)
         // 각 슬롯의 endTime은 startTime + 60분
         slots.forEach { slot ->
-            assertEquals(slot.startTime.plusMinutes(60), slot.endTime)
+            slot.endTime shouldBeEqualTo slot.startTime.plusMinutes(60)
         }
     }
 
@@ -528,7 +533,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        assertTrue(slots.isEmpty(), "의사는 상담 진료를 수행할 수 없어야 합니다")
+        slots.isEmpty().shouldBeTrue()
     }
 
     @Test
@@ -547,7 +552,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, consultantId, treatmentTypeId, MONDAY)
             )
 
-        assertEquals(18, slots.size, "상담사는 상담 슬롯을 정상적으로 제공해야 합니다")
+        slots shouldHaveSize 18
     }
 
     @Test
@@ -565,7 +570,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, consultantId, treatmentTypeId, MONDAY)
             )
 
-        assertTrue(slots.isEmpty(), "상담사는 진료를 수행할 수 없어야 합니다")
+        slots.isEmpty().shouldBeTrue()
     }
 
     @Test
@@ -585,9 +590,9 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId1, consultantId1, phoneConsultationId, MONDAY)
             )
 
-        assertEquals(18, phoneSlots.size, "전화 상담은 장비 없이 가능해야 합니다")
+        phoneSlots shouldHaveSize 18
         phoneSlots.forEach { slot ->
-            assertTrue(slot.equipmentIds.isEmpty())
+            slot.equipmentIds.isEmpty().shouldBeTrue()
         }
     }
 
@@ -608,7 +613,7 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        assertTrue(slots.isEmpty(), "공휴일에는 기본적으로 예약 슬롯이 없어야 합니다")
+        slots.shouldBeEmpty()
     }
 
     @Test
@@ -629,43 +634,51 @@ class SlotCalculationServiceTest {
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        assertEquals(18, slots.size, "openOnHolidays 병원은 공휴일에도 정상 영업해야 합니다")
+        slots shouldHaveSize 18
     }
 
     @Test
-    fun `19 - 병원 점심시간이 모든 영업일에 적용된다`() {
-        // 12:00-13:00 점심시간 설정
-        val (clinicId, doctorId, treatmentTypeId) =
-            insertBaseData(
-                lunchStartTime = LocalTime.of(12, 0),
-                lunchEndTime = LocalTime.of(13, 0)
-            )
+    fun `19 - 병원 기본 휴식시간이 모든 영업일에 적용된다`() {
+        val (clinicId, doctorId, treatmentTypeId) = insertBaseData()
+
+        // 12:00-13:00 기본 휴식시간 설정
+        transaction {
+            ClinicDefaultBreakTimes.insert {
+                it[ClinicDefaultBreakTimes.clinicId] = clinicId
+                it[name] = "점심시간"
+                it[startTime] = LocalTime.of(12, 0)
+                it[endTime] = LocalTime.of(13, 0)
+            }
+        }
 
         val slots =
             service.findAvailableSlots(
                 SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
             )
 
-        // 09:00~18:00 중 12:00~13:00 제외 → 8시간 = 16 슬롯 (30분 단위)
-        assertEquals(16, slots.size)
-        // 12:00, 12:30 슬롯이 없어야 함
-        assertTrue(slots.none { it.startTime == LocalTime.of(12, 0) })
-        assertTrue(slots.none { it.startTime == LocalTime.of(12, 30) })
-        // 11:30 슬롯은 있어야 함 (11:30~12:00)
-        assertTrue(slots.any { it.startTime == LocalTime.of(11, 30) })
-        // 13:00 슬롯은 있어야 함
-        assertTrue(slots.any { it.startTime == LocalTime.of(13, 0) })
+        // 09:00~18:00 중 12:00~13:00 제외 → 16 슬롯
+        slots shouldHaveSize 16
+        slots.none { it.startTime == LocalTime.of(12, 0) }.shouldBeTrue()
+        slots.none { it.startTime == LocalTime.of(12, 30) }.shouldBeTrue()
+        slots.any { it.startTime == LocalTime.of(11, 30) }.shouldBeTrue()
+        slots.any { it.startTime == LocalTime.of(13, 0) }.shouldBeTrue()
     }
 
     @Test
-    fun `20 - 점심시간과 요일별 휴식시간이 동시에 적용된다`() {
-        // 점심 12:00-13:00 + 요일별 휴식 15:00-15:30
-        val (clinicId, doctorId, treatmentTypeId) =
-            insertBaseData(
-                lunchStartTime = LocalTime.of(12, 0),
-                lunchEndTime = LocalTime.of(13, 0)
-            )
+    fun `20 - 기본 휴식시간과 요일별 휴식시간이 동시에 적용된다`() {
+        val (clinicId, doctorId, treatmentTypeId) = insertBaseData()
 
+        // 기본 휴식시간: 점심 12:00-13:00
+        transaction {
+            ClinicDefaultBreakTimes.insert {
+                it[ClinicDefaultBreakTimes.clinicId] = clinicId
+                it[name] = "점심시간"
+                it[startTime] = LocalTime.of(12, 0)
+                it[endTime] = LocalTime.of(13, 0)
+            }
+        }
+
+        // 요일별 휴식시간: 15:00-15:30
         transaction {
             BreakTimes.insert {
                 it[BreakTimes.clinicId] = clinicId
@@ -681,8 +694,40 @@ class SlotCalculationServiceTest {
             )
 
         // 09:00~18:00 중 12:00~13:00, 15:00~15:30 제외 → 15 슬롯
-        assertEquals(15, slots.size)
-        assertTrue(slots.none { it.startTime == LocalTime.of(12, 0) })
-        assertTrue(slots.none { it.startTime == LocalTime.of(15, 0) })
+        slots shouldHaveSize 15
+        slots.none { it.startTime == LocalTime.of(12, 0) }.shouldBeTrue()
+        slots.none { it.startTime == LocalTime.of(15, 0) }.shouldBeTrue()
+    }
+
+    @Test
+    fun `21 - 하루에 여러 기본 휴식시간이 적용된다`() {
+        val (clinicId, doctorId, treatmentTypeId) = insertBaseData()
+
+        // 점심 12:00-13:00 + 오후 티타임 15:00-15:30
+        transaction {
+            ClinicDefaultBreakTimes.insert {
+                it[ClinicDefaultBreakTimes.clinicId] = clinicId
+                it[name] = "점심시간"
+                it[startTime] = LocalTime.of(12, 0)
+                it[endTime] = LocalTime.of(13, 0)
+            }
+            ClinicDefaultBreakTimes.insert {
+                it[ClinicDefaultBreakTimes.clinicId] = clinicId
+                it[name] = "오후 티타임"
+                it[startTime] = LocalTime.of(15, 0)
+                it[endTime] = LocalTime.of(15, 30)
+            }
+        }
+
+        val slots =
+            service.findAvailableSlots(
+                SlotQuery(clinicId, doctorId, treatmentTypeId, MONDAY)
+            )
+
+        // 09:00~18:00 중 12:00~13:00, 15:00~15:30 제외 → 15 슬롯
+        slots shouldHaveSize 15
+        slots.none { it.startTime == LocalTime.of(12, 0) }.shouldBeTrue()
+        slots.none { it.startTime == LocalTime.of(12, 30) }.shouldBeTrue()
+        slots.none { it.startTime == LocalTime.of(15, 0) }.shouldBeTrue()
     }
 }

@@ -10,6 +10,7 @@ class TableSchemaTest {
         arrayOf(
             Holidays,
             Clinics,
+            ClinicDefaultBreakTimes,
             OperatingHoursTable,
             BreakTimes,
             ClinicClosures,

@@ -1,12 +1,11 @@
 package io.bluetape4k.scheduling.appointment.model.dto
 
-import io.bluetape4k.exposed.core.HasIdentifier
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 
-data class AppointmentDto(
-    override val id: Long? = null,
+data class AppointmentRecord(
+    val id: Long? = null,
     val clinicId: Long,
     val doctorId: Long,
     val treatmentTypeId: Long,
@@ -23,4 +22,4 @@ data class AppointmentDto(
     val status: String = "REQUESTED",
     val createdAt: Instant? = null,
     val updatedAt: Instant? = null,
-) : HasIdentifier<Long>
+)

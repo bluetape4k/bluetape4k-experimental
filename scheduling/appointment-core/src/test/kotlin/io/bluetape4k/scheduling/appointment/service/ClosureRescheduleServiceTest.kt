@@ -1,9 +1,11 @@
 package io.bluetape4k.scheduling.appointment.service
 
 import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
+import io.bluetape4k.scheduling.appointment.model.tables.ClinicDefaultBreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.ConsultationTopics
 import io.bluetape4k.scheduling.appointment.model.tables.DoctorAbsences
@@ -15,6 +17,12 @@ import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import io.bluetape4k.scheduling.appointment.model.tables.RescheduleCandidates
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
+import org.amshove.kluent.shouldBeEmpty
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -22,10 +30,6 @@ import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -47,6 +51,7 @@ class ClosureRescheduleServiceTest {
         private val allTables = arrayOf(
             Holidays,
             Clinics,
+            ClinicDefaultBreakTimes,
             OperatingHoursTable,
             BreakTimes,
             ClinicClosures,
@@ -149,7 +154,7 @@ class ClosureRescheduleServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = "CONFIRMED"
+                it[status] = AppointmentStatus.CONFIRMED
             }
 
             Triple(clinicId, doctorId, treatmentTypeId)
@@ -167,8 +172,8 @@ class ClosureRescheduleServiceTest {
                     .where { Appointments.clinicId eq clinicId }
                     .toList()
 
-            assertEquals(1, appointments.size)
-            assertEquals("PENDING_RESCHEDULE", appointments[0][Appointments.status])
+            appointments shouldHaveSize 1
+            appointments[0][Appointments.status] shouldBeEqualTo AppointmentStatus.PENDING_RESCHEDULE
         }
     }
 
@@ -179,10 +184,10 @@ class ClosureRescheduleServiceTest {
         val result = rescheduleService.processClosureReschedule(clinicId, MONDAY, searchDays = 1)
 
         // 화요일 후보가 생성되어야 함
-        assertEquals(1, result.size)
+        result.size shouldBeEqualTo 1
         val candidates = result.values.first()
-        assertTrue(candidates.isNotEmpty(), "화요일에 후보 슬롯이 있어야 합니다")
-        assertTrue(candidates.all { it.candidateDate == TUESDAY })
+        candidates.isEmpty().shouldBeFalse()
+        candidates.all { it.candidateDate == TUESDAY }.shouldBeTrue()
     }
 
     @Test
@@ -198,19 +203,19 @@ class ClosureRescheduleServiceTest {
             // 원래 예약이 RESCHEDULED
             val originalAppointment =
                 Appointments.selectAll()
-                    .where { Appointments.status eq "RESCHEDULED" }
+                    .where { Appointments.status eq AppointmentStatus.RESCHEDULED }
                     .firstOrNull()
-            assertNotNull(originalAppointment)
+            originalAppointment.shouldNotBeNull()
 
             // 새 예약이 CONFIRMED
             val newAppointment =
                 Appointments.selectAll()
                     .where { Appointments.id eq newAppointmentId }
                     .first()
-            assertEquals("CONFIRMED", newAppointment[Appointments.status])
-            assertEquals(TUESDAY, newAppointment[Appointments.appointmentDate])
-            assertEquals("홍길동", newAppointment[Appointments.patientName])
-            assertNotNull(newAppointment[Appointments.rescheduleFromId])
+            newAppointment[Appointments.status] shouldBeEqualTo AppointmentStatus.CONFIRMED
+            newAppointment[Appointments.appointmentDate] shouldBeEqualTo TUESDAY
+            newAppointment[Appointments.patientName] shouldBeEqualTo "홍길동"
+            newAppointment[Appointments.rescheduleFromId].shouldNotBeNull()
         }
     }
 
@@ -223,7 +228,7 @@ class ClosureRescheduleServiceTest {
 
         val newAppointmentId = rescheduleService.autoReschedule(originalAppointmentId)
 
-        assertNotNull(newAppointmentId)
+        newAppointmentId.shouldNotBeNull()
 
         transaction {
             val newAppointment =
@@ -231,8 +236,8 @@ class ClosureRescheduleServiceTest {
                     .where { Appointments.id eq newAppointmentId!! }
                     .first()
             // 가장 이른 슬롯 (화요일 09:00)이 선택되어야 함
-            assertEquals(TUESDAY, newAppointment[Appointments.appointmentDate])
-            assertEquals(LocalTime.of(9, 0), newAppointment[Appointments.startTime])
+            newAppointment[Appointments.appointmentDate] shouldBeEqualTo TUESDAY
+            newAppointment[Appointments.startTime] shouldBeEqualTo LocalTime.of(9, 0)
         }
     }
 
@@ -243,7 +248,7 @@ class ClosureRescheduleServiceTest {
         // 예약이 없는 화요일에 대해 처리
         val result = rescheduleService.processClosureReschedule(clinicId, TUESDAY)
 
-        assertTrue(result.isEmpty())
+        result.shouldBeEmpty()
     }
 
     @Test
@@ -293,12 +298,12 @@ class ClosureRescheduleServiceTest {
                     it[appointmentDate] = MONDAY
                     it[startTime] = LocalTime.of(9, 0)
                     it[endTime] = LocalTime.of(9, 30)
-                    it[status] = "PENDING_RESCHEDULE"
+                    it[status] = AppointmentStatus.PENDING_RESCHEDULE
                 }[Appointments.id].value
 
             // 후보 없이 autoReschedule 호출
             val result = rescheduleService.autoReschedule(appointmentId)
-            assertNull(result)
+            (result == null).shouldBeTrue()
         }
     }
 }

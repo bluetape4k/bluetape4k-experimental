@@ -1,12 +1,14 @@
 package io.bluetape4k.scheduling.appointment.event
 
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -31,13 +33,13 @@ class EventLogTest {
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            assertEquals(1, rows.size)
+            rows shouldHaveSize 1
             val row = rows.first()
-            assertEquals("Created", row[AppointmentEventLogs.eventType])
-            assertEquals("Appointment", row[AppointmentEventLogs.entityType])
-            assertEquals(1L, row[AppointmentEventLogs.entityId])
-            assertEquals(10L, row[AppointmentEventLogs.clinicId])
-            assertTrue(row[AppointmentEventLogs.payloadJson].contains("\"appointmentId\":1"))
+            row[AppointmentEventLogs.eventType] shouldBeEqualTo "Created"
+            row[AppointmentEventLogs.entityType] shouldBeEqualTo "Appointment"
+            row[AppointmentEventLogs.entityId] shouldBeEqualTo 1L
+            row[AppointmentEventLogs.clinicId] shouldBeEqualTo 10L
+            row[AppointmentEventLogs.payloadJson].contains("\"appointmentId\":1").shouldBeTrue()
         }
     }
 
@@ -56,15 +58,15 @@ class EventLogTest {
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            assertEquals(1, rows.size)
+            rows shouldHaveSize 1
             val row = rows.first()
-            assertEquals("StatusChanged", row[AppointmentEventLogs.eventType])
-            assertEquals(2L, row[AppointmentEventLogs.entityId])
-            assertEquals(20L, row[AppointmentEventLogs.clinicId])
+            row[AppointmentEventLogs.eventType] shouldBeEqualTo "StatusChanged"
+            row[AppointmentEventLogs.entityId] shouldBeEqualTo 2L
+            row[AppointmentEventLogs.clinicId] shouldBeEqualTo 20L
             val payload = row[AppointmentEventLogs.payloadJson]
-            assertTrue(payload.contains("\"fromState\":\"REQUESTED\""))
-            assertTrue(payload.contains("\"toState\":\"CONFIRMED\""))
-            assertTrue(payload.contains("\"reason\":\"의사 승인\""))
+            payload.contains("\"fromState\":\"REQUESTED\"").shouldBeTrue()
+            payload.contains("\"toState\":\"CONFIRMED\"").shouldBeTrue()
+            payload.contains("\"reason\":\"의사 승인\"").shouldBeTrue()
         }
     }
 
@@ -83,9 +85,9 @@ class EventLogTest {
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            assertEquals(1, rows.size)
+            rows shouldHaveSize 1
             val payload = rows.first()[AppointmentEventLogs.payloadJson]
-            assertTrue(!payload.contains("reason"))
+            payload.contains("reason").shouldBeFalse()
         }
     }
 
@@ -102,12 +104,12 @@ class EventLogTest {
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            assertEquals(1, rows.size)
+            rows shouldHaveSize 1
             val row = rows.first()
-            assertEquals("Cancelled", row[AppointmentEventLogs.eventType])
-            assertEquals(4L, row[AppointmentEventLogs.entityId])
-            assertEquals(40L, row[AppointmentEventLogs.clinicId])
-            assertTrue(row[AppointmentEventLogs.payloadJson].contains("\"reason\":\"환자 요청 취소\""))
+            row[AppointmentEventLogs.eventType] shouldBeEqualTo "Cancelled"
+            row[AppointmentEventLogs.entityId] shouldBeEqualTo 4L
+            row[AppointmentEventLogs.clinicId] shouldBeEqualTo 40L
+            row[AppointmentEventLogs.payloadJson].contains("\"reason\":\"환자 요청 취소\"").shouldBeTrue()
         }
     }
 
@@ -132,10 +134,10 @@ class EventLogTest {
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            assertEquals(3, rows.size)
-            assertEquals("Created", rows[0][AppointmentEventLogs.eventType])
-            assertEquals("StatusChanged", rows[1][AppointmentEventLogs.eventType])
-            assertEquals("Cancelled", rows[2][AppointmentEventLogs.eventType])
+            rows shouldHaveSize 3
+            rows[0][AppointmentEventLogs.eventType] shouldBeEqualTo "Created"
+            rows[1][AppointmentEventLogs.eventType] shouldBeEqualTo "StatusChanged"
+            rows[2][AppointmentEventLogs.eventType] shouldBeEqualTo "Cancelled"
         }
     }
 }
