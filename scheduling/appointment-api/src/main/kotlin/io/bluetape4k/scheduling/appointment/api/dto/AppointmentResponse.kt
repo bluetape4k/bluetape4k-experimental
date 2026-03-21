@@ -17,11 +17,16 @@ data class AppointmentResponse(
     val startTime: LocalTime,
     val endTime: LocalTime,
     val status: String,
+    val timezone: String? = null,
+    val locale: String? = null,
     val createdAt: Instant?,
     val updatedAt: Instant?,
 )
 
-fun AppointmentRecord.toResponse(): AppointmentResponse = AppointmentResponse(
+fun AppointmentRecord.toResponse(
+    timezone: String? = null,
+    locale: String? = null,
+): AppointmentResponse = AppointmentResponse(
     id = id!!,
     clinicId = clinicId,
     doctorId = doctorId,
@@ -33,6 +38,8 @@ fun AppointmentRecord.toResponse(): AppointmentResponse = AppointmentResponse(
     startTime = startTime,
     endTime = endTime,
     status = status,
+    timezone = timezone,
+    locale = locale,
     createdAt = createdAt,
     updatedAt = updatedAt,
 )

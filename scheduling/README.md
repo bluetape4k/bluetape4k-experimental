@@ -856,6 +856,6 @@ state2 = sm.transition(state2, AppointmentEvent.ConfirmReschedule)
 - [x] **Phase 2.5**: 의사/상담사 구분, 상담 방식/주제, 공휴일, 임시휴진 재배정
 - [x] **Phase 3**: Timefold Solver 기반 자동 스케줄 최적화 (2단계 전략, MoveFilter, ConstraintVerifier 20개 테스트)
 - [x] **Phase 4**: Spring MVC REST API + Gatling 스트레스 테스트 (CRUD, 기간별 조회, 휴진 재배정)
-- [ ] **Phase 5**: 다국어/다시간대 지원 (UTC 기반 일시 처리, 클리닉별 locale/timezone 적용)
+- [x] **Phase 5**: 다국어/다시간대 지원 (UTC 기반 일시 처리, 클리닉별 locale/timezone 적용)
 - [x] **Phase 6**: 알림 모듈 (이벤트 기반 알림 + 리마인더 스케줄러 + 플러그인 채널)
 - [x] **Phase 7**: JWT 인증/인가 + OpenAPI/Swagger 문서화
