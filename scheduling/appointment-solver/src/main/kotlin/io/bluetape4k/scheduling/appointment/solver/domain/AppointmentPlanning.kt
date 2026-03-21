@@ -3,6 +3,7 @@ package io.bluetape4k.scheduling.appointment.solver.domain
 import ai.timefold.solver.core.api.domain.entity.PlanningEntity
 import ai.timefold.solver.core.api.domain.entity.PlanningPin
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable
+import io.bluetape4k.scheduling.appointment.solver.move.AppointmentDifficultyComparator
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -14,7 +15,7 @@ import java.time.LocalTime
  *
  * [pinned]가 true인 예약(CONFIRMED 등)은 Solver가 이동하지 않습니다.
  */
-@PlanningEntity
+@PlanningEntity(difficultyComparatorClass = AppointmentDifficultyComparator::class)
 class AppointmentPlanning(
     val id: Long = 0L,
     val clinicId: Long = 0L,

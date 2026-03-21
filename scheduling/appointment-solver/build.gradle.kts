@@ -3,6 +3,7 @@ dependencies {
 
     // Timefold Solver
     api(Libs.timefold_solver_core)
+    implementation(Libs.timefold_solver_benchmark)
 
     implementation(Libs.bluetape4k_exposed_jdbc)
     implementation(Libs.exposed_jdbc)

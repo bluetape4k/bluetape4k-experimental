@@ -50,8 +50,15 @@ class SolverService(
             solverFactory
         }
 
+        val entityCount = solution.appointments.size
+        val pinnedCount = solution.appointments.count { it.pinned }
+
+        log.info("Solver 시작: clinicId=$clinicId, dateRange=$dateRange, entities=$entityCount, pinned=$pinnedCount")
+
+        val startMillis = System.currentTimeMillis()
         val solver = factory.buildSolver()
         val result = solver.solve(solution)
+        val solveTimeMillis = System.currentTimeMillis() - startMillis
 
         val originalMap = transaction {
             appointmentRepository.findByClinicAndDateRange(clinicId, dateRange)
@@ -61,10 +68,15 @@ class SolverService(
         val optimizedAppointments = SolutionConverter.extractResults(result, originalMap)
         val score = result.score!!
 
+        log.info("Solver 완료: score=$score, feasible=${score.isFeasible}, time=${solveTimeMillis}ms")
+
         return SolverResult(
             score = score,
             appointments = optimizedAppointments,
             isFeasible = score.isFeasible,
+            solveTimeMillis = solveTimeMillis,
+            entityCount = entityCount,
+            pinnedCount = pinnedCount,
         )
     }
 
