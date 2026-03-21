@@ -1,6 +1,7 @@
 package io.bluetape4k.scheduling.appointment.service
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
 import io.bluetape4k.scheduling.appointment.repository.ClinicRepository
 import io.bluetape4k.scheduling.appointment.repository.DoctorRepository
@@ -24,7 +25,7 @@ class SlotCalculationService(
     private val appointmentRepository: AppointmentRepository = AppointmentRepository(),
     private val holidayRepository: HolidayRepository = HolidayRepository(),
 ) {
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 주어진 조건에 맞는 예약 가능 슬롯 목록을 반환합니다.
@@ -150,23 +151,25 @@ class SlotCalculationService(
                     val available = mutableListOf<Long>()
                     for (eqId in requiredEquipment) {
                         val quantity = equipmentQuantities[eqId] ?: 0
-                        val usedCount = appointmentRepository.countEquipmentUsage(eqId, query.date, candidate.start, candidate.end)
+                        val usedCount =
+                            appointmentRepository.countEquipmentUsage(eqId, query.date, candidate.start, candidate.end)
                         if (usedCount < quantity) available.add(eqId)
                     }
                     if (available.isEmpty()) continue
                     available
                 } else emptyList()
 
-                availableSlots.add(
-                    AvailableSlot(
-                        date = query.date,
-                        startTime = candidate.start,
-                        endTime = candidate.end,
-                        doctorId = query.doctorId,
-                        equipmentIds = availableEquipmentIds,
-                        remainingCapacity = maxConcurrent - overlappingCount
-                    )
+
+                val availableSlot = AvailableSlot(
+                    date = query.date,
+                    startTime = candidate.start,
+                    endTime = candidate.end,
+                    doctorId = query.doctorId,
+                    equipmentIds = availableEquipmentIds,
+                    remainingCapacity = maxConcurrent - overlappingCount
                 )
+                log.debug { "Add available slot. availableSlot=$availableSlot" }
+                availableSlots.add(availableSlot)
             }
             availableSlots
         }
