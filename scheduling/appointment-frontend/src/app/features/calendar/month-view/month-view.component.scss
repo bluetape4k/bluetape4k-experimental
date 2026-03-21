@@ -56,13 +56,32 @@
   font-weight: 500;
 }
 
-.count-badge {
-  background: #1976d2;
+.appointment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.appointment-box {
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #fff;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  background: #1976d2;
+
+  &.status-requested { background: #ff9800; }
+  &.status-confirmed { background: #1976d2; }
+  &.status-checked_in { background: #00897b; }
+  &.status-in_progress { background: #7b1fa2; }
+  &.status-completed { background: #43a047; }
+  &.status-cancelled { background: #e53935; opacity: 0.7; }
+  &.status-no_show { background: #757575; }
 }
 
 @media (max-width: 600px) {
@@ -75,8 +94,8 @@
     font-size: 0.8rem;
   }
 
-  .count-badge {
-    font-size: 0.65rem;
-    padding: 1px 5px;
+  .appointment-box {
+    font-size: 0.6rem;
+    padding: 1px 3px;
   }
 }

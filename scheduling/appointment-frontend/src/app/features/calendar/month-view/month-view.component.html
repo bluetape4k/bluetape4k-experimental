@@ -12,10 +12,13 @@
       [class.today]="cell.isToday"
       (click)="goToDay(cell.dateStr)">
       <span class="date-number">{{ cell.day }}</span>
-      @let count = getCount(cell.dateStr);
-      @if (count > 0) {
-        <span class="count-badge">{{ count }}</span>
-      }
+      <div class="appointment-list">
+        @for (apt of getAppointments(cell.dateStr); track apt.id) {
+          <div class="appointment-box" [class]="'status-' + apt.status.toLowerCase()">
+            {{ apt.patientName }} - {{ apt.startTime.slice(0, 5) }}
+          </div>
+        }
+      </div>
     </div>
   }
 </div>

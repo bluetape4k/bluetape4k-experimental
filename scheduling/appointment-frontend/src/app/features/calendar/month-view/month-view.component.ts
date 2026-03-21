@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, effect, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppointmentService, CalendarStateService } from '../../../core/services';
@@ -68,26 +68,30 @@ export class MonthViewComponent implements OnInit {
     return cells;
   });
 
+  constructor() {
+    // currentDate가 변경될 때마다 예약 데이터 재조회
+    effect(() => {
+      const cells = this.cells();
+      if (cells.length > 0) {
+        const from = cells[0].dateStr;
+        const to = cells[cells.length - 1].dateStr;
+        this.appointmentService.getByDateRange(CLINIC_ID, from, to);
+      }
+    });
+  }
+
   ngOnInit(): void {
     const dateParam = this.route.snapshot.paramMap.get('date');
     if (dateParam) {
       this.calendarState.viewMode.set('month');
       this.calendarState.currentDate.set(new Date(dateParam + 'T00:00:00'));
     }
-    this.loadAppointments();
   }
 
-  private async loadAppointments(): Promise<void> {
-    const cells = this.cells();
-    if (cells.length === 0) return;
-    const from = cells[0].dateStr;
-    const to = cells[cells.length - 1].dateStr;
-    await this.appointmentService.getByDateRange(CLINIC_ID, from, to);
-  }
-
-  protected getCount(dateStr: string): number {
+  protected getAppointments(dateStr: string) {
     return this.appointmentService.appointments()
-      .filter(a => a.appointmentDate === dateStr).length;
+      .filter(a => a.appointmentDate === dateStr)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
 
   protected goToDay(dateStr: string): void {
