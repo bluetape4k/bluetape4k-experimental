@@ -13,6 +13,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 import java.time.DayOfWeek
 import java.time.LocalTime
 
@@ -24,69 +25,80 @@ import java.time.LocalTime
  */
 @Configuration
 class TestDataSeederConfig {
-
     companion object : KLogging() {
-        private val WEEKDAYS = listOf(
-            DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-            DayOfWeek.THURSDAY, DayOfWeek.FRIDAY,
-        )
+        private val WEEKDAYS =
+            listOf(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+            )
         private val OPEN_TIME = LocalTime.of(9, 0)
         private val CLOSE_TIME = LocalTime.of(18, 0)
         private const val DOCTOR_COUNT = 3
     }
 
     @Bean
-    fun testDataSeeder(): ApplicationRunner = ApplicationRunner {
-        transaction {
-            if (Clinics.selectAll().count() > 0) {
-                log.info { "시드 데이터가 이미 존재합니다. 건너뜁니다." }
-                return@transaction
-            }
-
-            log.info { "스트레스 테스트용 시드 데이터를 생성합니다." }
-
-            val clinicId = Clinics.insert {
-                it[name] = "Test Clinic"
-                it[slotDurationMinutes] = 30
-                it[maxConcurrentPatients] = 1
-            }[Clinics.id].value
-
-            for (day in WEEKDAYS) {
-                OperatingHoursTable.insert {
-                    it[OperatingHoursTable.clinicId] = clinicId
-                    it[dayOfWeek] = day
-                    it[openTime] = OPEN_TIME
-                    it[closeTime] = CLOSE_TIME
-                    it[isActive] = true
+    @Order(2)
+    fun testDataSeeder(): ApplicationRunner =
+        ApplicationRunner {
+            transaction {
+                if (Clinics.selectAll().count() > 0) {
+                    log.info { "시드 데이터가 이미 존재합니다. 건너뜁니다." }
+                    return@transaction
                 }
-            }
 
-            for (i in 1..DOCTOR_COUNT) {
-                val doctorId = Doctors.insert {
-                    it[Doctors.clinicId] = clinicId
-                    it[name] = "Doctor $i"
-                    it[providerType] = "DOCTOR"
-                }[Doctors.id].value
+                log.info { "스트레스 테스트용 시드 데이터를 생성합니다." }
+
+                val clinicId =
+                    Clinics
+                        .insert {
+                            it[name] = "Test Clinic"
+                            it[slotDurationMinutes] = 30
+                            it[maxConcurrentPatients] = 1
+                        }[Clinics.id]
+                        .value
 
                 for (day in WEEKDAYS) {
-                    DoctorSchedules.insert {
-                        it[DoctorSchedules.doctorId] = doctorId
+                    OperatingHoursTable.insert {
+                        it[OperatingHoursTable.clinicId] = clinicId
                         it[dayOfWeek] = day
-                        it[startTime] = OPEN_TIME
-                        it[endTime] = CLOSE_TIME
+                        it[openTime] = OPEN_TIME
+                        it[closeTime] = CLOSE_TIME
+                        it[isActive] = true
                     }
                 }
-            }
 
-            TreatmentTypes.insert {
-                it[TreatmentTypes.clinicId] = clinicId
-                it[name] = "General Checkup"
-                it[defaultDurationMinutes] = 30
-                it[requiredProviderType] = "DOCTOR"
-                it[requiresEquipment] = false
-            }
+                for (i in 1..DOCTOR_COUNT) {
+                    val doctorId =
+                        Doctors
+                            .insert {
+                                it[Doctors.clinicId] = clinicId
+                                it[name] = "Doctor $i"
+                                it[providerType] = "DOCTOR"
+                            }[Doctors.id]
+                            .value
 
-            log.info { "시드 데이터 생성 완료: clinic=$clinicId, doctors=$DOCTOR_COUNT" }
+                    for (day in WEEKDAYS) {
+                        DoctorSchedules.insert {
+                            it[DoctorSchedules.doctorId] = doctorId
+                            it[dayOfWeek] = day
+                            it[startTime] = OPEN_TIME
+                            it[endTime] = CLOSE_TIME
+                        }
+                    }
+                }
+
+                TreatmentTypes.insert {
+                    it[TreatmentTypes.clinicId] = clinicId
+                    it[name] = "General Checkup"
+                    it[defaultDurationMinutes] = 30
+                    it[requiredProviderType] = "DOCTOR"
+                    it[requiresEquipment] = false
+                }
+
+                log.info { "시드 데이터 생성 완료: clinic=$clinicId, doctors=$DOCTOR_COUNT" }
+            }
         }
-    }
 }

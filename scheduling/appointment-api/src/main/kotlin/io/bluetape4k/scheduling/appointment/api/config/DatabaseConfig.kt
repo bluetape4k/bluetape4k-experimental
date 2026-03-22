@@ -23,6 +23,7 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
 
 /**
  * 데이터베이스 스키마 초기화 설정.
@@ -38,6 +39,7 @@ class SchemaInitConfig {
      * Flyway가 비활성일 때 Exposed SchemaUtils로 스키마 생성.
      */
     @Bean
+    @Order(1)
     @ConditionalOnProperty(name = ["spring.flyway.enabled"], havingValue = "false", matchIfMissing = true)
     fun schemaInitializer(): ApplicationRunner =
         ApplicationRunner {
