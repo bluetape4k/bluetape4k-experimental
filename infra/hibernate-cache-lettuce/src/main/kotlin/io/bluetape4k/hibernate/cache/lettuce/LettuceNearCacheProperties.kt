@@ -124,7 +124,7 @@ data class LettuceNearCacheProperties(
         "zstdjdk"    -> LettuceBinaryCodecs.zstdJdk()
         "zstdkryo"   -> LettuceBinaryCodecs.zstdKryo()
         "zstdfory"   -> LettuceBinaryCodecs.zstdFory()
-        else -> LettuceBinaryCodecs.Default
+        else -> LettuceBinaryCodecs.default()
     }
 
     fun buildNearCacheConfig(regionName: String): NearCacheConfig<String, Any> {

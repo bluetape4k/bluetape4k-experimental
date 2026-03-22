@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test
 class TableSchemaTest {
     private val allTables =
         arrayOf(
+            Holidays,
             Clinics,
+            ClinicDefaultBreakTimes,
             OperatingHoursTable,
             BreakTimes,
             ClinicClosures,
@@ -18,8 +20,10 @@ class TableSchemaTest {
             Equipments,
             TreatmentTypes,
             TreatmentEquipments,
+            ConsultationTopics,
             Appointments,
-            AppointmentNotes
+            AppointmentNotes,
+            RescheduleCandidates
         )
 
     @Test

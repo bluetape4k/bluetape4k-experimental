@@ -30,5 +30,13 @@ sealed class AppointmentEvent {
     /** 재예약 (CONFIRMED → PENDING) */
     data object Reschedule : AppointmentEvent()
 
+    /** 재배정 요청 — 임시휴진 등 (REQUESTED/CONFIRMED → PENDING_RESCHEDULE) */
+    data class RequestReschedule(
+        val reason: String,
+    ) : AppointmentEvent()
+
+    /** 재배정 확정 (PENDING_RESCHEDULE → RESCHEDULED) */
+    data object ConfirmReschedule : AppointmentEvent()
+
     override fun toString(): String = this::class.simpleName ?: "Unknown"
 }

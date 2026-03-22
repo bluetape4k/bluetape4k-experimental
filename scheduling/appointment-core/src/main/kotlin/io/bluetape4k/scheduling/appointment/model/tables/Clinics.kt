@@ -5,6 +5,8 @@ import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 object Clinics : LongIdTable("scheduling_clinics") {
     val name = varchar("name", 255)
     val slotDurationMinutes = integer("slot_duration_minutes").default(30)
-    val timezone = varchar("timezone", 50).default("Asia/Seoul")
+    val timezone = varchar("timezone", 50).default("UTC")
+    val locale = varchar("locale", 20).default("ko-KR")
     val maxConcurrentPatients = integer("max_concurrent_patients").default(1)
+    val openOnHolidays = bool("open_on_holidays").default(false)
 }
