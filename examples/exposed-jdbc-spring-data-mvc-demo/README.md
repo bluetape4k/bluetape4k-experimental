@@ -9,6 +9,26 @@
 - **`ExposedRepository`** — Spring Data 기반 CRUD
 - **H2** 인메모리 데이터베이스
 
+## 요청 처리 흐름
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller as ProductController (MVC)
+    participant Repo as ProductRepository (ExposedRepository)
+    participant Tx as transaction {}
+    participant DB as H2 Database
+
+    Client->>Controller: GET /products/{id}
+    Controller->>Repo: findById(id)
+    Repo->>Tx: transaction { ... }
+    Tx->>DB: SELECT FROM products WHERE id = ?
+    DB-->>Tx: ResultRow
+    Tx-->>Repo: ProductEntity
+    Repo-->>Controller: ProductEntity
+    Controller-->>Client: 200 OK
+```
+
 ## 프로젝트 구조
 
 ```

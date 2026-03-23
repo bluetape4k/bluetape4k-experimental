@@ -2,6 +2,30 @@
 
 `io/benchmarks` 모듈은 앞으로 성능 개선 전후를 비교할 때 사용할 공용 벤치마크 실행 지점을 제공합니다.
 
+## 벤치마크 실행 파이프라인
+
+```mermaid
+flowchart TD
+    Q{"실행 목적"}
+    Quick["benchmarkQuick\n빠른 회귀 확인"]
+    Custom["benchmarkCustom\n특정 클래스 실행\n-Pbenchmark.include=..."]
+    Suite["benchmarkSuite\n전체 스냅샷"]
+    Json["jmhJson / comboJmhJson\n개선 전후 비교"]
+    Report["benchmarkMarkdown\n결과 → Markdown"]
+    Results[/"benchmark-results/*.md"/]
+
+    Q -->|빠른 확인| Quick
+    Q -->|특정 클래스| Custom
+    Q -->|전체 스냅샷| Suite
+    Q -->|전후 비교| Json
+
+    Custom --> Report
+    Json --> Report
+    Quick --> Results
+    Suite --> Results
+    Report --> Results
+```
+
 ## 기본 실행
 
 스크립트로 바로 실행:

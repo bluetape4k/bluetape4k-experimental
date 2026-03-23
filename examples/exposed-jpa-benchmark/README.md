@@ -80,22 +80,29 @@ build/reports/gatling/comparisonsimulation-<timestamp>/index.html
 
 ## 아키텍처
 
-```
-BenchmarkApplication (main)
-  └─ PostgreSQLServer.Launcher.postgres   ← Testcontainer 자동 시작
-  └─ System.setProperty(datasource.url)   ← Spring DataSource 오버라이드
+```mermaid
+graph LR
+    PG[("PostgreSQL\nTestcontainers")]
 
-DataInitializer (ApplicationRunner)
-  └─ Database.connect(dataSource)         ← Exposed 연결 (ExposedAutoConfiguration 제외)
-  └─ SchemaUtils.createMissingTablesAndColumns(Authors, Books)
+    subgraph Exposed["Exposed Layer — /api/exposed/**"]
+        ET["Authors / Books\nLongIdTable"]
+        EE["AuthorEntity / BookEntity\nDAO"]
+        ER["AuthorExposedRepository"]
+        ES["ExposedAuthorService"]
+        EC["ExposedController"]
+        ET --> EE --> ER --> ES --> EC
+    end
 
-[Exposed Layer]                     [JPA Layer]
-  Authors / Books (LongIdTable)       authors_jpa / books_jpa (@Entity)
-  AuthorEntity / BookEntity (DAO)     AuthorJpa / BookJpa
-  AuthorExposedRepository             AuthorJpaRepository (Spring Data JPA)
-  ExposedAuthorService                JpaAuthorService
-  ExposedController                   JpaController
-  /api/exposed/**                     /api/jpa/**
+    subgraph JPA["JPA Layer — /api/jpa/**"]
+        JT["authors_jpa / books_jpa\n@Entity"]
+        JR["AuthorJpaRepository\nSpring Data JPA"]
+        JS["JpaAuthorService"]
+        JC["JpaController"]
+        JT --> JR --> JS --> JC
+    end
+
+    Exposed --> PG
+    JPA --> PG
 ```
 
 ### ExposedAutoConfiguration 제외 이유

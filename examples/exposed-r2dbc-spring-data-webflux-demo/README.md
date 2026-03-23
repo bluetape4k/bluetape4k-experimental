@@ -16,6 +16,26 @@
 - `DataInitializer`를 R2DBC DSL 기반 초기화로 전환
 - `spring.r2dbc.*` 설정 및 `r2dbc-h2` 런타임 의존성 보강
 
+## 요청 처리 흐름
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller as ProductController (WebFlux)
+    participant Repo as ProductCoroutineRepository
+    participant Tx as suspendTransaction
+    participant DB as R2DBC H2
+
+    Client->>Controller: POST /products
+    Controller->>Repo: save(dto)
+    Repo->>Tx: suspendTransaction(r2dbcDatabase)
+    Tx->>DB: INSERT INTO products
+    DB-->>Tx: ResultRow
+    Tx-->>Repo: ProductDto
+    Repo-->>Controller: saved ProductDto
+    Controller-->>Client: 201 Created
+```
+
 ## 프로젝트 구조
 
 ```text

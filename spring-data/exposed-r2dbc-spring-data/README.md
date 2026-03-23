@@ -17,6 +17,32 @@ JetBrains Exposed R2DBC DSL을 Spring Data Repository 패턴으로 사용할 수
 - 기본 CRUD/paging 메서드는 Repository 내부에서 `suspendTransaction`을 열어 일관된 호출 계약 제공
 - 대량 스트리밍은 `streamAll(database)` 에서 호출자가 사용할 `R2dbcDatabase`를 명시
 
+```mermaid
+classDiagram
+    class Repository~R,ID~ {
+        <<interface>>
+    }
+    class SuspendExposedCrudRepository~T,R,ID~ {
+        <<interface>>
+        +save(entity) S
+        +findByIdOrNull(id) R?
+        +findAll() Flow~R~
+        +count() Long
+        +deleteById(id)
+        +toDomain(row) R
+        +toPersistValues(domain) Map
+    }
+    class SuspendExposedPagingRepository~T,R,ID~ {
+        <<interface>>
+        +findAll(pageable) Page~R~
+    }
+    class SimpleExposedR2dbcRepository~T,R,ID~
+
+    Repository <|-- SuspendExposedCrudRepository
+    SuspendExposedCrudRepository <|-- SuspendExposedPagingRepository
+    SuspendExposedCrudRepository <|.. SimpleExposedR2dbcRepository
+```
+
 ## 핵심 API
 
 ```kotlin
@@ -63,6 +89,32 @@ interface UserRepository : SuspendExposedCrudRepository<Users, UserDto, Long> {
         Users.email to domain.email,
     )
 }
+```
+
+#### save / findByIdOrNull 흐름
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant Repo as SuspendExposedCrudRepository
+    participant Tx as suspendTransaction
+    participant DB as R2DBC Database
+
+    Note over App,DB: save(entity)
+    App->>Repo: save(entity)
+    Repo->>Tx: suspendTransaction { ... }
+    Tx->>DB: INSERT / UPDATE
+    DB-->>Tx: ResultRow
+    Tx-->>Repo: domain
+    Repo-->>App: saved entity
+
+    Note over App,DB: findByIdOrNull(id)
+    App->>Repo: findByIdOrNull(id)
+    Repo->>Tx: suspendTransaction { ... }
+    Tx->>DB: SELECT WHERE id = ?
+    DB-->>Tx: ResultRow?
+    Tx-->>Repo: domain?
+    Repo-->>App: entity?
 ```
 
 ## 트랜잭션 경계

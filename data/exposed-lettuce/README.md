@@ -62,6 +62,29 @@ flowchart TD
 | `WRITE_THROUGH` | Redis + DB 동시 저장 (기본값)            |
 | `WRITE_BEHIND`  | Redis 즉시 저장 + DB 비동기 배치 저장        |
 
+#### Read-Through 흐름
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant Repo as AbstractJdbcLettuceRepository
+    participant Redis
+    participant DB as Exposed JDBC DAO
+
+    App->>Repo: findById(id)
+    Repo->>Redis: GET {keyPrefix}:{id}
+    alt Cache Hit
+        Redis-->>Repo: entity
+        Repo-->>App: entity
+    else Cache Miss
+        Redis-->>Repo: null
+        Repo->>DB: EntityClass.findById(id)
+        DB-->>Repo: entity
+        Repo->>Redis: SET {keyPrefix}:{id} entity
+        Repo-->>App: entity
+    end
+```
+
 ## 사용 방법
 
 ### 1. 엔티티 및 테이블 정의

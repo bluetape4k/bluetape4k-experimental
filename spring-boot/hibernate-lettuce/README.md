@@ -140,6 +140,21 @@ flowchart LR
 
 ## Auto-Configuration 클래스
 
+```mermaid
+graph LR
+    subgraph AutoConfig["Spring Boot Auto-Configuration"]
+        H["LettuceNearCacheHibernateAutoConfiguration\n@ConditionalOnClass(RegionFactory, EMF)"]
+        M["LettuceNearCacheMetricsAutoConfiguration\n@ConditionalOnBean(MeterRegistry)"]
+        A["LettuceNearCacheActuatorAutoConfiguration\n@ConditionalOnClass(Endpoint)"]
+    end
+
+    H -->|등록| PC["HibernatePropertiesCustomizer"]
+    M -->|등록| MB["LettuceNearCacheMetricsBinder"]
+    A -->|등록| EP["/actuator/nearcache 엔드포인트"]
+```
+
+
+
 | 클래스                                          | 조건                                                                   | 역할                                 |
 |----------------------------------------------|----------------------------------------------------------------------|------------------------------------|
 | `LettuceNearCacheHibernateAutoConfiguration` | `LettuceNearCacheRegionFactory`, `EntityManagerFactory` on classpath | `HibernatePropertiesCustomizer` 등록 |
