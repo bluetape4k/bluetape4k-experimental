@@ -5,25 +5,48 @@ Caffeine(L1 로컬) + Redis(L2 원격)의 2계층 캐시를 제공하며, **RESP
 
 ## 아키텍처
 
-```
-Application
-    │
-[LettuceNearCache / LettuceNearSuspendCache]
-    │
-┌───┴───────────────────┐
-│                       │
-▼                       ▼
-Caffeine (L1)       Redis (L2, via Lettuce)
-로컬 인메모리 캐시    분산 캐시
+```mermaid
+graph TD
+    App["Application"]
+    Cache["LettuceNearCache / LettuceNearSuspendCache"]
+    L1["Caffeine (L1)\n로컬 인메모리"]
+    L2["Redis (L2, via Lettuce)\n분산 캐시"]
+    Tracking["TrackingInvalidationListener\nRESP3 CLIENT TRACKING"]
 
-Invalidation:
-Redis → CLIENT TRACKING (RESP3 push) → CaffeineLocalCache.invalidate()
+    App --> Cache
+    Cache --> L1
+    Cache --> L2
+    L2 -->|"invalidation push"| Tracking
+    Tracking -->|"캐시 무효화"| L1
 ```
 
 ## 최근 변경
 
 - `TrackingInvalidationListener`가 `ByteBuffer`, `ByteArray`, `String` payload를 모두 해석하도록 보강
 - 코루틴 캐시 `put/putAll`의 tracking 등록 경로를 `async().get(...)` fire-and-forget으로 최적화
+
+#### Read-Through 흐름
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant Cache as LettuceNearCache
+    participant L1 as Caffeine (L1)
+    participant L2 as Redis (L2)
+
+    App->>Cache: get(key)
+    Cache->>L1: get(key)
+    alt L1 Hit
+        L1-->>Cache: value
+        Cache-->>App: value (즉시 반환)
+    else L1 Miss
+        L1-->>Cache: null
+        Cache->>L2: GET {cacheName}:{key}
+        L2-->>Cache: value
+        Cache->>L1: put(key, value)
+        Cache-->>App: value
+    end
+```
 
 ### 읽기 전략 (Read-Through)
 1. L1(Caffeine) 히트 → 즉시 반환
@@ -222,15 +245,19 @@ println("Redis key count: ${cache.redisSize()}")
 
 ## CLIENT TRACKING 동작 원리
 
-```
-인스턴스 A (cacheName="orders")   Redis 서버       인스턴스 B (cacheName="orders")
-          │                           │                       │
-          │── CLIENT TRACKING ON ──>  │                       │
-          │── GET "orders:key" ──────>│                       │
-          │<── value ─────────────────│                       │
-          │                           │<── SET "orders:key" ──│
-          │<── invalidate push ────────                       │
-          │── local.remove("key")                             │
+```mermaid
+sequenceDiagram
+    participant A as 인스턴스 A (cacheName="orders")
+    participant Redis as Redis 서버
+    participant B as 인스턴스 B (cacheName="orders")
+
+    A->>Redis: CLIENT TRACKING ON NOLOOP
+    A->>Redis: GET orders:key
+    Redis-->>A: value (tracking 등록)
+    A->>A: Caffeine put(key, value)
+    B->>Redis: SET orders:key newValue
+    Redis-->>A: invalidation push
+    A->>A: Caffeine invalidate(key)
 ```
 
 - **같은 cacheName** 인스턴스끼리만 invalidation이 전파됨 (key prefix가 일치해야 함)
