@@ -7,22 +7,22 @@ Hibernate 7 **2nd Level Cache** 구현체 — Lettuce Near Cache(Caffeine L1 + R
 
 ## 아키텍처
 
-```
-Hibernate ORM
-    │
-[LettuceNearCacheRegionFactory]  ← RegionFactoryTemplate 구현
-    │
-    ├── EntityRegion, CollectionRegion, QueryResultsRegion, ...
-    │       │
-    │   [LettuceNearCacheStorageAccess]  ← DomainDataStorageAccess 구현
-    │       │   key: "{regionName}::{key}"
-    │       │
-    │   [LettuceNearCache<String, Any>]  ← 2-tier cache
-    │       │
-    │   ┌───┴────────────────────────┐
-    │   ▼                            ▼
-    Caffeine (L1)              Redis (L2, Lettuce)
-    로컬 인메모리               분산 캐시 + CLIENT TRACKING
+```mermaid
+graph TD
+    Hibernate["Hibernate ORM"]
+    Factory["LettuceNearCacheRegionFactory\nRegionFactoryTemplate 구현"]
+    Region["EntityRegion / CollectionRegion\nQueryResultsRegion"]
+    Storage["LettuceNearCacheStorageAccess\nDomainDataStorageAccess 구현\nkey: {regionName}::{key}"]
+    NearCache["LettuceNearCache\n2-tier cache"]
+    L1["Caffeine (L1)\n로컬 인메모리"]
+    L2["Redis (L2, Lettuce)\n분산 캐시 + CLIENT TRACKING"]
+
+    Hibernate --> Factory
+    Factory --> Region
+    Region --> Storage
+    Storage --> NearCache
+    NearCache --> L1
+    NearCache --> L2
 ```
 
 - **Region 격리**: 각 Region은 독립된 `LettuceNearCache` 인스턴스를 가짐
@@ -129,6 +129,34 @@ val products: MutableList<Product> = mutableListOf()
 `NONSTRICT_READ_WRITE`를 권장한다. 분산 Redis 환경에서는 soft-lock 기반의 `READ_WRITE`가 추가 overhead를 발생시키기 때문이다.
 
 ## 동작 방식
+
+#### getFromCache / putIntoCache 흐름
+
+```mermaid
+sequenceDiagram
+    participant Hibernate
+    participant Storage as LettuceNearCacheStorageAccess
+    participant L1 as Caffeine (L1)
+    participant L2 as Redis (L2)
+
+    Note over Hibernate,L2: getFromCache
+    Hibernate->>Storage: getFromCache(key)
+    Storage->>L1: get(key)
+    alt L1 Hit
+        L1-->>Storage: value
+    else L1 Miss
+        L1-->>Storage: null
+        Storage->>L2: GET regionName::key
+        L2-->>Storage: value
+        Storage->>L1: put(key, value)
+    end
+    Storage-->>Hibernate: value
+
+    Note over Hibernate,L2: putIntoCache
+    Hibernate->>Storage: putIntoCache(key, value)
+    Storage->>L1: put(key, value)
+    Storage->>L2: SET regionName::key value
+```
 
 | 연산                        | 동작                                                        |
 |---------------------------|-----------------------------------------------------------|

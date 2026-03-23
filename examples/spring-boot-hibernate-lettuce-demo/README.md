@@ -6,23 +6,39 @@ Spring Boot 4 + Hibernate 7 **2nd Level Cache (2LC)** with **Lettuce Near Cache*
 
 ## 아키텍처
 
-```
-HTTP Request
-    │
-ProductController (REST API)
-    │
-ProductRepository (Spring Data JPA)
-    │
-Hibernate (JPA)
-    │
-    ├── [2nd Level Cache ON] ────> LettuceNearCacheRegionFactory
-    │                                   │
-    │                           ┌───────┴────────┐
-    │                           │                │
-    │                       Caffeine (L1)    Redis (L2)
-    │                       로컬 인메모리     분산 캐시
-    │
-    └── [Cache Miss] ─────> H2 Database
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller as ProductController
+    participant JPA as Spring Data JPA
+    participant H2LC as Hibernate 2LC
+    participant L1 as Caffeine (L1)
+    participant L2 as Redis (L2)
+    participant DB as H2 Database
+
+    Client->>Controller: GET /api/products/{id}
+    Controller->>JPA: findById(id)
+    JPA->>H2LC: getFromCache(id)
+    H2LC->>L1: get(id)
+    alt L1 Hit
+        L1-->>H2LC: Product
+        H2LC-->>JPA: Product
+    else L1 Miss
+        H2LC->>L2: GET product::id
+        alt L2 Hit
+            L2-->>H2LC: Product
+            H2LC->>L1: populate
+        else L2 Miss
+            H2LC-->>JPA: null
+            JPA->>DB: SELECT * FROM products WHERE id=?
+            DB-->>JPA: Product
+            JPA->>H2LC: putIntoCache
+            H2LC->>L1: put
+            H2LC->>L2: SET
+        end
+    end
+    JPA-->>Controller: Product
+    Controller-->>Client: 200 OK
 ```
 
 ## 실행 방법

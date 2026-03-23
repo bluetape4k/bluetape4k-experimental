@@ -116,6 +116,16 @@ bluetape4k:
 
 ### 설정값 → Hibernate properties 매핑
 
+```mermaid
+flowchart LR
+    YAML["application.yml<br/>bluetape4k.cache.lettuce-near.*"]
+    Props["LettuceNearCacheProperties<br/>@ConfigurationProperties 바인딩"]
+    Customizer["HibernatePropertiesCustomizer<br/>customize()"]
+    Hibernate["Hibernate Properties<br/>hibernate.cache.lettuce.*"]
+
+    YAML --> Props --> Customizer --> Hibernate
+```
+
 | Spring 설정                            | Hibernate property                                 |
 |--------------------------------------|----------------------------------------------------|
 | `redis-uri`                          | `hibernate.cache.lettuce.redis_uri`                |
