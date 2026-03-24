@@ -1,7 +1,7 @@
 dependencies {
     api(Libs.bluetape4k_core)
-    api(Libs.bluetape4k_logging)
-    api(Libs.kotlinx_coroutines_core)
+    implementation(Libs.bluetape4k_coroutines)
+    implementation(Libs.kotlinx_coroutines_core)
 
     testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.bluetape4k_testcontainers)

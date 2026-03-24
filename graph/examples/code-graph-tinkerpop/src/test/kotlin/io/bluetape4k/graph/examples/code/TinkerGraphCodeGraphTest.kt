@@ -2,16 +2,18 @@ package io.bluetape4k.graph.examples.code
 
 import io.bluetape4k.graph.examples.code.service.CodeGraphService
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TinkerGraphCodeGraphTest {
+
+    companion object: KLogging()
 
     private val ops = TinkerGraphOperations()
     private val service = CodeGraphService(ops)
@@ -49,6 +51,9 @@ class TinkerGraphCodeGraphTest {
         val path = service.findDependencyPath(top.id, core.id)
         path.shouldNotBeNull()
         path.vertices.size shouldBeGreaterThan 1
+        path.vertices.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
@@ -62,6 +67,9 @@ class TinkerGraphCodeGraphTest {
 
         val impacted = service.getImpactedModules(core.id, depth = 1)
         impacted.shouldNotBeEmpty()
+        impacted.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
@@ -75,6 +83,9 @@ class TinkerGraphCodeGraphTest {
 
         val chain = service.getInheritanceChain(leafClass.id, depth = 3)
         chain.shouldNotBeEmpty()
+        chain.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
@@ -89,6 +100,9 @@ class TinkerGraphCodeGraphTest {
 
         val callChain = service.getCallChain(funcA.id, maxDepth = 3)
         callChain.shouldNotBeEmpty()
+        callChain.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test

@@ -6,6 +6,7 @@ import io.bluetape4k.graph.age.AgeGraphOperations
 import io.bluetape4k.graph.examples.linkedin.service.LinkedInGraphService
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.servers.PostgreSQLAgeServer
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
@@ -14,13 +15,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LinkedInGraphTest {
 
     companion object {
-        private val server = PostgreSQLAgeServer()
+        private val server = PostgreSQLAgeServer.instance
     }
 
     private lateinit var dataSource: HikariDataSource
@@ -75,9 +74,9 @@ class LinkedInGraphTest {
     @Test
     fun `최단 인맥 경로 탐색 - 6단계 분리`() {
         val alice = service.addPerson("Alice", "Engineer", "A", "Seoul")
-        val bob   = service.addPerson("Bob",   "Manager",  "B", "Seoul")
+        val bob = service.addPerson("Bob", "Manager", "B", "Seoul")
         val carol = service.addPerson("Carol", "Designer", "C", "Seoul")
-        val dave  = service.addPerson("Dave",  "CTO",      "D", "Seoul")
+        val dave = service.addPerson("Dave", "CTO", "D", "Seoul")
 
         service.connect(alice.id, bob.id)
         service.connect(bob.id, carol.id)
@@ -92,7 +91,7 @@ class LinkedInGraphTest {
     @Test
     fun `2촌 인맥 탐색`() {
         val alice = service.addPerson("Alice", "Engineer", "A", "Seoul")
-        val bob   = service.addPerson("Bob",   "Manager",  "B", "Seoul")
+        val bob = service.addPerson("Bob", "Manager", "B", "Seoul")
         val carol = service.addPerson("Carol", "Designer", "C", "Seoul")
 
         service.connect(alice.id, bob.id)
@@ -105,7 +104,7 @@ class LinkedInGraphTest {
     @Test
     fun `회사 추가 및 재직자 조회`() {
         val alice = service.addPerson("Alice", "Engineer", "TechCorp", "Seoul")
-        val bob   = service.addPerson("Bob", "Designer", "TechCorp", "Seoul")
+        val bob = service.addPerson("Bob", "Designer", "TechCorp", "Seoul")
         val techCorp = service.addCompany("TechCorp", "Technology", "Seoul")
 
         service.addWorkExperience(alice.id, techCorp.id, "Software Engineer", isCurrent = true)
@@ -118,11 +117,14 @@ class LinkedInGraphTest {
     @Test
     fun `팔로우 관계 생성`() {
         val alice = service.addPerson("Alice", "Influencer", "A", "Seoul")
-        val bob   = service.addPerson("Bob", "Fan", "B", "Seoul")
+        val bob = service.addPerson("Bob", "Fan", "B", "Seoul")
 
         service.follow(bob.id, alice.id)
 
-        val followers = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "FOLLOWS", direction = Direction.INCOMING, maxDepth = 1))
+        val followers = ops.neighbors(
+            alice.id,
+            NeighborOptions(edgeLabel = "FOLLOWS", direction = Direction.INCOMING, maxDepth = 1)
+        )
         followers.shouldNotBeEmpty()
     }
 }

@@ -4,9 +4,9 @@ import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
+import io.bluetape4k.graph.servers.MemgraphServer
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -265,7 +265,8 @@ class MemgraphGraphOperationsTest {
         ops.createEdge(a.id, b.id, "KNOWS")
         ops.createEdge(b.id, c.id, "KNOWS")
 
-        val neighbors = ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
+        val neighbors =
+            ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
         neighbors.shouldNotBeEmpty()
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "B"

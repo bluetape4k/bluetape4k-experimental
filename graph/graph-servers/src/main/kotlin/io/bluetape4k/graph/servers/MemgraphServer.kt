@@ -1,4 +1,4 @@
-package io.bluetape4k.graph.examples.linkedin
+package io.bluetape4k.graph.servers
 
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.Driver
@@ -9,15 +9,13 @@ import org.testcontainers.containers.GenericContainer
  * Memgraph 테스트 컨테이너.
  *
  * - 이미지: `memgraph/memgraph:latest`
- * - 싱글턴 패턴으로 테스트 간 컨테이너 재사용 (빠른 테스트)
+ * - 싱글턴 패턴으로 테스트 간 컨테이너 재사용
  * - Memgraph는 인증 없이 접속 가능 (기본 설정)
  *
- * **Driver 생성 예시:**
+ * **사용 예시:**
  * ```kotlin
- * GraphDatabase.driver(
- *     MemgraphServer.boltUrl,
- *     AuthTokens.none()
- * )
+ * val driver = MemgraphServer.driver
+ * val ops = MemgraphGraphOperations(driver)
  * ```
  */
 object MemgraphServer {

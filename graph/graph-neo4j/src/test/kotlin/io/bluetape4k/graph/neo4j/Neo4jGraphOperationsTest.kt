@@ -5,8 +5,10 @@ import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -20,15 +22,15 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.Driver
 import org.neo4j.driver.GraphDatabase
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class Neo4jGraphOperationsTest {
+
+    companion object: KLogging()
 
     private lateinit var driver: Driver
     private lateinit var ops: Neo4jGraphOperations
@@ -77,6 +79,7 @@ class Neo4jGraphOperationsTest {
         val vertex = ops.createVertex("Person")
         vertex.id.value.shouldNotBeEmpty()
         vertex.label shouldBeEqualTo "Person"
+        log.debug { "vertx=$vertex" }
     }
 
     @Test
@@ -85,6 +88,7 @@ class Neo4jGraphOperationsTest {
         val props = mapOf("name" to "Alice", "age" to 30L)
         val vertex = ops.createVertex("Person", props)
 
+        log.debug { "vertx=$vertex" }
         vertex.label shouldBeEqualTo "Person"
         vertex.properties["name"] shouldBeEqualTo "Alice"
         vertex.properties["age"] shouldBeEqualTo 30L
@@ -99,6 +103,7 @@ class Neo4jGraphOperationsTest {
         found.shouldNotBeNull()
         found.id shouldBeEqualTo created.id
         found.properties["name"] shouldBeEqualTo "Bob"
+        log.debug { "found=$found" }
     }
 
     @Test
@@ -119,6 +124,9 @@ class Neo4jGraphOperationsTest {
         val persons = ops.findVerticesByLabel("Person")
         persons.shouldHaveSize(2)
         persons.all { it.label == "Person" }.shouldBeTrue()
+        persons.forEach { person ->
+            log.debug { "person=$person" }
+        }
     }
 
     @Test
@@ -128,8 +136,9 @@ class Neo4jGraphOperationsTest {
         ops.createVertex("Person", mapOf("name" to "Bob", "city" to "Busan"))
 
         val result = ops.findVerticesByLabel("Person", mapOf("city" to "Seoul"))
-        result.shouldHaveSize(1)
+        result shouldHaveSize 1
         result[0].properties["name"] shouldBeEqualTo "Alice"
+        log.debug { "result[0]=${result[0]}" }
     }
 
     @Test
@@ -173,6 +182,7 @@ class Neo4jGraphOperationsTest {
 
         val edge = ops.createEdge(alice.id, bob.id, "KNOWS", mapOf("since" to 2020L))
 
+        log.debug { "edge=$edge" }
         edge.label shouldBeEqualTo "KNOWS"
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo bob.id
@@ -193,6 +203,9 @@ class Neo4jGraphOperationsTest {
         val knowsEdges = ops.findEdgesByLabel("KNOWS")
         knowsEdges.shouldHaveSize(2)
         knowsEdges.all { it.label == "KNOWS" }.shouldBeTrue()
+        knowsEdges.forEach { edge ->
+            log.debug { "edge=$edge" }
+        }
     }
 
     @Test
@@ -205,7 +218,7 @@ class Neo4jGraphOperationsTest {
         val deleted = ops.deleteEdge("KNOWS", edge.id)
         deleted.shouldBeTrue()
 
-        ops.findEdgesByLabel("KNOWS").shouldHaveSize(0)
+        ops.findEdgesByLabel("KNOWS").shouldBeEmpty()
     }
 
     // ----- 그래프 탐색 (Traversal) -----
@@ -221,10 +234,14 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(alice.id, carol.id, "KNOWS")
 
         val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING))
-        neighbors.shouldHaveSize(2)
+        neighbors shouldHaveSize 2
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
         names shouldContain "Carol"
+
+        neighbors.forEach { vertex ->
+            log.debug { "neighbor=$vertex" }
+        }
     }
 
     @Test
@@ -238,7 +255,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
         val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING))
-        neighbors.shouldHaveSize(2)
+        neighbors shouldHaveSize 2
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
         names shouldContain "Carol"
@@ -254,8 +271,14 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH))
-        neighbors.shouldHaveSize(2)
+        val neighbors = ops.neighbors(
+            alice.id,
+            NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH)
+        )
+        neighbors shouldHaveSize 2
+        neighbors.forEach { vertex ->
+            log.debug { "neighbor=$vertex" }
+        }
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
         names shouldContain "Carol"
@@ -271,7 +294,13 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(a.id, b.id, "KNOWS")
         ops.createEdge(b.id, c.id, "KNOWS")
 
-        val neighbors = ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
+        val neighbors = ops.neighbors(
+            a.id,
+            NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2)
+        )
+        neighbors.forEach { neighbor ->
+            log.debug { "neighbor=$neighbor" }
+        }
         neighbors.shouldNotBeEmpty()
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "B"
@@ -291,6 +320,10 @@ class Neo4jGraphOperationsTest {
         val path = ops.shortestPath(a.id, c.id, PathOptions(edgeLabel = "KNOWS"))
         path.shouldNotBeNull()
         path.vertices.shouldNotBeEmpty()
+
+        path.vertices.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
@@ -318,5 +351,8 @@ class Neo4jGraphOperationsTest {
         val paths = ops.allPaths(a.id, c.id, PathOptions(edgeLabel = "KNOWS"))
         paths.shouldNotBeEmpty()
         paths.size shouldBeGreaterOrEqualTo 2
+        paths.forEach { path ->
+            log.debug { "path=$path" }
+        }
     }
 }

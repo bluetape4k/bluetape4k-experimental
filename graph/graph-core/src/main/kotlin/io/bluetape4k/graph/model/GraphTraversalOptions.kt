@@ -1,9 +1,11 @@
 package io.bluetape4k.graph.model
 
+import java.io.Serializable
+
 /**
  * 그래프 순회 옵션의 기반 sealed class.
  */
-sealed class GraphTraversalOptions {
+sealed class GraphTraversalOptions: Serializable {
     abstract val maxDepth: Int
 }
 
@@ -18,8 +20,9 @@ data class NeighborOptions(
     val edgeLabel: String? = null,
     val direction: Direction = Direction.OUTGOING,
     override val maxDepth: Int = 1,
-) : GraphTraversalOptions() {
+): GraphTraversalOptions() {
     companion object {
+        const val serializableUID = 1L
         val Default = NeighborOptions()
     }
 }
@@ -33,8 +36,9 @@ data class NeighborOptions(
 data class PathOptions(
     val edgeLabel: String? = null,
     override val maxDepth: Int = 10,
-) : GraphTraversalOptions() {
+): GraphTraversalOptions() {
     companion object {
+        const val serializableUID = 1L
         val Default = PathOptions()
     }
 }

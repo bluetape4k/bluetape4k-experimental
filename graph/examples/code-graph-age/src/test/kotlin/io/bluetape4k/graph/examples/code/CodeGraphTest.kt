@@ -4,6 +4,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.graph.age.AgeGraphOperations
 import io.bluetape4k.graph.examples.code.service.CodeGraphService
+import io.bluetape4k.graph.servers.PostgreSQLAgeServer
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeEmpty
@@ -13,13 +16,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CodeGraphTest {
 
-    companion object {
-        private val server = PostgreSQLAgeServer()
+    companion object: KLogging() {
+        private val server = PostgreSQLAgeServer.instance
     }
 
     private lateinit var dataSource: HikariDataSource
@@ -60,8 +61,8 @@ class CodeGraphTest {
     @Test
     fun `모듈 추가 및 의존성 관계 구성`() {
         val core = service.addModule("core", "graph/graph-core", "1.0.0")
-        val age  = service.addModule("graph-age", "graph/graph-age", "1.0.0")
-        val app  = service.addModule("linkedin-app", "examples/linkedin", "1.0.0")
+        val age = service.addModule("graph-age", "graph/graph-age", "1.0.0")
+        val app = service.addModule("linkedin-app", "examples/linkedin", "1.0.0")
 
         service.addDependency(age.id, core.id, "compile")
         service.addDependency(app.id, age.id, "compile")
@@ -71,13 +72,16 @@ class CodeGraphTest {
 
         val appDeps = service.getTransitiveDependencies(app.id, maxDepth = 3)
         appDeps.shouldNotBeEmpty()
+        appDeps.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
     fun `의존성 경로 탐색`() {
         val core = service.addModule("core", path = "", version = "1.0.0")
-        val mid  = service.addModule("middle", path = "", version = "1.0.0")
-        val top  = service.addModule("top", path = "", version = "1.0.0")
+        val mid = service.addModule("middle", path = "", version = "1.0.0")
+        val top = service.addModule("top", path = "", version = "1.0.0")
 
         service.addDependency(mid.id, core.id)
         service.addDependency(top.id, mid.id)
@@ -85,11 +89,14 @@ class CodeGraphTest {
         val path = service.findDependencyPath(top.id, core.id)
         path.shouldNotBeNull()
         path.length shouldBeGreaterThan 0
+        path.vertices.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
     fun `영향 범위 분석 - 역방향 탐색`() {
-        val core    = service.addModule("core", path = "", version = "1.0.0")
+        val core = service.addModule("core", path = "", version = "1.0.0")
         val moduleA = service.addModule("moduleA", path = "", version = "1.0.0")
         val moduleB = service.addModule("moduleB", path = "", version = "1.0.0")
 
@@ -98,12 +105,15 @@ class CodeGraphTest {
 
         val impacted = service.getImpactedModules(core.id, depth = 1)
         impacted.shouldNotBeEmpty()
+        impacted.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
     fun `클래스 상속 계층 탐색`() {
         val baseClass = service.addClass("Animal", "io.example.Animal")
-        val midClass  = service.addClass("Mammal", "io.example.Mammal")
+        val midClass = service.addClass("Mammal", "io.example.Mammal")
         val leafClass = service.addClass("Dog", "io.example.Dog")
 
         service.addExtends(midClass.id, baseClass.id)
@@ -111,6 +121,9 @@ class CodeGraphTest {
 
         val chain = service.getInheritanceChain(leafClass.id, depth = 3)
         chain.shouldNotBeEmpty()
+        chain.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
@@ -125,12 +138,15 @@ class CodeGraphTest {
 
         val callChain = service.getCallChain(funcA.id, maxDepth = 3)
         callChain.shouldNotBeEmpty()
+        callChain.forEach { vertex ->
+            log.debug { "vertex=$vertex" }
+        }
     }
 
     @Test
     fun `의존성 없는 경우 경로 null`() {
         val isolated = service.addModule("isolated", path = "", version = "1.0.0")
-        val other    = service.addModule("other", path = "", version = "1.0.0")
+        val other = service.addModule("other", path = "", version = "1.0.0")
 
         val path = service.findDependencyPath(isolated.id, other.id)
         path.shouldBeNull()

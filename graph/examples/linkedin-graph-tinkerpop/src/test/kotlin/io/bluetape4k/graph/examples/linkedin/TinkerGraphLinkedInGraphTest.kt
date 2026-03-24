@@ -4,6 +4,8 @@ import io.bluetape4k.graph.examples.linkedin.service.LinkedInGraphService
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TinkerGraphLinkedInGraphTest {
+
+    companion object: KLogging()
 
     private val ops = TinkerGraphOperations()
     private lateinit var service: LinkedInGraphService
@@ -36,6 +40,9 @@ class TinkerGraphLinkedInGraphTest {
 
         val connections = service.getDirectConnections(alice.id)
         connections.shouldNotBeEmpty()
+        connections.forEach { vertex ->
+            log.debug { "vertext=$vertex" }
+        }
     }
 
     @Test
@@ -53,6 +60,9 @@ class TinkerGraphLinkedInGraphTest {
 
         path.shouldNotBeNull()
         path.vertices.size shouldBeGreaterThan 1
+        path.vertices.forEach { vertex ->
+            log.debug { "vertext=$vertex" }
+        }
     }
 
     @Test
@@ -79,6 +89,9 @@ class TinkerGraphLinkedInGraphTest {
 
         val employees = service.findEmployees(techCorp.id)
         employees.shouldNotBeEmpty()
+        employees.forEach { vertex ->
+            log.debug { "vertext=$vertex" }
+        }
     }
 
     @Test
@@ -90,5 +103,8 @@ class TinkerGraphLinkedInGraphTest {
 
         val followers = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "FOLLOWS", direction = Direction.INCOMING, maxDepth = 1))
         followers.shouldNotBeEmpty()
+        followers.forEach { vertex ->
+            log.debug { "vertext=$vertex" }
+        }
     }
 }

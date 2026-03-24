@@ -1,11 +1,13 @@
 package io.bluetape4k.graph.model
 
+import java.io.Serializable
+
 /**
  * 그래프 경로의 단계 (정점 또는 간선).
  */
 sealed class PathStep {
-    data class VertexStep(val vertex: GraphVertex) : PathStep()
-    data class EdgeStep(val edge: GraphEdge) : PathStep()
+    data class VertexStep(val vertex: GraphVertex): PathStep()
+    data class EdgeStep(val edge: GraphEdge): PathStep()
 }
 
 /**
@@ -13,7 +15,7 @@ sealed class PathStep {
  */
 data class GraphPath(
     val steps: List<PathStep>,
-) {
+): Serializable {
     val vertices: List<GraphVertex>
         get() = steps.filterIsInstance<PathStep.VertexStep>().map { it.vertex }
     val edges: List<GraphEdge>
@@ -24,6 +26,8 @@ data class GraphPath(
         get() = steps.isEmpty()
 
     companion object {
+        const val serializableUID = 1L
+
         val EMPTY = GraphPath(emptyList())
 
         fun of(vararg vertices: GraphVertex): GraphPath =

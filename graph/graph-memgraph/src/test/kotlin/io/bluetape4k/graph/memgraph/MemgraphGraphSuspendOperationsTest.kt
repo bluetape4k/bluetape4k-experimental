@@ -4,10 +4,12 @@ import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
+import io.bluetape4k.graph.servers.MemgraphServer
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import kotlinx.coroutines.flow.toList
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -21,12 +23,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class MemgraphGraphSuspendOperationsTest {
+
+    companion object: KLogging()
 
     private lateinit var ops: MemgraphGraphSuspendOperations
 
@@ -80,6 +82,7 @@ class MemgraphGraphSuspendOperationsTest {
         val props = mapOf("name" to "Alice", "age" to 30L)
         val vertex = ops.createVertex("Person", props)
 
+        log.debug { "vertex=$vertex" }
         vertex.label shouldBeEqualTo "Person"
         vertex.properties["name"] shouldBeEqualTo "Alice"
         vertex.properties["age"] shouldBeEqualTo 30L
@@ -91,6 +94,7 @@ class MemgraphGraphSuspendOperationsTest {
         val created = ops.createVertex("Person", mapOf("name" to "Bob"))
         val found = ops.findVertexById("Person", created.id)
 
+        log.debug { "found=$found" }
         found.shouldNotBeNull()
         found.id shouldBeEqualTo created.id
         found.properties["name"] shouldBeEqualTo "Bob"
@@ -114,6 +118,9 @@ class MemgraphGraphSuspendOperationsTest {
         val persons = ops.findVerticesByLabel("Person").toList()
         persons.shouldHaveSize(2)
         persons.all { it.label == "Person" }.shouldBeTrue()
+        persons.forEach { person ->
+            log.debug { "person=$person" }
+        }
     }
 
     @Test
@@ -123,8 +130,9 @@ class MemgraphGraphSuspendOperationsTest {
         ops.createVertex("Person", mapOf("name" to "Bob", "city" to "Busan"))
 
         val result = ops.findVerticesByLabel("Person", mapOf("city" to "Seoul")).toList()
-        result.shouldHaveSize(1)
+        result shouldHaveSize 1
         result[0].properties["name"] shouldBeEqualTo "Alice"
+        log.debug { "result[0]=${result[0]}" }
     }
 
     @Test
@@ -168,6 +176,7 @@ class MemgraphGraphSuspendOperationsTest {
 
         val edge = ops.createEdge(alice.id, bob.id, "KNOWS", mapOf("since" to 2020L))
 
+        log.debug { "edge=$edge" }
         edge.label shouldBeEqualTo "KNOWS"
         edge.startId shouldBeEqualTo alice.id
         edge.endId shouldBeEqualTo bob.id
@@ -215,7 +224,8 @@ class MemgraphGraphSuspendOperationsTest {
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(alice.id, carol.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING)).toList()
+        val neighbors =
+            ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING)).toList()
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -232,7 +242,8 @@ class MemgraphGraphSuspendOperationsTest {
         ops.createEdge(bob.id, alice.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING)).toList()
+        val neighbors =
+            ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING)).toList()
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -249,7 +260,8 @@ class MemgraphGraphSuspendOperationsTest {
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH)).toList()
+        val neighbors =
+            ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH)).toList()
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -266,7 +278,9 @@ class MemgraphGraphSuspendOperationsTest {
         ops.createEdge(a.id, b.id, "KNOWS")
         ops.createEdge(b.id, c.id, "KNOWS")
 
-        val neighbors = ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2)).toList()
+        val neighbors =
+            ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
+                .toList()
         neighbors.shouldNotBeEmpty()
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "B"

@@ -6,7 +6,9 @@ import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
+import io.bluetape4k.graph.servers.PostgreSQLAgeServer
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterThan
@@ -21,12 +23,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestMethodOrder
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AgeGraphOperationsTest {
+
+    companion object: KLogging()
 
     private lateinit var dataSource: HikariDataSource
     private lateinit var database: Database
@@ -210,7 +212,10 @@ class AgeGraphOperationsTest {
         val alice = ops.createVertex("Person", mapOf("name" to "Alice"))
         val bob = ops.createVertex("Person", mapOf("name" to "Bob"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 1))
+        val neighbors = ops.neighbors(
+            alice.id,
+            NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 1)
+        )
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Bob" }.shouldBeTrue()
     }
@@ -221,7 +226,8 @@ class AgeGraphOperationsTest {
         val alice = ops.createVertex("Person", mapOf("name" to "Alice"))
         val bob = ops.createVertex("Person", mapOf("name" to "Bob"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
-        val neighbors = ops.neighbors(bob.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING, maxDepth = 1))
+        val neighbors =
+            ops.neighbors(bob.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING, maxDepth = 1))
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Alice" }.shouldBeTrue()
     }
@@ -234,7 +240,8 @@ class AgeGraphOperationsTest {
         val carol = ops.createVertex("Person", mapOf("name" to "Carol"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH, maxDepth = 1))
+        val neighbors =
+            ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH, maxDepth = 1))
         neighbors.shouldNotBeEmpty()
         neighbors.size shouldBeGreaterThan 1
     }
@@ -247,7 +254,8 @@ class AgeGraphOperationsTest {
         val carol = ops.createVertex("Person", mapOf("name" to "Carol"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(bob.id, carol.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
+        val neighbors =
+            ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Carol" }.shouldBeTrue()
     }
