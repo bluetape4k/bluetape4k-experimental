@@ -37,9 +37,9 @@ import org.neo4j.driver.reactivestreams.ReactiveSession
 class Neo4jGraphSuspendOperations(
     private val driver: Driver,
     private val database: String = "neo4j",
-) : GraphSuspendOperations {
+): GraphSuspendOperations {
 
-    companion object : KLoggingChannel()
+    companion object: KLoggingChannel()
 
     private fun session(): ReactiveSession =
         driver.session(
@@ -105,44 +105,50 @@ class Neo4jGraphSuspendOperations(
         }
     }
 
-    override fun close() { /* driver는 외부 소유 */ }
+    override fun close() { /* driver는 외부 소유 */
+    }
 
     // -- GraphSuspendVertexRepository --
 
     override suspend fun createVertex(label: String, properties: Map<String, Any?>): GraphVertex {
         label.requireNotBlank("label")
-        val propsClause = if (properties.isEmpty()) "" else " \$props"
-        val cypher = "CREATE (n:$label$propsClause) RETURN n"
+        val propsClause = if (properties.isEmpty()) "" else $$" $props"
+        val cypher = $$"CREATE (n:$$label$$propsClause) RETURN n"
         val params = if (properties.isEmpty()) emptyMap() else mapOf("props" to properties)
-        return runQuery(cypher, params) { Neo4jRecordMapper.recordToVertex(it) }
-            .firstOrNull() ?: throw GraphQueryException("Failed to create vertex: $label")
+        return runQuery(cypher, params) {
+            Neo4jRecordMapper.recordToVertex(it)
+        }.firstOrNull() ?: throw GraphQueryException("Failed to create vertex: $label")
     }
 
     override suspend fun findVertexById(label: String, id: GraphElementId): GraphVertex? {
         label.requireNotBlank("label")
         return runQuery(
-            "MATCH (n:$label) WHERE elementId(n) = \$id RETURN n",
+            $$"MATCH (n:$$label) WHERE elementId(n) = $id RETURN n",
             mapOf("id" to id.value),
-        ) { Neo4jRecordMapper.recordToVertex(it) }.firstOrNull()
+        ) {
+            Neo4jRecordMapper.recordToVertex(it)
+        }.firstOrNull()
     }
 
     override fun findVerticesByLabel(label: String, filter: Map<String, Any?>): Flow<GraphVertex> {
         label.requireNotBlank("label")
         val whereClause = if (filter.isEmpty()) "" else
-            " WHERE " + filter.keys.joinToString(" AND ") { "n.$it = \$$it" }
+            " WHERE " + filter.keys.joinToString(" AND ") { $$"n.$$it = $$$it" }
         return flowQuery(
-            "MATCH (n:$label)$whereClause RETURN n",
+            $$"MATCH (n:$$label)$$whereClause RETURN n",
             filter,
-        ) { Neo4jRecordMapper.recordToVertex(it) }
+        ) {
+            Neo4jRecordMapper.recordToVertex(it)
+        }
     }
 
     override suspend fun updateVertex(label: String, id: GraphElementId, properties: Map<String, Any?>): GraphVertex? {
         label.requireNotBlank("label")
         if (properties.isEmpty()) return findVertexById(label, id)
-        val setClause = properties.keys.joinToString(", ") { "n.$it = \$$it" }
+        val setClause = properties.keys.joinToString(", ") { $$"n.$$it = $$$it" }
         val params = properties + mapOf("id" to id.value)
         return runQuery(
-            "MATCH (n:$label) WHERE elementId(n) = \$id SET $setClause RETURN n",
+            $$"MATCH (n:$$label) WHERE elementId(n) = $id SET $$setClause RETURN n",
             params,
         ) { Neo4jRecordMapper.recordToVertex(it) }.firstOrNull()
     }
@@ -152,7 +158,7 @@ class Neo4jGraphSuspendOperations(
         val s = session()
         return try {
             val result = s.run(
-                Query("MATCH (n:$label) WHERE elementId(n) = \$id DETACH DELETE n", mapOf("id" to id.value))
+                Query($$"MATCH (n:$$label) WHERE elementId(n) = $id DETACH DELETE n", mapOf("id" to id.value))
             ).awaitSingle()
             result.consume().awaitSingle().counters().nodesDeleted() > 0
         } finally {
@@ -164,7 +170,7 @@ class Neo4jGraphSuspendOperations(
         label.requireNotBlank("label")
         val s = session()
         return try {
-            val result = s.run(Query("MATCH (n:$label) RETURN count(n) AS cnt")).awaitSingle()
+            val result = s.run(Query($$"MATCH (n:$$label) RETURN count(n) AS cnt")).awaitSingle()
             result.records().awaitFirstOrNull()?.get("cnt")?.asLong() ?: 0L
         } finally {
             withContext(NonCancellable) { s.close<Void>().awaitFirstOrNull() }
@@ -180,25 +186,28 @@ class Neo4jGraphSuspendOperations(
         properties: Map<String, Any?>,
     ): GraphEdge {
         label.requireNotBlank("label")
-        val propsClause = if (properties.isEmpty()) "" else " \$props"
+        val propsClause = if (properties.isEmpty()) "" else $$" $props"
         val params = mutableMapOf<String, Any?>("fromId" to fromId.value, "toId" to toId.value)
         if (properties.isNotEmpty()) params["props"] = properties
         return runQuery(
-            "MATCH (a), (b) WHERE elementId(a) = \$fromId AND elementId(b) = \$toId " +
-                "CREATE (a)-[r:$label$propsClause]->(b) RETURN r",
+            $$"MATCH (a), (b) WHERE elementId(a) = $fromId AND elementId(b) = $toId " +
+                    $$"CREATE (a)-[r:$$label$$propsClause]->(b) RETURN r",
             params,
-        ) { Neo4jRecordMapper.recordToEdge(it) }
-            .firstOrNull() ?: throw GraphQueryException("Failed to create edge: $label")
+        ) {
+            Neo4jRecordMapper.recordToEdge(it)
+        }.firstOrNull() ?: throw GraphQueryException("Failed to create edge: $label")
     }
 
     override fun findEdgesByLabel(label: String, filter: Map<String, Any?>): Flow<GraphEdge> {
         label.requireNotBlank("label")
         val whereClause = if (filter.isEmpty()) "" else
-            " WHERE " + filter.keys.joinToString(" AND ") { "r.$it = \$$it" }
+            " WHERE " + filter.keys.joinToString(" AND ") { $$"r.$$it = $$$it" }
         return flowQuery(
-            "MATCH ()-[r:$label]->()$whereClause RETURN r",
+            $$"MATCH ()-[r:$$label]->()$$whereClause RETURN r",
             filter,
-        ) { Neo4jRecordMapper.recordToEdge(it) }
+        ) {
+            Neo4jRecordMapper.recordToEdge(it)
+        }
     }
 
     override suspend fun deleteEdge(label: String, id: GraphElementId): Boolean {
@@ -206,7 +215,7 @@ class Neo4jGraphSuspendOperations(
         val s = session()
         return try {
             val result = s.run(
-                Query("MATCH ()-[r:$label]->() WHERE elementId(r) = \$id DELETE r", mapOf("id" to id.value))
+                Query($$"MATCH ()-[r:$$label]->() WHERE elementId(r) = $id DELETE r", mapOf("id" to id.value))
             ).awaitSingle()
             result.consume().awaitSingle().counters().relationshipsDeleted() > 0
         } finally {
@@ -223,16 +232,18 @@ class Neo4jGraphSuspendOperations(
         depth: Int,
     ): Flow<GraphVertex> {
         edgeLabel.requireNotBlank("edgeLabel")
-        val depthStr = if (depth == 1) "" else "*1..$depth"
+        val depthStr = if (depth == 1) "" else $$"*1..$$depth"
         val pattern = when (direction) {
-            Direction.OUTGOING -> "(start)-[:$edgeLabel$depthStr]->(neighbor)"
-            Direction.INCOMING -> "(start)<-[:$edgeLabel$depthStr]-(neighbor)"
-            Direction.BOTH -> "(start)-[:$edgeLabel$depthStr]-(neighbor)"
+            Direction.OUTGOING -> $$"(start)-[:$$edgeLabel$$depthStr]->(neighbor)"
+            Direction.INCOMING -> $$"(start)<-[:$$edgeLabel$$depthStr]-(neighbor)"
+            Direction.BOTH     -> $$"(start)-[:$$edgeLabel$$depthStr]-(neighbor)"
         }
         return flowQuery(
-            "MATCH $pattern WHERE elementId(start) = \$startId RETURN DISTINCT neighbor",
+            $$"MATCH $$pattern WHERE elementId(start) = $startId RETURN DISTINCT neighbor",
             mapOf("startId" to startId.value),
-        ) { Neo4jRecordMapper.recordToVertex(it, "neighbor") }
+        ) {
+            Neo4jRecordMapper.recordToVertex(it, "neighbor")
+        }
     }
 
     override suspend fun shortestPath(
@@ -241,12 +252,14 @@ class Neo4jGraphSuspendOperations(
         edgeLabel: String?,
         maxDepth: Int,
     ): GraphPath? {
-        val relPattern = if (edgeLabel != null) ":$edgeLabel*1..$maxDepth" else "*1..$maxDepth"
+        val relPattern = if (edgeLabel != null) $$":$$edgeLabel*1..$$maxDepth" else $$"*1..$$maxDepth"
         return runQuery(
-            "MATCH p = shortestPath((a)-[$relPattern]-(b)) " +
-                "WHERE elementId(a) = \$fromId AND elementId(b) = \$toId RETURN p",
+            $$"MATCH p = shortestPath((a)-[$$relPattern]-(b)) " +
+                    $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",
             mapOf("fromId" to fromId.value, "toId" to toId.value),
-        ) { Neo4jRecordMapper.recordToPath(it) }.firstOrNull()
+        ) {
+            Neo4jRecordMapper.recordToPath(it)
+        }.firstOrNull()
     }
 
     override fun allPaths(
@@ -255,11 +268,13 @@ class Neo4jGraphSuspendOperations(
         edgeLabel: String?,
         maxDepth: Int,
     ): Flow<GraphPath> {
-        val relPattern = if (edgeLabel != null) ":$edgeLabel*1..$maxDepth" else "*1..$maxDepth"
+        val relPattern = if (edgeLabel != null) $$":$$edgeLabel*1..$$maxDepth" else $$"*1..$$maxDepth"
         return flowQuery(
-            "MATCH p = (a)-[$relPattern]-(b) " +
-                "WHERE elementId(a) = \$fromId AND elementId(b) = \$toId RETURN p",
+            $$"MATCH p = (a)-[$$relPattern]-(b) " +
+                    $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",
             mapOf("fromId" to fromId.value, "toId" to toId.value),
-        ) { Neo4jRecordMapper.recordToPath(it) }
+        ) {
+            Neo4jRecordMapper.recordToPath(it)
+        }
     }
 }
