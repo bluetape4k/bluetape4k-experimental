@@ -1351,6 +1351,8 @@ object Libs {
     const val mysql_connector_j = "com.mysql:mysql-connector-j:9.5.0"  // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.6"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     const val postgresql_driver = "org.postgresql:postgresql:42.7.8"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    const val neo4j_java_driver = "org.neo4j.driver:neo4j-java-driver:5.28.4"  // https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver
+    const val neo4j_bolt_connection_netty = "org.neo4j.bolt:neo4j-bolt-connection-netty:1.1.0"  // Netty transport for Neo4j Driver 5.x
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
     const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
@@ -1498,6 +1500,7 @@ object Libs {
     val testcontainers_ollama = testcontainersModule("ollama")
     val testcontainers_oracle_xe = testcontainersModule("oracle-xe")
     val testcontainers_postgresql = testcontainersModule("postgresql")
+    val testcontainers_neo4j = testcontainersModule("neo4j")
     val testcontainers_kafka = testcontainersModule("kafka")
     val testcontainers_pulsar = testcontainersModule("pulsar")
     val testcontainers_redpanda = testcontainersModule("redpanda")
