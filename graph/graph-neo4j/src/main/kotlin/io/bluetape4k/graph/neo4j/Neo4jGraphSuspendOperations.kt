@@ -232,8 +232,8 @@ class Neo4jGraphSuspendOperations(
         options: NeighborOptions,
     ): Flow<GraphVertex> {
         options.edgeLabel?.requireNotBlank("edgeLabel")
-        val depthStr = if (options.maxDepth == 1) "" else $$"*1..${ options.maxDepth }"
-        val edgePart = if (options.edgeLabel != null) $$":${ options.edgeLabel }$$depthStr" else depthStr
+        val depthStr = if (options.maxDepth == 1) "" else $$"*1..$${ options.maxDepth }"
+        val edgePart = if (options.edgeLabel != null) $$":$${ options.edgeLabel }$$depthStr" else depthStr
         val pattern = when (options.direction) {
             Direction.OUTGOING -> $$"(start)-[$$edgePart]->(neighbor)"
             Direction.INCOMING -> $$"(start)<-[$$edgePart]-(neighbor)"
@@ -252,7 +252,7 @@ class Neo4jGraphSuspendOperations(
         toId: GraphElementId,
         options: PathOptions,
     ): GraphPath? {
-        val relPattern = if (options.edgeLabel != null) $$":${ options.edgeLabel }*1..${ options.maxDepth }" else $$"*1..${ options.maxDepth }"
+        val relPattern = if (options.edgeLabel != null) $$":$${ options.edgeLabel }*1..$${ options.maxDepth }" else $$"*1..$${ options.maxDepth }"
         return runQuery(
             $$"MATCH p = shortestPath((a)-[$$relPattern]-(b)) " +
                     $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",
@@ -267,7 +267,7 @@ class Neo4jGraphSuspendOperations(
         toId: GraphElementId,
         options: PathOptions,
     ): Flow<GraphPath> {
-        val relPattern = if (options.edgeLabel != null) $$":${ options.edgeLabel }*1..${ options.maxDepth }" else $$"*1..${ options.maxDepth }"
+        val relPattern = if (options.edgeLabel != null) $$":$${ options.edgeLabel }*1..$${ options.maxDepth }" else $$"*1..$${ options.maxDepth }"
         return flowQuery(
             $$"MATCH p = (a)-[$$relPattern]-(b) " +
                     $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",
