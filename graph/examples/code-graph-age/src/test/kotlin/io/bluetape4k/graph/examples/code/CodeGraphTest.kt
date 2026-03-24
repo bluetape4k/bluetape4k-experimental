@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.graph.age.AgeGraphOperations
 import io.bluetape4k.graph.examples.code.service.CodeGraphService
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeEmpty
@@ -51,7 +50,7 @@ class CodeGraphTest {
     }
 
     @BeforeEach
-    fun setupGraph() = runSuspendIO {
+    fun setupGraph() {
         if (ops.graphExists("code_test")) {
             ops.dropGraph("code_test")
         }
@@ -59,7 +58,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `모듈 추가 및 의존성 관계 구성`() = runSuspendIO {
+    fun `모듈 추가 및 의존성 관계 구성`() {
         val core = service.addModule("core", "graph/graph-core", "1.0.0")
         val age  = service.addModule("graph-age", "graph/graph-age", "1.0.0")
         val app  = service.addModule("linkedin-app", "examples/linkedin", "1.0.0")
@@ -75,7 +74,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `의존성 경로 탐색`() = runSuspendIO {
+    fun `의존성 경로 탐색`() {
         val core = service.addModule("core", path = "", version = "1.0.0")
         val mid  = service.addModule("middle", path = "", version = "1.0.0")
         val top  = service.addModule("top", path = "", version = "1.0.0")
@@ -89,7 +88,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `영향 범위 분석 - 역방향 탐색`() = runSuspendIO {
+    fun `영향 범위 분석 - 역방향 탐색`() {
         val core    = service.addModule("core", path = "", version = "1.0.0")
         val moduleA = service.addModule("moduleA", path = "", version = "1.0.0")
         val moduleB = service.addModule("moduleB", path = "", version = "1.0.0")
@@ -102,7 +101,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `클래스 상속 계층 탐색`() = runSuspendIO {
+    fun `클래스 상속 계층 탐색`() {
         val baseClass = service.addClass("Animal", "io.example.Animal")
         val midClass  = service.addClass("Mammal", "io.example.Mammal")
         val leafClass = service.addClass("Dog", "io.example.Dog")
@@ -115,7 +114,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `함수 호출 체인 분석`() = runSuspendIO {
+    fun `함수 호출 체인 분석`() {
         val funcA = service.addFunction("processOrder", "fun processOrder(orderId: Long)")
         val funcB = service.addFunction("validateOrder", "fun validateOrder(orderId: Long)")
         val funcC = service.addFunction("saveOrder", "fun saveOrder(order: Order)")
@@ -129,7 +128,7 @@ class CodeGraphTest {
     }
 
     @Test
-    fun `의존성 없는 경우 경로 null`() = runSuspendIO {
+    fun `의존성 없는 경우 경로 null`() {
         val isolated = service.addModule("isolated", path = "", version = "1.0.0")
         val other    = service.addModule("other", path = "", version = "1.0.0")
 

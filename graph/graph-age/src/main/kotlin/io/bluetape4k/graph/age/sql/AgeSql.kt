@@ -117,15 +117,16 @@ object AgeSql {
     fun neighbors(
         graphName: String,
         startId: Long,
-        edgeLabel: String,
+        edgeLabel: String?,
         direction: String,
         depth: Int,
     ): String {
         val depthStr = if (depth == 1) "" else "*1..$depth"
+        val edgePart = if (edgeLabel != null) ":$edgeLabel$depthStr" else if (depthStr.isEmpty()) "" else depthStr
         val pattern = when (direction) {
-            "OUTGOING" -> "(start)-[:$edgeLabel$depthStr]->(neighbor)"
-            "INCOMING" -> "(start)<-[:$edgeLabel$depthStr]-(neighbor)"
-            else -> "(start)-[:$edgeLabel$depthStr]-(neighbor)"
+            "OUTGOING" -> "(start)-[$edgePart]->(neighbor)"
+            "INCOMING" -> "(start)<-[$edgePart]-(neighbor)"
+            else -> "(start)-[$edgePart]-(neighbor)"
         }
         return cypher(
             graphName,
@@ -146,6 +147,21 @@ object AgeSql {
         return cypher(
             graphName,
             "MATCH p = (a)-[$relPattern]-(b) WHERE id(a) = $fromId AND id(b) = $toId RETURN p LIMIT 1",
+            listOf("p" to "agtype")
+        )
+    }
+
+    fun allPaths(
+        graphName: String,
+        fromId: Long,
+        toId: Long,
+        edgeLabel: String?,
+        maxDepth: Int,
+    ): String {
+        val relPattern = if (edgeLabel != null) ":$edgeLabel*1..$maxDepth" else "*1..$maxDepth"
+        return cypher(
+            graphName,
+            "MATCH p = (a)-[$relPattern]-(b) WHERE id(a) = $fromId AND id(b) = $toId RETURN p",
             listOf("p" to "agtype")
         )
     }

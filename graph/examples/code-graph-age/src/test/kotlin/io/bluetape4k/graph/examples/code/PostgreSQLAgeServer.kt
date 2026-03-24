@@ -1,9 +1,9 @@
 package io.bluetape4k.graph.examples.code
 
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
-class PostgreSQLAgeServer : PostgreSQLContainer<PostgreSQLAgeServer>(
+class PostgreSQLAgeServer : PostgreSQLContainer(
     DockerImageName.parse("apache/age:latest").asCompatibleSubstituteFor("postgres")
 ) {
 
