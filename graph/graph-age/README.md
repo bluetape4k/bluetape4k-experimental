@@ -25,15 +25,15 @@ graph TD
     H["HikariCP<br/>(연결 풀)"] --> G
     I["PostgreSQL Driver<br/>(TCP)"] --> D
 
-    style A fill:#e1f5ff
-    style B fill:#fff3e0
-    style C fill:#f3e5f5
-    style D fill:#e8f5e9
-    style E fill:#fce4ec
-    style F fill:#fce4ec
-    style G fill:#ede7f6
-    style H fill:#e0f2f1
-    style I fill:#f1f8e9
+    style A fill:#1565C0,color:#fff
+    style B fill:#E65100,color:#fff
+    style C fill:#6A1B9A,color:#fff
+    style D fill:#2E7D32,color:#fff
+    style E fill:#880E4F,color:#fff
+    style F fill:#880E4F,color:#fff
+    style G fill:#4527A0,color:#fff
+    style H fill:#00695C,color:#fff
+    style I fill:#558B2F,color:#fff
 ```
 
 ### Apache AGE 동작 흐름
@@ -50,16 +50,16 @@ graph LR
     H --> I["AgeTypeParser<br/>agtype → GraphVertex/Edge"]
     I --> J["GraphVertex<br/>GraphEdge<br/>GraphPath"]
 
-    style A fill:#fff3e0
-    style B fill:#f3e5f5
-    style C fill:#ede7f6
-    style D fill:#fce4ec
-    style E fill:#e0f2f1
-    style F fill:#e8f5e9
-    style G fill:#c8e6c9
-    style H fill:#f0f4c3
-    style I fill:#fce4ec
-    style J fill:#c8e6c9
+    style A fill:#E65100,color:#fff
+    style B fill:#6A1B9A,color:#fff
+    style C fill:#4527A0,color:#fff
+    style D fill:#880E4F,color:#fff
+    style E fill:#00695C,color:#fff
+    style F fill:#2E7D32,color:#fff
+    style G fill:#388E3C,color:#fff
+    style H fill:#827717,color:#fff
+    style I fill:#880E4F,color:#fff
+    style J fill:#388E3C,color:#fff
 ```
 
 ## 주요 클래스
@@ -377,14 +377,14 @@ flowchart TD
     K --> U["Return GraphEdge"]
     S --> V["Return GraphPath"]
 
-    style A fill:#f0f4c3
-    style B fill:#fff9c4
-    style C fill:#fce4ec
-    style D fill:#fce4ec
-    style E fill:#fce4ec
-    style T fill:#c8e6c9
-    style U fill:#c8e6c9
-    style V fill:#c8e6c9
+    style A fill:#827717,color:#fff
+    style B fill:#F57F17,color:#fff
+    style C fill:#880E4F,color:#fff
+    style D fill:#880E4F,color:#fff
+    style E fill:#880E4F,color:#fff
+    style T fill:#388E3C,color:#fff
+    style U fill:#388E3C,color:#fff
+    style V fill:#388E3C,color:#fff
 ```
 
 ## HikariCP 연결 초기화
@@ -437,15 +437,15 @@ graph TD
     R --> S["테스트 완료"]
     S --> T["컨테이너 정리"]
 
-    style A fill:#c8e6c9
-    style B fill:#e8f5e9
-    style C fill:#c8e6c9
-    style D fill:#a5d6a7
-    style F fill:#ede7f6
-    style H fill:#f3e5f5
-    style I fill:#fff3e0
-    style J fill:#c8e6c9
-    style T fill:#ffcdd2
+    style A fill:#388E3C,color:#fff
+    style B fill:#2E7D32,color:#fff
+    style C fill:#388E3C,color:#fff
+    style D fill:#a5d6a7,color:#fff
+    style F fill:#4527A0,color:#fff
+    style H fill:#6A1B9A,color:#fff
+    style I fill:#E65100,color:#fff
+    style J fill:#388E3C,color:#fff
+    style T fill:#ffcdd2,color:#fff
 ```
 
 ## 코드 예시

@@ -1,12 +1,12 @@
 package io.bluetape4k.graph.examples.linkedin
 
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 /**
  * Apache AGE 확장이 설치된 PostgreSQL 테스트 컨테이너.
  */
-class PostgreSQLAgeServer : PostgreSQLContainer<PostgreSQLAgeServer>(
+class PostgreSQLAgeServer: PostgreSQLContainer(
     DockerImageName.parse("apache/age:latest").asCompatibleSubstituteFor("postgres")
 ) {
 

@@ -37,11 +37,11 @@ graph TD
     ReactiveSession --> Cypher
     Cypher --> Neo4j
 
-    style Impl fill:#e1f5ff
-    style Session fill:#e1f5ff
-    style Mapper fill:#e1f5ff
-    style OpsIface fill:#fff3e0
-    style Neo4j fill:#f3e5f5
+    style Impl fill:#1565C0,color:#fff
+    style Session fill:#1565C0,color:#fff
+    style Mapper fill:#1565C0,color:#fff
+    style OpsIface fill:#E65100,color:#fff
+    style Neo4j fill:#6A1B9A,color:#fff
 ```
 
 ## 핵심 아키텍처
@@ -65,10 +65,10 @@ graph LR
     Flow -->|"toList()"| Suspend
     Suspend -->|"List&lt;Record&gt;"| App
 
-    style Publisher fill:#fff9c4
-    style Reactive fill:#c8e6c9
-    style Flow fill:#c8e6c9
-    style Suspend fill:#ffccbc
+    style Publisher fill:#F57F17,color:#fff
+    style Reactive fill:#388E3C,color:#fff
+    style Flow fill:#388E3C,color:#fff
+    style Suspend fill:#BF360C,color:#fff
 ```
 
 ## 클래스 설계
@@ -153,10 +153,10 @@ classDiagram
     Neo4jRecordMapper --> GraphEdge
     Neo4jRecordMapper --> GraphPath
 
-    style GraphOperations fill:#fff3e0
-    style Neo4jGraphOperations fill:#e1f5ff
-    style Neo4jCoroutineSession fill:#e1f5ff
-    style Neo4jRecordMapper fill:#e1f5ff
+    style GraphOperations fill:#E65100,color:#fff
+    style Neo4jGraphOperations fill:#1565C0,color:#fff
+    style Neo4jCoroutineSession fill:#1565C0,color:#fff
+    style Neo4jRecordMapper fill:#1565C0,color:#fff
 ```
 
 ### Neo4jCoroutineSession 상세 설계
@@ -288,10 +288,10 @@ classDiagram
     PathStep <|-- EdgeStep
     Path --> GraphPath: "→"
 
-    style Neo4jRecordMapper fill:#e1f5ff
-    style GraphVertex fill:#c8e6c9
-    style GraphEdge fill:#c8e6c9
-    style GraphPath fill:#c8e6c9
+    style Neo4jRecordMapper fill:#1565C0,color:#fff
+    style GraphVertex fill:#388E3C,color:#fff
+    style GraphEdge fill:#388E3C,color:#fff
+    style GraphPath fill:#388E3C,color:#fff
 ```
 
 ## 시퀀스 다이어그램
@@ -437,12 +437,12 @@ flowchart TD
     Execute --> MapToVertices["Neo4jRecordMapper<br/>.recordToVertex(record, 'neighbor')"]
     MapToVertices --> Result["List&lt;GraphVertex&gt;"]
 
-    style Start fill:#e3f2fd
-    style CheckDirection fill:#fff9c4
-    style Outgoing fill:#c8e6c9
-    style Incoming fill:#c8e6c9
-    style Both fill:#c8e6c9
-    style Result fill:#f8bbd0
+    style Start fill:#0D47A1,color:#fff
+    style CheckDirection fill:#F57F17,color:#fff
+    style Outgoing fill:#388E3C,color:#fff
+    style Incoming fill:#388E3C,color:#fff
+    style Both fill:#388E3C,color:#fff
+    style Result fill:#AD1457,color:#fff
 ```
 
 ### Publisher → Coroutine 변환 메커니즘
@@ -528,10 +528,10 @@ graph LR
     RelEndId --> GEdge
     RelProps --> GEdge
 
-    style Node fill:#c8e6c9
-    style Rel fill:#bbdefb
-    style GVertex fill:#fff9c4
-    style GEdge fill:#fff9c4
+    style Node fill:#388E3C,color:#fff
+    style Rel fill:#bbdefb,color:#fff
+    style GVertex fill:#F57F17,color:#fff
+    style GEdge fill:#F57F17,color:#fff
 ```
 
 ### 테스트 환경 구성
@@ -553,10 +553,10 @@ graph TD
     Test -->|"@AfterEach"| Stop["close() + Container.stop()"]
     Stop -->|"리소스 정리"| Cleanup["Docker 컨테이너 종료"]
 
-    style Container fill:#ffccbc
-    style DockerNeo4j fill:#f3e5f5
-    style Ops fill:#e1f5ff
-    style Test fill:#fff9c4
+    style Container fill:#BF360C,color:#fff
+    style DockerNeo4j fill:#6A1B9A,color:#fff
+    style Ops fill:#1565C0,color:#fff
+    style Test fill:#F57F17,color:#fff
 ```
 
 ## 주요 메서드

@@ -1353,6 +1353,11 @@ object Libs {
     const val postgresql_driver = "org.postgresql:postgresql:42.7.8"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
     const val neo4j_java_driver = "org.neo4j.driver:neo4j-java-driver:5.28.4"  // https://mvnrepository.com/artifact/org.neo4j.driver/neo4j-java-driver
     const val neo4j_bolt_connection_netty = "org.neo4j.bolt:neo4j-bolt-connection-netty:1.1.0"  // Netty transport for Neo4j Driver 5.x
+
+    // Apache TinkerPop (Gremlin) - https://mvnrepository.com/artifact/org.apache.tinkerpop
+    const val tinkerpop_gremlin_core = "org.apache.tinkerpop:gremlin-core:3.7.3"
+    const val tinkergraph_gremlin = "org.apache.tinkerpop:tinkergraph-gremlin:3.7.3"
+
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
     const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc

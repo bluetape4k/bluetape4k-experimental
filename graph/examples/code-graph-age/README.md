@@ -327,10 +327,10 @@ graph TD
         G1["Class: OrderService"] -->|"BELONGS_TO"| G2["Module: order-service"]
     end
 
-    style ModuleRelations fill:#e8f4f8,stroke:#2196F3
-    style ClassRelations fill:#e8f5e9,stroke:#4CAF50
-    style FunctionRelations fill:#fff3e0,stroke:#FF9800
-    style MembershipRelations fill:#f3e5f5,stroke:#9C27B0
+    style ModuleRelations fill:#1565C0,stroke:#2196F3,color:#fff
+    style ClassRelations fill:#2E7D32,stroke:#4CAF50,color:#fff
+    style FunctionRelations fill:#E65100,stroke:#FF9800,color:#fff
+    style MembershipRelations fill:#6A1B9A,stroke:#9C27B0,color:#fff
 ```
 
 ---
