@@ -17,6 +17,7 @@ import org.neo4j.driver.types.Relationship
  * Memgraph는 `elementId()` 대신 정수형 `id()`를 사용한다.
  * [GraphElementId.value]에는 정수 ID의 문자열 표현을 저장한다.
  */
+@Suppress("DEPRECATION")
 object MemgraphRecordMapper : KLogging() {
 
     fun nodeToVertex(node: Node): GraphVertex {

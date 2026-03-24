@@ -11,6 +11,7 @@ import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import org.neo4j.driver.Driver
 import org.neo4j.driver.Record
@@ -36,7 +37,13 @@ class MemgraphGraphOperations(
     private val database: String = "memgraph",
 ): GraphOperations {
 
-    companion object: KLogging()
+    companion object: KLogging() {
+        private val SAFE_IDENTIFIER = Regex("^[A-Za-z_][A-Za-z0-9_]*$")
+    }
+
+    private fun String.requireSafeIdentifier(paramName: String): String = apply {
+        require(SAFE_IDENTIFIER.matches(this)) { "$paramName must be a valid identifier (alphanumeric/_): $this" }
+    }
 
     private fun session(): Session =
         driver.session(SessionConfig.builder().withDatabase(database).build())
@@ -64,7 +71,13 @@ class MemgraphGraphOperations(
                 s.run("RETURN 1")
                 true
             }
+        } catch (e: org.neo4j.driver.exceptions.ServiceUnavailableException) {
+            log.warn(e) { "Memgraph service unavailable for database: $name" }
+            false
+        } catch (e: org.neo4j.driver.exceptions.DatabaseException) {
+            false
         } catch (e: Exception) {
+            log.warn(e) { "Unexpected error checking graphExists for: $name" }
             false
         }
     }
@@ -75,7 +88,7 @@ class MemgraphGraphOperations(
     // -- GraphVertexRepository --
 
     override fun createVertex(label: String, properties: Map<String, Any?>): GraphVertex {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val propsClause = if (properties.isEmpty()) "" else $$" $props"
         val cypher = $$"CREATE (n:$$label$$propsClause) RETURN n"
         val params = if (properties.isEmpty()) emptyMap() else mapOf("props" to properties)
@@ -85,7 +98,7 @@ class MemgraphGraphOperations(
     }
 
     override fun findVertexById(label: String, id: GraphElementId): GraphVertex? {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         return runQuery(
             $$"MATCH (n:$$label) WHERE id(n) = toInteger($id) RETURN n",
             mapOf("id" to id.value),
@@ -95,7 +108,7 @@ class MemgraphGraphOperations(
     }
 
     override fun findVerticesByLabel(label: String, filter: Map<String, Any?>): List<GraphVertex> {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val whereClause = if (filter.isEmpty()) "" else
             " WHERE " + filter.keys.joinToString(" AND ") { $$"n.$$it = $$$it" }
         return runQuery(
@@ -107,7 +120,7 @@ class MemgraphGraphOperations(
     }
 
     override fun updateVertex(label: String, id: GraphElementId, properties: Map<String, Any?>): GraphVertex? {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         if (properties.isEmpty()) return findVertexById(label, id)
         val setClause = properties.keys.joinToString(", ") { $$"n.$$it = $$$it" }
         val params = properties + mapOf("id" to id.value)
@@ -120,7 +133,7 @@ class MemgraphGraphOperations(
     }
 
     override fun deleteVertex(label: String, id: GraphElementId): Boolean {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         return session().use { s ->
             val result = s.run(
                 $$"MATCH (n:$$label) WHERE id(n) = toInteger($id) DETACH DELETE n",
@@ -131,7 +144,7 @@ class MemgraphGraphOperations(
     }
 
     override fun countVertices(label: String): Long {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         return session().use { s ->
             s.run($$"MATCH (n:$$label) RETURN count(n) AS cnt").single().get("cnt").asLong()
         }
@@ -145,7 +158,7 @@ class MemgraphGraphOperations(
         label: String,
         properties: Map<String, Any?>,
     ): GraphEdge {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val propsClause = if (properties.isEmpty()) "" else $$" $props"
         val params = mutableMapOf<String, Any?>("fromId" to fromId.value, "toId" to toId.value)
         if (properties.isNotEmpty()) params["props"] = properties
@@ -159,7 +172,7 @@ class MemgraphGraphOperations(
     }
 
     override fun findEdgesByLabel(label: String, filter: Map<String, Any?>): List<GraphEdge> {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val whereClause = if (filter.isEmpty()) "" else
             " WHERE " + filter.keys.joinToString(" AND ") { $$"r.$$it = $$$it" }
         return runQuery(
@@ -169,7 +182,7 @@ class MemgraphGraphOperations(
     }
 
     override fun deleteEdge(label: String, id: GraphElementId): Boolean {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         return session().use { s ->
             val result = s.run(
                 $$"MATCH ()-[r:$$label]->() WHERE id(r) = toInteger($id) DELETE r",

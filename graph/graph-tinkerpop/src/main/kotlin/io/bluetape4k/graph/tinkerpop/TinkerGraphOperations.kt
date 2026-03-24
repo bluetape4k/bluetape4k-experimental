@@ -12,6 +12,7 @@ import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import org.apache.tinkerpop.gremlin.process.traversal.P
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.`__` as AnonymousTraversal
@@ -28,7 +29,7 @@ class TinkerGraphOperations : GraphOperations {
     companion object : KLogging()
 
     private val graph: TinkerGraph = TinkerGraph.open()
-    private val g: GraphTraversalSource get() = graph.traversal()
+    private val g: GraphTraversalSource = graph.traversal()
 
     override fun close() {
         graph.close()
@@ -83,7 +84,7 @@ class TinkerGraphOperations : GraphOperations {
 
         val traversal = g.V(idValue).hasLabel(label)
         properties.forEach { (key, value) ->
-            traversal.property(key, value)
+            if (value != null) traversal.property(key, value)
         }
         val v = traversal.next()
         return GremlinRecordMapper.vertexToGraphVertex(v)
@@ -192,11 +193,18 @@ class TinkerGraphOperations : GraphOperations {
         val paths = try {
             g.V(fromIdValue)
                 .repeat(step)
-                .until(AnonymousTraversal.hasId<Any>(toIdValue))
+                .until(
+                    AnonymousTraversal.or<Any>(
+                        AnonymousTraversal.hasId<Any>(toIdValue),
+                        AnonymousTraversal.loops<Any>().`is`(P.gte<Int>(options.maxDepth)),
+                    )
+                )
+                .hasId(toIdValue)
                 .path()
                 .limit(1)
                 .toList()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.debug(e) { "shortestPath traversal failed: from=$fromId to=$toId options=$options" }
             emptyList()
         }
 
@@ -218,10 +226,17 @@ class TinkerGraphOperations : GraphOperations {
         val paths = try {
             g.V(fromIdValue)
                 .repeat(step)
-                .until(AnonymousTraversal.hasId<Any>(toIdValue))
+                .until(
+                    AnonymousTraversal.or<Any>(
+                        AnonymousTraversal.hasId<Any>(toIdValue),
+                        AnonymousTraversal.loops<Any>().`is`(P.gte<Int>(options.maxDepth)),
+                    )
+                )
+                .hasId(toIdValue)
                 .path()
                 .toList()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.debug(e) { "allPaths traversal failed: from=$fromId to=$toId options=$options" }
             emptyList()
         }
 

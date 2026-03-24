@@ -11,9 +11,11 @@ import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -47,7 +49,13 @@ class MemgraphGraphSuspendOperations(
     private val database: String = "memgraph",
 ): GraphSuspendOperations {
 
-    companion object: KLoggingChannel()
+    companion object: KLoggingChannel() {
+        private val SAFE_IDENTIFIER = Regex("^[A-Za-z_][A-Za-z0-9_]*$")
+    }
+
+    private fun String.requireSafeIdentifier(paramName: String): String = apply {
+        require(SAFE_IDENTIFIER.matches(this)) { "$paramName must be a valid identifier (alphanumeric/_): $this" }
+    }
 
     private fun session(): ReactiveSession =
         driver.session(
@@ -81,11 +89,11 @@ class MemgraphGraphSuspendOperations(
         cypher: String,
         params: Map<String, Any?> = emptyMap(),
         mapper: (Record) -> T,
-    ): Flow<T> = flow {
+    ): Flow<T> = channelFlow {
         val s = session()
         try {
             val result = s.run(Query(cypher, params)).awaitSingle()
-            emitAll(result.records().asFlow().map(mapper))
+            result.records().asFlow().map(mapper).collect { send(it) }
         } finally {
             withContext(NonCancellable) { s.close<Void>().awaitFirstOrNull() }
         }
@@ -106,7 +114,13 @@ class MemgraphGraphSuspendOperations(
         return try {
             val result = s.run(Query("RETURN 1")).awaitSingle()
             result.records().awaitFirstOrNull() != null
+        } catch (e: org.neo4j.driver.exceptions.ServiceUnavailableException) {
+            log.warn(e) { "Memgraph service unavailable for database: $name" }
+            false
+        } catch (e: org.neo4j.driver.exceptions.DatabaseException) {
+            false
         } catch (e: Exception) {
+            log.warn(e) { "Unexpected error checking graphExists for: $name" }
             false
         } finally {
             withContext(NonCancellable) { s.close<Void>().awaitFirstOrNull() }
@@ -119,7 +133,7 @@ class MemgraphGraphSuspendOperations(
     // -- GraphSuspendVertexRepository --
 
     override suspend fun createVertex(label: String, properties: Map<String, Any?>): GraphVertex {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val propsClause = if (properties.isEmpty()) "" else $$" $props"
         val cypher = $$"CREATE (n:$$label$$propsClause) RETURN n"
         val params = if (properties.isEmpty()) emptyMap() else mapOf("props" to properties)
@@ -129,7 +143,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override suspend fun findVertexById(label: String, id: GraphElementId): GraphVertex? {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         return runQuery(
             $$"MATCH (n:$$label) WHERE id(n) = toInteger($id) RETURN n",
             mapOf("id" to id.value),
@@ -139,7 +153,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override fun findVerticesByLabel(label: String, filter: Map<String, Any?>): Flow<GraphVertex> {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val whereClause = if (filter.isEmpty()) "" else
             " WHERE " + filter.keys.joinToString(" AND ") { $$"n.$$it = $$$it" }
         return flowQuery(
@@ -151,7 +165,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override suspend fun updateVertex(label: String, id: GraphElementId, properties: Map<String, Any?>): GraphVertex? {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         if (properties.isEmpty()) return findVertexById(label, id)
         val setClause = properties.keys.joinToString(", ") { $$"n.$$it = $$$it" }
         val params = properties + mapOf("id" to id.value)
@@ -162,7 +176,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override suspend fun deleteVertex(label: String, id: GraphElementId): Boolean {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val s = session()
         return try {
             val result = s.run(
@@ -175,7 +189,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override suspend fun countVertices(label: String): Long {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val s = session()
         return try {
             val result = s.run(Query($$"MATCH (n:$$label) RETURN count(n) AS cnt")).awaitSingle()
@@ -193,7 +207,7 @@ class MemgraphGraphSuspendOperations(
         label: String,
         properties: Map<String, Any?>,
     ): GraphEdge {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val propsClause = if (properties.isEmpty()) "" else $$" $props"
         val params = mutableMapOf<String, Any?>("fromId" to fromId.value, "toId" to toId.value)
         if (properties.isNotEmpty()) params["props"] = properties
@@ -207,7 +221,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override fun findEdgesByLabel(label: String, filter: Map<String, Any?>): Flow<GraphEdge> {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val whereClause = if (filter.isEmpty()) "" else
             " WHERE " + filter.keys.joinToString(" AND ") { $$"r.$$it = $$$it" }
         return flowQuery(
@@ -219,7 +233,7 @@ class MemgraphGraphSuspendOperations(
     }
 
     override suspend fun deleteEdge(label: String, id: GraphElementId): Boolean {
-        label.requireNotBlank("label")
+        label.requireNotBlank("label").requireSafeIdentifier("label")
         val s = session()
         return try {
             val result = s.run(
