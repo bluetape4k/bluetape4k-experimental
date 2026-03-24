@@ -24,7 +24,7 @@ classDiagram
     }
     class SuspendExposedCrudRepository~T,R,ID~ {
         <<interface>>
-        +save(entity) S
+        +save~S extends R~(entity) S
         +findByIdOrNull(id) R?
         +findAll() Flow~R~
         +count() Long
