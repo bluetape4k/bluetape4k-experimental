@@ -19,7 +19,8 @@ class EventLogTest {
     fun setUp() {
         Database.connect("jdbc:h2:mem:test_event_log;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(AppointmentEventLogs)
+            // SchemaUtils.createMissingTablesAndColumns(AppointmentEventLogs)
+            SchemaUtils.create(AppointmentEventLogs)
             AppointmentEventLogs.deleteAll()
         }
         logger = AppointmentEventLogger()

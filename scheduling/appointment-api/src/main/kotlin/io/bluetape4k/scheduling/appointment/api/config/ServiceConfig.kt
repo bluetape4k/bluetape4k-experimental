@@ -12,7 +12,7 @@ import io.bluetape4k.scheduling.appointment.statemachine.AppointmentStateMachine
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ServiceConfig {
 
     @Bean

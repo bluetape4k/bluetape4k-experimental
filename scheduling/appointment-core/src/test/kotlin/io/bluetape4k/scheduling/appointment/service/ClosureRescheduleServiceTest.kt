@@ -17,6 +17,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.OperatingHoursTable
 import io.bluetape4k.scheduling.appointment.model.tables.RescheduleCandidates
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentEquipments
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
+import io.bluetape4k.support.requireNotNull
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -233,7 +234,7 @@ class ClosureRescheduleServiceTest {
         transaction {
             val newAppointment =
                 Appointments.selectAll()
-                    .where { Appointments.id eq newAppointmentId!! }
+                    .where { Appointments.id eq newAppointmentId.requireNotNull("newAppointmentId") }
                     .first()
             // 가장 이른 슬롯 (화요일 09:00)이 선택되어야 함
             newAppointment[Appointments.appointmentDate] shouldBeEqualTo TUESDAY

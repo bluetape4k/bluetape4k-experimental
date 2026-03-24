@@ -1,9 +1,9 @@
 package io.bluetape4k.scheduling.appointment.solver.benchmark
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import io.bluetape4k.scheduling.appointment.model.dto.DoctorScheduleRecord
 import io.bluetape4k.scheduling.appointment.model.dto.OperatingHoursRecord
-import io.bluetape4k.scheduling.appointment.solver.constraint.AppointmentConstraintProvider
 import io.bluetape4k.scheduling.appointment.solver.domain.AppointmentPlanning
 import io.bluetape4k.scheduling.appointment.solver.domain.ClinicFact
 import io.bluetape4k.scheduling.appointment.solver.domain.DoctorFact
@@ -47,7 +47,7 @@ class BenchmarkTest {
         result.score.shouldNotBeNull()
         result.score!!.isFeasible.shouldBeTrue()
         elapsed.shouldBeGreaterThan(0L)
-        log.info("소규모: score=${result.score}, time=${elapsed}ms")
+        log.info { "소규모: score=${result.score}, time=${elapsed}ms" }
     }
 
     @Test
@@ -62,12 +62,12 @@ class BenchmarkTest {
 
         result.score.shouldNotBeNull()
         result.score!!.isFeasible.shouldBeTrue()
-        log.info("중규모: score=${result.score}, time=${elapsed}ms")
+        log.info { "중규모: score=${result.score}, time=${elapsed}ms" }
     }
 
     @Test
     fun `대규모 - 의사 10명 예약 100건`() {
-        val solution = buildSolution(doctorCount = 10, appointmentCount = 100, days = 5)
+        val solution = buildSolution(doctorCount = 10, appointmentCount = 100, days = 10)
         val factory = AppointmentSolverConfig.createFactory(timeLimit = Duration.ofSeconds(30))
         val solver = factory.buildSolver()
 
@@ -76,7 +76,7 @@ class BenchmarkTest {
         val elapsed = System.currentTimeMillis() - startMillis
 
         result.score.shouldNotBeNull()
-        log.info("대규모: score=${result.score}, feasible=${result.score!!.isFeasible}, time=${elapsed}ms")
+        log.info { "대규모: score=${result.score}, feasible=${result.score!!.isFeasible}, time=${elapsed}ms" }
     }
 
     private fun buildSolution(

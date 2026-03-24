@@ -20,13 +20,14 @@ import java.time.LocalTime
  */
 class ConstraintVerifierTest {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
-    private val constraintVerifier = ConstraintVerifier.build(
-        AppointmentConstraintProvider(),
-        ScheduleSolution::class.java,
-        AppointmentPlanning::class.java,
-    )
+    private val constraintVerifier = ConstraintVerifier
+        .build(
+            AppointmentConstraintProvider(),
+            ScheduleSolution::class.java,
+            AppointmentPlanning::class.java,
+        )
 
     /** 테스트 기준일: 2026-03-23 (월요일) */
     private val monday: LocalDate = LocalDate.of(2026, 3, 23)
@@ -71,7 +72,10 @@ class ConstraintVerifierTest {
             isActive = true,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.withinOperatingHours(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.withinOperatingHours(factory)
+            }
             .given(appt, operatingHours)
             .penalizesBy(1)
     }
@@ -88,7 +92,10 @@ class ConstraintVerifierTest {
             isActive = true,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.withinOperatingHours(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.withinOperatingHours(factory)
+            }
             .given(appt, operatingHours)
             .penalizesBy(0)
     }
@@ -105,7 +112,10 @@ class ConstraintVerifierTest {
             isActive = false,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.withinOperatingHours(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.withinOperatingHours(factory)
+            }
             .given(appt, operatingHours)
             .penalizesBy(1)
     }
@@ -125,7 +135,10 @@ class ConstraintVerifierTest {
             endTime = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noDoctorAbsenceConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noDoctorAbsenceConflict(factory)
+            }
             .given(appt, absence)
             .penalizesBy(1)
     }
@@ -141,7 +154,10 @@ class ConstraintVerifierTest {
             endTime = LocalTime.of(10, 15),
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noDoctorAbsenceConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noDoctorAbsenceConflict(factory)
+            }
             .given(appt, absence)
             .penalizesBy(1)
     }
@@ -151,7 +167,10 @@ class ConstraintVerifierTest {
         val appt = appointment(doctorId = 100L, startTime = LocalTime.of(10, 0))
         // 부재 없음 → given에 absence 미포함
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noDoctorAbsenceConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noDoctorAbsenceConflict(factory)
+            }
             .given(appt)
             .penalizesBy(0)
     }
@@ -166,7 +185,10 @@ class ConstraintVerifierTest {
             endTime = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noDoctorAbsenceConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noDoctorAbsenceConflict(factory)
+            }
             .given(appt, absence)
             .penalizesBy(0)
     }
@@ -184,7 +206,10 @@ class ConstraintVerifierTest {
             isFullDay = true,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noClinicClosureConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noClinicClosureConflict(factory)
+            }
             .given(appt, closure)
             .penalizesBy(1)
     }
@@ -201,7 +226,10 @@ class ConstraintVerifierTest {
             endTime = LocalTime.of(14, 0),
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noClinicClosureConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noClinicClosureConflict(factory)
+            }
             .given(appt, closure)
             .penalizesBy(1)
     }
@@ -215,7 +243,10 @@ class ConstraintVerifierTest {
             isFullDay = true,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.noClinicClosureConflict(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.noClinicClosureConflict(factory)
+            }
             .given(appt, closure)
             .penalizesBy(0)
     }
@@ -234,7 +265,10 @@ class ConstraintVerifierTest {
             maxConcurrentPatients = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.providerTypeMatch(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.providerTypeMatch(factory)
+            }
             .given(appt, doctor)
             .penalizesBy(1)
     }
@@ -249,7 +283,10 @@ class ConstraintVerifierTest {
             maxConcurrentPatients = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.providerTypeMatch(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.providerTypeMatch(factory)
+            }
             .given(appt, doctor)
             .penalizesBy(0)
     }
@@ -268,7 +305,10 @@ class ConstraintVerifierTest {
             maxConcurrentPatients = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.doctorBelongsToClinic(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.doctorBelongsToClinic(factory)
+            }
             .given(appt, doctor)
             .penalizesBy(1)
     }
@@ -283,7 +323,10 @@ class ConstraintVerifierTest {
             maxConcurrentPatients = null,
         )
 
-        constraintVerifier.verifyThat { _, factory -> HardConstraints.doctorBelongsToClinic(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                HardConstraints.doctorBelongsToClinic(factory)
+            }
             .given(appt, doctor)
             .penalizesBy(0)
     }
@@ -297,7 +340,10 @@ class ConstraintVerifierTest {
         val appt1 = appointment(id = 1L, doctorId = 100L, startTime = LocalTime.of(9, 0))
         val appt2 = appointment(id = 2L, doctorId = 100L, startTime = LocalTime.of(10, 0))
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.doctorLoadBalance(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.doctorLoadBalance(factory)
+            }
             .given(appt1, appt2)
             .penalizesBy(1)
     }
@@ -307,7 +353,10 @@ class ConstraintVerifierTest {
         val appt1 = appointment(id = 1L, doctorId = 100L, startTime = LocalTime.of(9, 0))
         val appt2 = appointment(id = 2L, doctorId = 101L, startTime = LocalTime.of(9, 0))
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.doctorLoadBalance(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.doctorLoadBalance(factory)
+            }
             .given(appt1, appt2)
             .penalizesBy(0)
     }
@@ -315,9 +364,13 @@ class ConstraintVerifierTest {
     @Test
     fun `S1 - 같은 의사라도 다른 날 예약이면 페널티 없음`() {
         val appt1 = appointment(id = 1L, doctorId = 100L, appointmentDate = monday, startTime = LocalTime.of(9, 0))
-        val appt2 = appointment(id = 2L, doctorId = 100L, appointmentDate = monday.plusDays(1), startTime = LocalTime.of(9, 0))
+        val appt2 =
+            appointment(id = 2L, doctorId = 100L, appointmentDate = monday.plusDays(1), startTime = LocalTime.of(9, 0))
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.doctorLoadBalance(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.doctorLoadBalance(factory)
+            }
             .given(appt1, appt2)
             .penalizesBy(0)
     }
@@ -331,7 +384,10 @@ class ConstraintVerifierTest {
         // originalDoctorId=100, 현재 doctorId=200 → 페널티
         val appt = appointment(doctorId = 200L, originalDoctorId = 100L)
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.preferOriginalDoctor(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.preferOriginalDoctor(factory)
+            }
             .given(appt)
             .penalizesBy(1)
     }
@@ -340,7 +396,10 @@ class ConstraintVerifierTest {
     fun `S3 - 원래 의사와 같은 의사에게 배정되면 페널티 없음`() {
         val appt = appointment(doctorId = 100L, originalDoctorId = 100L)
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.preferOriginalDoctor(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.preferOriginalDoctor(factory)
+            }
             .given(appt)
             .penalizesBy(0)
     }
@@ -349,7 +408,10 @@ class ConstraintVerifierTest {
     fun `S3 - originalDoctorId가 null이면 최초 배정으로 페널티 없음`() {
         val appt = appointment(doctorId = 100L, originalDoctorId = null)
 
-        constraintVerifier.verifyThat { _, factory -> SoftConstraints.preferOriginalDoctor(factory) }
+        constraintVerifier
+            .verifyThat { _, factory ->
+                SoftConstraints.preferOriginalDoctor(factory)
+            }
             .given(appt)
             .penalizesBy(0)
     }

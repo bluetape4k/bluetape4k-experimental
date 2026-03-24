@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration
  * Swagger UI: http://localhost:8080/swagger-ui/index.html
  * API Docs:   http://localhost:8080/v3/api-docs
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class OpenApiConfig {
 
     companion object {

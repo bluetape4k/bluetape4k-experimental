@@ -16,13 +16,13 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
-@Component
 /**
  * WebFlux 예제용 초기 데이터를 비동기로 적재한다.
  *
  * startup thread를 `runBlocking`으로 붙잡지 않고,
  * 애플리케이션 준비 완료 후 별도 coroutine에서 schema 생성과 seed insert를 수행한다.
  */
+@Component
 class DataInitializer(
     private val r2dbcDatabase: R2dbcDatabase,
 ) : AutoCloseable {

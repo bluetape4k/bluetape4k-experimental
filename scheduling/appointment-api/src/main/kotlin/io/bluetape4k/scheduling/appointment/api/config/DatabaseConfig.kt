@@ -33,7 +33,7 @@ import org.springframework.core.annotation.Order
  * - Flyway 비활성(기본): Exposed SchemaUtils가 스키마를 생성.
  *   → 개발/테스트 환경 (H2 in-memory).
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class SchemaInitConfig {
     /**
      * Flyway가 비활성일 때 Exposed SchemaUtils로 스키마 생성.
@@ -44,7 +44,7 @@ class SchemaInitConfig {
     fun schemaInitializer(): ApplicationRunner =
         ApplicationRunner {
             transaction {
-                SchemaUtils.createMissingTablesAndColumns(
+                SchemaUtils.create(
                     Clinics,
                     OperatingHoursTable,
                     ClinicDefaultBreakTimes,

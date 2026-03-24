@@ -4,7 +4,7 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.config.EnableExposedRep
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableExposedRepositories(basePackages = ["io.bluetape4k.examples.exposed.mvc.repository"])
 class DemoApplication
 

@@ -23,7 +23,7 @@ import java.time.LocalTime
  * 클리닉, 의사, 영업시간, 의사 스케줄, 진료 유형을 생성합니다.
  * 이미 데이터가 존재하면 건너뜁니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class TestDataSeederConfig {
     companion object : KLogging() {
         private val WEEKDAYS =
