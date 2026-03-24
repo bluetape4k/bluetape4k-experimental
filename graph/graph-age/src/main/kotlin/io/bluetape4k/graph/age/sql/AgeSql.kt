@@ -149,4 +149,19 @@ object AgeSql {
             listOf("p" to "agtype")
         )
     }
+
+    fun allPaths(
+        graphName: String,
+        fromId: Long,
+        toId: Long,
+        edgeLabel: String?,
+        maxDepth: Int,
+    ): String {
+        val relPattern = if (edgeLabel != null) ":$edgeLabel*1..$maxDepth" else "*1..$maxDepth"
+        return cypher(
+            graphName,
+            "MATCH p = (a)-[$relPattern]-(b) WHERE id(a) = $fromId AND id(b) = $toId RETURN p",
+            listOf("p" to "agtype")
+        )
+    }
 }
