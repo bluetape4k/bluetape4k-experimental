@@ -4,6 +4,8 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -208,7 +210,7 @@ class AgeGraphOperationsTest {
         val alice = ops.createVertex("Person", mapOf("name" to "Alice"))
         val bob = ops.createVertex("Person", mapOf("name" to "Bob"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.OUTGOING, 1)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 1))
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Bob" }.shouldBeTrue()
     }
@@ -219,7 +221,7 @@ class AgeGraphOperationsTest {
         val alice = ops.createVertex("Person", mapOf("name" to "Alice"))
         val bob = ops.createVertex("Person", mapOf("name" to "Bob"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
-        val neighbors = ops.neighbors(bob.id, "KNOWS", Direction.INCOMING, 1)
+        val neighbors = ops.neighbors(bob.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING, maxDepth = 1))
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Alice" }.shouldBeTrue()
     }
@@ -232,7 +234,7 @@ class AgeGraphOperationsTest {
         val carol = ops.createVertex("Person", mapOf("name" to "Carol"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.BOTH, 1)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH, maxDepth = 1))
         neighbors.shouldNotBeEmpty()
         neighbors.size shouldBeGreaterThan 1
     }
@@ -245,7 +247,7 @@ class AgeGraphOperationsTest {
         val carol = ops.createVertex("Person", mapOf("name" to "Carol"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(bob.id, carol.id, "KNOWS")
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.OUTGOING, 2)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
         neighbors.shouldNotBeEmpty()
         neighbors.any { it.properties["name"] == "Carol" }.shouldBeTrue()
     }
@@ -258,7 +260,7 @@ class AgeGraphOperationsTest {
         val carol = ops.createVertex("Person", mapOf("name" to "Carol"))
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(bob.id, carol.id, "KNOWS")
-        val path = ops.shortestPath(alice.id, carol.id, "KNOWS", 10)
+        val path = ops.shortestPath(alice.id, carol.id, PathOptions(edgeLabel = "KNOWS", maxDepth = 10))
         path.shouldNotBeNull()
         path.length shouldBeGreaterThan 0
     }
@@ -269,7 +271,7 @@ class AgeGraphOperationsTest {
         val alice = ops.createVertex("Person", mapOf("name" to "Alice"))
         val dave = ops.createVertex("Person", mapOf("name" to "Dave"))
         // 간선 없음 - alice와 dave는 연결되지 않음
-        val path = ops.shortestPath(alice.id, dave.id, "KNOWS", 10)
+        val path = ops.shortestPath(alice.id, dave.id, PathOptions(edgeLabel = "KNOWS", maxDepth = 10))
         path.shouldBeNull()
     }
 
@@ -284,7 +286,7 @@ class AgeGraphOperationsTest {
         ops.createEdge(bob.id, carol.id, "KNOWS")
         // alice -> carol (우회 경로)
         ops.createEdge(alice.id, carol.id, "KNOWS")
-        val paths = ops.allPaths(alice.id, carol.id, "KNOWS", 5)
+        val paths = ops.allPaths(alice.id, carol.id, PathOptions(edgeLabel = "KNOWS", maxDepth = 5))
         paths.shouldNotBeEmpty()
         paths.size shouldBeGreaterThan 1
     }

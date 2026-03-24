@@ -4,7 +4,8 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.graph.age.AgeGraphOperations
 import io.bluetape4k.graph.examples.linkedin.service.LinkedInGraphService
-import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.graph.model.Direction
+import io.bluetape4k.graph.model.NeighborOptions
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
@@ -50,7 +51,7 @@ class LinkedInGraphTest {
     }
 
     @BeforeEach
-    fun setupGraph() = runSuspendIO {
+    fun setupGraph() {
         if (ops.graphExists("linkedin_test")) {
             ops.dropGraph("linkedin_test")
         }
@@ -58,7 +59,7 @@ class LinkedInGraphTest {
     }
 
     @Test
-    fun `사람 추가 및 인맥 연결`() = runSuspendIO {
+    fun `사람 추가 및 인맥 연결`() {
         val alice = service.addPerson("Alice", "Software Engineer", "TechCorp", "Seoul")
         val bob = service.addPerson("Bob", "Product Manager", "StartupXYZ", "Busan")
 
@@ -72,7 +73,7 @@ class LinkedInGraphTest {
     }
 
     @Test
-    fun `최단 인맥 경로 탐색 - 6단계 분리`() = runSuspendIO {
+    fun `최단 인맥 경로 탐색 - 6단계 분리`() {
         val alice = service.addPerson("Alice", "Engineer", "A", "Seoul")
         val bob   = service.addPerson("Bob",   "Manager",  "B", "Seoul")
         val carol = service.addPerson("Carol", "Designer", "C", "Seoul")
@@ -89,7 +90,7 @@ class LinkedInGraphTest {
     }
 
     @Test
-    fun `2촌 인맥 탐색`() = runSuspendIO {
+    fun `2촌 인맥 탐색`() {
         val alice = service.addPerson("Alice", "Engineer", "A", "Seoul")
         val bob   = service.addPerson("Bob",   "Manager",  "B", "Seoul")
         val carol = service.addPerson("Carol", "Designer", "C", "Seoul")
@@ -102,7 +103,7 @@ class LinkedInGraphTest {
     }
 
     @Test
-    fun `회사 추가 및 재직자 조회`() = runSuspendIO {
+    fun `회사 추가 및 재직자 조회`() {
         val alice = service.addPerson("Alice", "Engineer", "TechCorp", "Seoul")
         val bob   = service.addPerson("Bob", "Designer", "TechCorp", "Seoul")
         val techCorp = service.addCompany("TechCorp", "Technology", "Seoul")
@@ -115,13 +116,13 @@ class LinkedInGraphTest {
     }
 
     @Test
-    fun `팔로우 관계 생성`() = runSuspendIO {
+    fun `팔로우 관계 생성`() {
         val alice = service.addPerson("Alice", "Influencer", "A", "Seoul")
         val bob   = service.addPerson("Bob", "Fan", "B", "Seoul")
 
         service.follow(bob.id, alice.id)
 
-        val followers = ops.neighbors(alice.id, "FOLLOWS", io.bluetape4k.graph.model.Direction.INCOMING, 1)
+        val followers = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "FOLLOWS", direction = Direction.INCOMING, maxDepth = 1))
         followers.shouldNotBeEmpty()
     }
 }

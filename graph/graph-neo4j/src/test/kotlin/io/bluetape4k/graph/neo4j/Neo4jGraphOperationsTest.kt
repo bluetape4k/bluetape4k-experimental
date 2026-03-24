@@ -2,6 +2,8 @@ package io.bluetape4k.graph.neo4j
 
 import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -218,7 +220,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(alice.id, carol.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.OUTGOING)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING))
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -235,7 +237,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(bob.id, alice.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.INCOMING)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.INCOMING))
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -252,7 +254,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(alice.id, bob.id, "KNOWS")
         ops.createEdge(carol.id, alice.id, "KNOWS")
 
-        val neighbors = ops.neighbors(alice.id, "KNOWS", Direction.BOTH)
+        val neighbors = ops.neighbors(alice.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.BOTH))
         neighbors.shouldHaveSize(2)
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "Bob"
@@ -269,7 +271,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(a.id, b.id, "KNOWS")
         ops.createEdge(b.id, c.id, "KNOWS")
 
-        val neighbors = ops.neighbors(a.id, "KNOWS", Direction.OUTGOING, depth = 2)
+        val neighbors = ops.neighbors(a.id, NeighborOptions(edgeLabel = "KNOWS", direction = Direction.OUTGOING, maxDepth = 2))
         neighbors.shouldNotBeEmpty()
         val names = neighbors.map { it.properties["name"] }
         names shouldContain "B"
@@ -286,7 +288,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(a.id, b.id, "KNOWS")
         ops.createEdge(b.id, c.id, "KNOWS")
 
-        val path = ops.shortestPath(a.id, c.id, "KNOWS")
+        val path = ops.shortestPath(a.id, c.id, PathOptions(edgeLabel = "KNOWS"))
         path.shouldNotBeNull()
         path.vertices.shouldNotBeEmpty()
     }
@@ -298,7 +300,7 @@ class Neo4jGraphOperationsTest {
         val b = ops.createVertex("Person", mapOf("name" to "B"))
 
         // 간선 없음
-        val path = ops.shortestPath(a.id, b.id, "KNOWS")
+        val path = ops.shortestPath(a.id, b.id, PathOptions(edgeLabel = "KNOWS"))
         path.shouldBeNull()
     }
 
@@ -313,7 +315,7 @@ class Neo4jGraphOperationsTest {
         ops.createEdge(b.id, c.id, "KNOWS")
         ops.createEdge(a.id, c.id, "KNOWS")
 
-        val paths = ops.allPaths(a.id, c.id, "KNOWS")
+        val paths = ops.allPaths(a.id, c.id, PathOptions(edgeLabel = "KNOWS"))
         paths.shouldNotBeEmpty()
         paths.size shouldBeGreaterOrEqualTo 2
     }
