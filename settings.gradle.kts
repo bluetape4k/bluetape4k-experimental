@@ -27,8 +27,6 @@ includeModules("infra", false, false)
 includeModules("utils", false, false)
 includeModules("scheduling", false, false)
 includeModules("examples", false, false)
-includeModules("graph", false, false)
-includeModules("graph/examples", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
     files("$rootDir/$baseDir").files
