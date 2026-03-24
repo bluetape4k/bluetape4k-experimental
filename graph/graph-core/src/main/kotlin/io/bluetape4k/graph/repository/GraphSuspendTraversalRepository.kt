@@ -1,9 +1,10 @@
 package io.bluetape4k.graph.repository
 
-import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -16,22 +17,18 @@ import kotlinx.coroutines.flow.Flow
 interface GraphSuspendTraversalRepository {
     fun neighbors(
         startId: GraphElementId,
-        edgeLabel: String,
-        direction: Direction = Direction.OUTGOING,
-        depth: Int = 1,
+        options: NeighborOptions = NeighborOptions.Default,
     ): Flow<GraphVertex>
 
     suspend fun shortestPath(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String? = null,
-        maxDepth: Int = 10,
+        options: PathOptions = PathOptions.Default,
     ): GraphPath?
 
     fun allPaths(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String? = null,
-        maxDepth: Int = 5,
+        options: PathOptions = PathOptions.Default,
     ): Flow<GraphPath>
 }

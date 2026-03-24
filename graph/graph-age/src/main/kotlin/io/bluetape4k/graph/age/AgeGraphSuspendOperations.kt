@@ -3,11 +3,12 @@ package io.bluetape4k.graph.age
 import io.bluetape4k.graph.GraphQueryException
 import io.bluetape4k.graph.age.sql.AgeSql
 import io.bluetape4k.graph.age.sql.AgeTypeParser
-import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requireNotBlank
@@ -241,11 +242,8 @@ class AgeGraphSuspendOperations(
 
     override fun neighbors(
         startId: GraphElementId,
-        edgeLabel: String,
-        direction: Direction,
-        depth: Int,
+        options: NeighborOptions,
     ): Flow<GraphVertex> {
-        edgeLabel.requireNotBlank("edgeLabel")
         return flow {
             val vertices = withContext(Dispatchers.IO) {
                 transaction(database) {
@@ -254,7 +252,7 @@ class AgeGraphSuspendOperations(
                     val longId = startId.value.toLongOrNull()
                         ?: throw GraphQueryException("AGE requires numeric ID, got: ${startId.value}")
                     val list = mutableListOf<GraphVertex>()
-                    exec(AgeSql.neighbors(graphName, longId, edgeLabel, direction.name, depth)) { rs ->
+                    exec(AgeSql.neighbors(graphName, longId, options.edgeLabel, options.direction.name, options.maxDepth)) { rs ->
                         while (rs.next()) list.add(AgeTypeParser.parseVertex(rs.getString("neighbor")))
                     }
                     list
@@ -267,8 +265,7 @@ class AgeGraphSuspendOperations(
     override suspend fun shortestPath(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): GraphPath? = withContext(Dispatchers.IO) {
         transaction(database) {
             exec(AgeSql.loadAge())
@@ -278,7 +275,7 @@ class AgeGraphSuspendOperations(
             val to = toId.value.toLongOrNull()
                 ?: throw GraphQueryException("AGE requires numeric ID, got: ${toId.value}")
             var path: GraphPath? = null
-            exec(AgeSql.shortestPath(graphName, from, to, edgeLabel, maxDepth)) { rs ->
+            exec(AgeSql.shortestPath(graphName, from, to, options.edgeLabel, options.maxDepth)) { rs ->
                 if (rs.next()) path = AgeTypeParser.parsePath(rs.getString("p"))
             }
             path
@@ -288,8 +285,7 @@ class AgeGraphSuspendOperations(
     override fun allPaths(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): Flow<GraphPath> = flow {
         val paths = withContext(Dispatchers.IO) {
             transaction(database) {
@@ -300,7 +296,7 @@ class AgeGraphSuspendOperations(
                 val to = toId.value.toLongOrNull()
                     ?: throw GraphQueryException("AGE requires numeric ID, got: ${toId.value}")
                 val list = mutableListOf<GraphPath>()
-                exec(AgeSql.allPaths(graphName, from, to, edgeLabel, maxDepth)) { rs ->
+                exec(AgeSql.allPaths(graphName, from, to, options.edgeLabel, options.maxDepth)) { rs ->
                     while (rs.next()) list.add(AgeTypeParser.parsePath(rs.getString("p")))
                 }
                 list

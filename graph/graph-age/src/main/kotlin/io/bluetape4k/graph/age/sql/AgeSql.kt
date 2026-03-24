@@ -117,15 +117,16 @@ object AgeSql {
     fun neighbors(
         graphName: String,
         startId: Long,
-        edgeLabel: String,
+        edgeLabel: String?,
         direction: String,
         depth: Int,
     ): String {
         val depthStr = if (depth == 1) "" else "*1..$depth"
+        val edgePart = if (edgeLabel != null) ":$edgeLabel$depthStr" else if (depthStr.isEmpty()) "" else depthStr
         val pattern = when (direction) {
-            "OUTGOING" -> "(start)-[:$edgeLabel$depthStr]->(neighbor)"
-            "INCOMING" -> "(start)<-[:$edgeLabel$depthStr]-(neighbor)"
-            else -> "(start)-[:$edgeLabel$depthStr]-(neighbor)"
+            "OUTGOING" -> "(start)-[$edgePart]->(neighbor)"
+            "INCOMING" -> "(start)<-[$edgePart]-(neighbor)"
+            else -> "(start)-[$edgePart]-(neighbor)"
         }
         return cypher(
             graphName,

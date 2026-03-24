@@ -3,11 +3,12 @@ package io.bluetape4k.graph.age
 import io.bluetape4k.graph.GraphQueryException
 import io.bluetape4k.graph.age.sql.AgeSql
 import io.bluetape4k.graph.age.sql.AgeTypeParser
-import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.requireNotBlank
@@ -212,18 +213,15 @@ class AgeGraphOperations(
 
     override fun neighbors(
         startId: GraphElementId,
-        edgeLabel: String,
-        direction: Direction,
-        depth: Int,
+        options: NeighborOptions,
     ): List<GraphVertex> {
-        edgeLabel.requireNotBlank("edgeLabel")
         return transaction(database) {
             exec(AgeSql.loadAge())
             exec(AgeSql.setSearchPath())
             val longId = startId.value.toLongOrNull()
                 ?: throw GraphQueryException("AGE requires numeric ID, got: ${startId.value}")
             val vertices = mutableListOf<GraphVertex>()
-            exec(AgeSql.neighbors(graphName, longId, edgeLabel, direction.name, depth)) { rs ->
+            exec(AgeSql.neighbors(graphName, longId, options.edgeLabel, options.direction.name, options.maxDepth)) { rs ->
                 while (rs.next()) vertices.add(AgeTypeParser.parseVertex(rs.getString("neighbor")))
             }
             vertices
@@ -233,8 +231,7 @@ class AgeGraphOperations(
     override fun shortestPath(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): GraphPath? {
         return transaction(database) {
             exec(AgeSql.loadAge())
@@ -244,7 +241,7 @@ class AgeGraphOperations(
             val to = toId.value.toLongOrNull()
                 ?: throw GraphQueryException("AGE requires numeric ID, got: ${toId.value}")
             var path: GraphPath? = null
-            exec(AgeSql.shortestPath(graphName, from, to, edgeLabel, maxDepth)) { rs ->
+            exec(AgeSql.shortestPath(graphName, from, to, options.edgeLabel, options.maxDepth)) { rs ->
                 if (rs.next()) path = AgeTypeParser.parsePath(rs.getString("p"))
             }
             path
@@ -254,8 +251,7 @@ class AgeGraphOperations(
     override fun allPaths(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): List<GraphPath> {
         return transaction(database) {
             exec(AgeSql.loadAge())
@@ -265,7 +261,7 @@ class AgeGraphOperations(
             val to = toId.value.toLongOrNull()
                 ?: throw GraphQueryException("AGE requires numeric ID, got: ${toId.value}")
             val paths = mutableListOf<GraphPath>()
-            exec(AgeSql.allPaths(graphName, from, to, edgeLabel, maxDepth)) { rs ->
+            exec(AgeSql.allPaths(graphName, from, to, options.edgeLabel, options.maxDepth)) { rs ->
                 while (rs.next()) paths.add(AgeTypeParser.parsePath(rs.getString("p")))
             }
             paths

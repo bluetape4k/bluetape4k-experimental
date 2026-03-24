@@ -6,6 +6,8 @@ import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -227,16 +229,15 @@ class Neo4jGraphSuspendOperations(
 
     override fun neighbors(
         startId: GraphElementId,
-        edgeLabel: String,
-        direction: Direction,
-        depth: Int,
+        options: NeighborOptions,
     ): Flow<GraphVertex> {
-        edgeLabel.requireNotBlank("edgeLabel")
-        val depthStr = if (depth == 1) "" else $$"*1..$$depth"
-        val pattern = when (direction) {
-            Direction.OUTGOING -> $$"(start)-[:$$edgeLabel$$depthStr]->(neighbor)"
-            Direction.INCOMING -> $$"(start)<-[:$$edgeLabel$$depthStr]-(neighbor)"
-            Direction.BOTH     -> $$"(start)-[:$$edgeLabel$$depthStr]-(neighbor)"
+        options.edgeLabel?.requireNotBlank("edgeLabel")
+        val depthStr = if (options.maxDepth == 1) "" else $$"*1..${ options.maxDepth }"
+        val edgePart = if (options.edgeLabel != null) $$":${ options.edgeLabel }$$depthStr" else depthStr
+        val pattern = when (options.direction) {
+            Direction.OUTGOING -> $$"(start)-[$$edgePart]->(neighbor)"
+            Direction.INCOMING -> $$"(start)<-[$$edgePart]-(neighbor)"
+            Direction.BOTH     -> $$"(start)-[$$edgePart]-(neighbor)"
         }
         return flowQuery(
             $$"MATCH $$pattern WHERE elementId(start) = $startId RETURN DISTINCT neighbor",
@@ -249,10 +250,9 @@ class Neo4jGraphSuspendOperations(
     override suspend fun shortestPath(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): GraphPath? {
-        val relPattern = if (edgeLabel != null) $$":$$edgeLabel*1..$$maxDepth" else $$"*1..$$maxDepth"
+        val relPattern = if (options.edgeLabel != null) $$":${ options.edgeLabel }*1..${ options.maxDepth }" else $$"*1..${ options.maxDepth }"
         return runQuery(
             $$"MATCH p = shortestPath((a)-[$$relPattern]-(b)) " +
                     $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",
@@ -265,10 +265,9 @@ class Neo4jGraphSuspendOperations(
     override fun allPaths(
         fromId: GraphElementId,
         toId: GraphElementId,
-        edgeLabel: String?,
-        maxDepth: Int,
+        options: PathOptions,
     ): Flow<GraphPath> {
-        val relPattern = if (edgeLabel != null) $$":$$edgeLabel*1..$$maxDepth" else $$"*1..$$maxDepth"
+        val relPattern = if (options.edgeLabel != null) $$":${ options.edgeLabel }*1..${ options.maxDepth }" else $$"*1..${ options.maxDepth }"
         return flowQuery(
             $$"MATCH p = (a)-[$$relPattern]-(b) " +
                     $$"WHERE elementId(a) = $fromId AND elementId(b) = $toId RETURN p",

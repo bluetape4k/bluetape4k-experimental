@@ -4,6 +4,8 @@ import io.bluetape4k.graph.model.Direction
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphPath
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.graph.model.NeighborOptions
+import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.flow.Flow
@@ -116,35 +118,35 @@ class CodeGraphSuspendService(
 
     /** 특정 모듈이 의존하는 모듈 목록 */
     fun getDependencies(moduleId: GraphElementId): Flow<GraphVertex> =
-        ops.neighbors(moduleId, "DEPENDS_ON", Direction.OUTGOING, depth = 1)
+        ops.neighbors(moduleId, NeighborOptions(edgeLabel = "DEPENDS_ON", direction = Direction.OUTGOING, maxDepth = 1))
 
     /** 특정 모듈에 의존하는 모듈 목록 (역방향) */
     fun getDependents(moduleId: GraphElementId): Flow<GraphVertex> =
-        ops.neighbors(moduleId, "DEPENDS_ON", Direction.INCOMING, depth = 1)
+        ops.neighbors(moduleId, NeighborOptions(edgeLabel = "DEPENDS_ON", direction = Direction.INCOMING, maxDepth = 1))
 
     /** 전이 의존성 (n단계) */
     fun getTransitiveDependencies(moduleId: GraphElementId, maxDepth: Int = 5): Flow<GraphVertex> =
-        ops.neighbors(moduleId, "DEPENDS_ON", Direction.OUTGOING, depth = maxDepth)
+        ops.neighbors(moduleId, NeighborOptions(edgeLabel = "DEPENDS_ON", direction = Direction.OUTGOING, maxDepth = maxDepth))
 
     /** 두 모듈 간 의존성 경로 탐색 */
     suspend fun findDependencyPath(fromId: GraphElementId, toId: GraphElementId): GraphPath? =
-        ops.shortestPath(fromId, toId, "DEPENDS_ON", maxDepth = 10)
+        ops.shortestPath(fromId, toId, PathOptions(edgeLabel = "DEPENDS_ON", maxDepth = 10))
 
     /** 순환 의존성 탐지: A→B→C→A 패턴 */
     fun detectCircularDependency(moduleId: GraphElementId): Flow<GraphPath> =
-        ops.allPaths(moduleId, moduleId, "DEPENDS_ON", maxDepth = 5)
+        ops.allPaths(moduleId, moduleId, PathOptions(edgeLabel = "DEPENDS_ON", maxDepth = 5))
 
     /** 클래스 상속 계층 탐색 */
     fun getInheritanceChain(classId: GraphElementId, depth: Int = 5): Flow<GraphVertex> =
-        ops.neighbors(classId, "EXTENDS", Direction.OUTGOING, depth = depth)
+        ops.neighbors(classId, NeighborOptions(edgeLabel = "EXTENDS", direction = Direction.OUTGOING, maxDepth = depth))
 
     /** 함수 호출 체인 탐색 */
     fun getCallChain(functionId: GraphElementId, maxDepth: Int = 5): Flow<GraphVertex> =
-        ops.neighbors(functionId, "CALLS", Direction.OUTGOING, depth = maxDepth)
+        ops.neighbors(functionId, NeighborOptions(edgeLabel = "CALLS", direction = Direction.OUTGOING, maxDepth = maxDepth))
 
     /** 영향 범위 분석: 이 모듈이 변경되면 영향받는 모듈 */
     fun getImpactedModules(moduleId: GraphElementId, depth: Int = 3): Flow<GraphVertex> =
-        ops.neighbors(moduleId, "DEPENDS_ON", Direction.INCOMING, depth = depth)
+        ops.neighbors(moduleId, NeighborOptions(edgeLabel = "DEPENDS_ON", direction = Direction.INCOMING, maxDepth = depth))
 
     /** 모듈 이름으로 검색 */
     fun findModuleByName(name: String): Flow<GraphVertex> =
