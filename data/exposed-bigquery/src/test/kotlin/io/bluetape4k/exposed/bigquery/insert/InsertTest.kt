@@ -1,17 +1,12 @@
 package io.bluetape4k.exposed.bigquery.insert
 
-import io.bluetape4k.exposed.bigquery.AbstractBigQueryH2Test
-import io.bluetape4k.exposed.bigquery.domain.Events
+import io.bluetape4k.exposed.bigquery.AbstractBigQueryTest
 import io.bluetape4k.logging.KLogging
-import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.batchInsert
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.Instant
 
-class InsertTest: AbstractBigQueryH2Test() {
+class InsertTest: AbstractBigQueryTest() {
 
     companion object: KLogging()
 
@@ -21,51 +16,51 @@ class InsertTest: AbstractBigQueryH2Test() {
         val eventType: String,
         val region: String,
         val amount: BigDecimal?,
-        val occurredAt: Instant,
     )
 
     private val fixtures = listOf(
-        EventFixture(1L, 100L, "PURCHASE", "kr", BigDecimal("9900.00"), Instant.now()),
-        EventFixture(2L, 100L, "VIEW", "kr", null, Instant.now()),
-        EventFixture(3L, 200L, "PURCHASE", "us", BigDecimal("49.99"), Instant.now()),
-        EventFixture(4L, 200L, "CLICK", "us", null, Instant.now()),
-        EventFixture(5L, 300L, "PURCHASE", "eu", BigDecimal("19.90"), Instant.now()),
+        EventFixture(1L, 100L, "PURCHASE", "kr", BigDecimal("9900.00")),
+        EventFixture(2L, 100L, "VIEW", "kr", null),
+        EventFixture(3L, 200L, "PURCHASE", "us", BigDecimal("49.99")),
+        EventFixture(4L, 200L, "CLICK", "us", null),
+        EventFixture(5L, 300L, "PURCHASE", "eu", BigDecimal("19.90")),
     )
+
+    private fun insertFixtures() {
+        fixtures.forEach { f ->
+            val amountSql = f.amount?.toPlainString() ?: "NULL"
+            runQuery(
+                """
+                INSERT INTO events (event_id, user_id, event_type, region, amount, occurred_at)
+                VALUES (${f.eventId}, ${f.userId}, '${f.eventType}', '${f.region}', $amountSql, TIMESTAMP '2024-01-01 00:00:00 UTC')
+                """
+            )
+        }
+    }
 
     @Test
     fun `batchInsert - 이벤트 대량 적재`() {
-        withTables(Events) {
-            Events.batchInsert(fixtures) { f ->
-                this[Events.eventId] = f.eventId
-                this[Events.userId] = f.userId
-                this[Events.eventType] = f.eventType
-                this[Events.region] = f.region
-                this[Events.amount] = f.amount
-                this[Events.occurredAt] = f.occurredAt
-            }
+        withEventsTable {
+            insertFixtures()
 
-            val rows = Events.selectAll().toList()
-            rows shouldHaveSize fixtures.size
+            val response = runQuery("SELECT COUNT(*) as cnt FROM events")
+            val count = response.rows.first().f.first().v.toString().toLong()
+            count shouldBeEqualTo fixtures.size.toLong()
         }
     }
 
     @Test
     fun `batchInsert - 리전별 집계 검증`() {
-        withTables(Events) {
-            Events.batchInsert(fixtures) { f ->
-                this[Events.eventId] = f.eventId
-                this[Events.userId] = f.userId
-                this[Events.eventType] = f.eventType
-                this[Events.region] = f.region
-                this[Events.amount] = f.amount
-                this[Events.occurredAt] = f.occurredAt
-            }
+        withEventsTable {
+            insertFixtures()
 
-            val krRows = Events.selectAll().where { Events.region eq "kr" }.toList()
-            krRows shouldHaveSize 2
+            val krResponse = runQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
+            val krCount = krResponse.rows.first().f.first().v.toString().toLong()
+            krCount shouldBeEqualTo 2L
 
-            val purchaseRows = Events.selectAll().where { Events.eventType eq "PURCHASE" }.toList()
-            purchaseRows shouldHaveSize 3
+            val purchaseResponse = runQuery("SELECT COUNT(*) as cnt FROM events WHERE event_type = 'PURCHASE'")
+            val purchaseCount = purchaseResponse.rows.first().f.first().v.toString().toLong()
+            purchaseCount shouldBeEqualTo 3L
         }
     }
 }

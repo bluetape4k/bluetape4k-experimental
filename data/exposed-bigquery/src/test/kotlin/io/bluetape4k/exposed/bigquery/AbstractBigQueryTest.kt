@@ -1,76 +1,95 @@
 package io.bluetape4k.exposed.bigquery
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
-import io.bluetape4k.exposed.bigquery.dialect.BigQueryDialect
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.bigquery.Bigquery
+import com.google.api.services.bigquery.model.DatasetReference
+import com.google.api.services.bigquery.model.QueryRequest
+import com.google.api.services.bigquery.model.QueryResponse
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.utils.ShutdownQueue
-import org.jetbrains.exposed.v1.core.DatabaseApi
-import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.vendors.PostgreSQLDialectMetadata
 
 /**
  * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
  *
- * Simba BigQuery JDBC 드라이버를 사용하여 에뮬레이터에 연결합니다.
- * - 로컬에 에뮬레이터가 실행 중이면 그대로 사용 (localhost:9050)
- * - 아니면 Testcontainers로 Docker 컨테이너 자동 시작
+ * JDBC 드라이버 없이 `google-api-services-bigquery-v2` REST 클라이언트로 에뮬레이터에 직접 연결합니다.
+ * - 로컬 에뮬레이터 실행 중: localhost:9050 사용
+ * - 미실행 시: Testcontainers Docker 컨테이너 자동 시작
  *
  * ## 사전 조건
  *
- * Simba BigQuery JDBC 드라이버 JAR이 `data/exposed-bigquery/libs/` 에 있어야 합니다.
- * 다운로드: https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
- *
- * ## H2 대안
- *
- * 에뮬레이터 없이 로컬 개발 시에는 [AbstractBigQueryH2Test]를 사용하세요.
+ * bigquery-emulator 설치:
+ * ```bash
+ * brew install goccy/bigquery-emulator/bigquery-emulator
+ * bigquery-emulator --project=test --dataset=testdb --port=9050
+ * ```
  */
 abstract class AbstractBigQueryTest {
 
     companion object : KLogging() {
 
-        val dataSource: HikariDataSource by lazy {
-            // Dialect 및 JDBC 드라이버 등록 (Database.connect() 이전에 반드시 먼저 등록)
-            DatabaseApi.registerDialect(BigQueryDialect.dialectName) { BigQueryDialect() }
-            Database.registerDialectMetadata(BigQueryDialect.dialectName) { PostgreSQLDialectMetadata() }
-            Database.registerJdbcDriver(
-                prefix = "jdbc:bigquery",
-                driverClassName = BigQueryDialect.DRIVER_CLASS_NAME,
-                dialect = BigQueryDialect.dialectName
-            )
-
-            HikariDataSource(
-                HikariConfig().apply {
-                    jdbcUrl = BigQueryEmulator.jdbcUrl
-                    driverClassName = BigQueryDialect.DRIVER_CLASS_NAME
-                    maximumPoolSize = 3
-                    connectionTimeout = 30_000
-                    isAutoCommit = true
-                }
-            ).also { ShutdownQueue.register(it) }
+        /**
+         * BigQuery REST API 클라이언트 (google-api-services-bigquery-v2).
+         * 에뮬레이터 HTTP 엔드포인트를 setRootUrl 로 지정합니다.
+         */
+        val bigquery: Bigquery by lazy {
+            val transport = GoogleNetHttpTransport.newTrustedTransport()
+            val json = GsonFactory.getDefaultInstance()
+            val credential = GoogleCredential().setAccessToken("emulator-fake-token")
+            Bigquery.Builder(transport, json, credential)
+                .setRootUrl("http://${BigQueryEmulator.host}:${BigQueryEmulator.port}/")
+                .setApplicationName("exposed-bigquery-test")
+                .build()
         }
 
-        val db: Database by lazy {
-            Database.connect(
-                datasource = dataSource,
-                databaseConfig = DatabaseConfig {
-                    defaultMaxAttempts = 1
+        /**
+         * BigQuery 표준 SQL을 에뮬레이터에서 실행하고 결과를 반환합니다.
+         */
+        fun runQuery(sql: String): QueryResponse {
+            val request = QueryRequest()
+                .setQuery(sql.trimIndent().trim())
+                .setUseLegacySql(false)
+                .setDefaultDataset(
+                    DatasetReference()
+                        .setProjectId(BigQueryEmulator.PROJECT_ID)
+                        .setDatasetId(BigQueryEmulator.DATASET)
+                )
+                .setTimeoutMs(30_000L)
+
+            return bigquery.jobs().query(BigQueryEmulator.PROJECT_ID, request).execute()
+                .also { response ->
+                    if (response.errors?.isNotEmpty() == true) {
+                        val msg = response.errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
+                        throw RuntimeException("BigQuery 쿼리 오류: $msg\nSQL: ${sql.take(200)}")
+                    }
                 }
-            )
         }
     }
 
-    fun withTables(vararg tables: Table, block: Transaction.() -> Unit) {
-        transaction(db) { SchemaUtils.create(*tables) }
+    /**
+     * events 테이블을 생성하고 테스트 블록 실행 후 삭제합니다.
+     *
+     * NOTE: bigquery-emulator 가 `DROP TABLE IF EXISTS` 를 지원하지 않아 runCatching 으로 무시합니다.
+     */
+    protected fun withEventsTable(block: () -> Unit) {
+        // 이전 테스트 잔여 테이블 정리 (테이블이 없어도 에러 무시)
+        runCatching { runQuery("DROP TABLE events") }
+        runQuery(
+            """
+            CREATE TABLE events (
+                event_id    INT64     NOT NULL,
+                user_id     INT64     NOT NULL,
+                event_type  STRING    NOT NULL,
+                region      STRING    NOT NULL,
+                amount      NUMERIC,
+                occurred_at TIMESTAMP NOT NULL
+            )
+            """.trimIndent()
+        )
         try {
-            transaction(db) { block() }
+            block()
         } finally {
-            transaction(db) { SchemaUtils.drop(*tables) }
+            runCatching { runQuery("DROP TABLE events") }
         }
     }
 }
