@@ -1,0 +1,34 @@
+# BigQuery 로컬 테스트 환경 구성 - 진행 이력
+
+## 완료된 작업
+
+### 루트 원인 분석
+1. `BIGINT` 타입 → BigQuery/GoogleSQL이 `INT64` 사용 (PostgreSQL dialect 불호환)
+2. `NULL` 제거 regex가 INSERT 값의 NULL도 제거 → 이중 쉼표 문법 오류
+3. `getObject()` 가 raw String 반환 → Exposed가 BigDecimal 변환 실패
+
+### 수정 내용 (BigQueryEmulatorJdbc.kt)
+- `adaptSqlForBigQuery()`: PostgreSQL → BigQuery 타입 변환 추가
+  - BIGINT → INT64, VARCHAR(n) → STRING, INTEGER/SMALLINT/SERIAL → INT64
+  - DOUBLE PRECISION → FLOAT64, BOOLEAN → BOOL, TEXT → STRING, BYTEA → BYTES
+- `adaptSqlForBigQuery()`: NULL/NOT ENFORCED 제거를 DDL에서만 적용
+  - INSERT의 NULL 값은 제거하지 않도록 isDdl 체크 추가
+- `BigQueryEmulatorResultSet.getTypedValue()`: 필드 타입별 Java 타입 변환
+  - INT64 → Long, FLOAT64 → Double, NUMERIC/BIGNUMERIC → BigDecimal
+  - BOOL → Boolean, TIMESTAMP → java.sql.Timestamp
+
+### 테스트 결과
+- SelectTest: 5/5 통과 (selectAll, where, orderBy, count, sum)
+- InsertTest: 2/2 통과 (batchInsert 두 케이스)
+- 총 7/7 통과
+
+### 환경
+- bigquery-emulator (brew install goccy/bigquery-emulator/bigquery-emulator) localhost:9050 에서 실행 중
+- 로컬 실행 자동 감지 (Testcontainers 불필요 시 로컬 에뮬레이터 사용)
+- HikariCP + 커스텀 JDBC 드라이버 (google-api-services-bigquery-v2 사용)
+
+### 주요 교훈
+- BigQuery/GoogleSQL은 PostgreSQL과 타입 이름이 다름 (INT64, STRING, BOOL 등)
+- BigQuery REST API는 모든 값을 String으로 반환 → getObject()에서 타입 변환 필수
+- CREATE TABLE의 nullable 컬럼에는 NULL 키워드 사용 불가 (BigQuery)
+- NULL 제거 regex는 DDL에서만 적용해야 함 (DML의 NULL 값 보호)

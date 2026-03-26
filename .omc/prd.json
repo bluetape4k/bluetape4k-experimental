@@ -1,0 +1,65 @@
+{
+  "title": "BigQuery 로컬 테스트 환경 구성 (bigquery-emulator 연동)",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "PostgreSQL → BigQuery 타입 변환 추가",
+      "description": "adaptSqlForBigQuery 함수에 PostgreSQL 타입을 BigQuery/GoogleSQL 타입으로 변환하는 로직 추가",
+      "acceptanceCriteria": [
+        "BIGINT → INT64 변환",
+        "VARCHAR(n) → STRING 변환",
+        "INTEGER, SMALLINT, SERIAL → INT64 변환",
+        "DOUBLE PRECISION → FLOAT64 변환",
+        "BOOLEAN → BOOL 변환",
+        "CHARACTER VARYING(n) → STRING 변환",
+        "TEXT → STRING 변환",
+        "FLOAT8, FLOAT4, FLOAT, REAL → FLOAT64 변환",
+        "BYTEA → BYTES 변환",
+        "CREATE TABLE events 실행 후 에러 없음"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-002",
+      "title": "NULL 제거 regex를 DDL에서만 적용",
+      "description": "adaptSqlForBigQuery의 NULL 제거 regex가 INSERT 값의 NULL도 제거하는 버그 수정. DDL(CREATE/ALTER/DROP)에서만 적용.",
+      "acceptanceCriteria": [
+        "INSERT INTO ... VALUES (..., NULL, ...) 에서 NULL이 제거되지 않음",
+        "CREATE TABLE ... TYPE NULL → TYPE 변환은 유지",
+        "InsertTest - batchInsert - 이벤트 대량 적재 통과",
+        "InsertTest - batchInsert - 리전별 집계 검증 통과"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "ResultSet.getObject() 타입별 변환 반환",
+      "description": "BigQuery REST API가 모든 값을 String으로 반환하므로 getObject()에서 필드 타입에 따라 적절한 Java 타입으로 변환",
+      "acceptanceCriteria": [
+        "INT64 컬럼 → Long 반환",
+        "FLOAT64 컬럼 → Double 반환",
+        "NUMERIC/BIGNUMERIC 컬럼 → BigDecimal 반환",
+        "BOOL 컬럼 → Boolean 반환",
+        "TIMESTAMP 컬럼 → java.sql.Timestamp 반환",
+        "SelectTest - sum - 리전별 매출 합계 통과"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-004",
+      "title": "SelectTest + InsertTest 전체 통과",
+      "description": "SelectTest 5개 + InsertTest 2개 = 7개 테스트 전체 통과",
+      "acceptanceCriteria": [
+        "SelectTest - selectAll - 전체 이벤트 조회 통과",
+        "SelectTest - where - 리전 필터 통과",
+        "SelectTest - orderBy - userId 내림차순 정렬 통과",
+        "SelectTest - count - 리전별 이벤트 수 통과",
+        "SelectTest - sum - 리전별 매출 합계 통과",
+        "InsertTest - batchInsert - 이벤트 대량 적재 통과",
+        "InsertTest - batchInsert - 리전별 집계 검증 통과",
+        "BUILD SUCCESSFUL"
+      ],
+      "passes": true
+    }
+  ]
+}
