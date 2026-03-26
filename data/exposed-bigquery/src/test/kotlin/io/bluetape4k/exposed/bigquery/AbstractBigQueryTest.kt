@@ -17,7 +17,14 @@ import org.jetbrains.exposed.v1.jdbc.vendors.PostgreSQLDialectMetadata
 /**
  * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
  *
- * [BigQueryEmulator] 컨테이너를 시작하고 HikariCP DataSource로 연결합니다.
+ * Simba BigQuery JDBC 드라이버를 사용하여 에뮬레이터에 연결합니다.
+ * - 로컬에 에뮬레이터가 실행 중이면 그대로 사용 (localhost:9050)
+ * - 아니면 Testcontainers로 Docker 컨테이너 자동 시작
+ *
+ * ## 사전 조건
+ *
+ * Simba BigQuery JDBC 드라이버 JAR이 `data/exposed-bigquery/libs/` 에 있어야 합니다.
+ * 다운로드: https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
  *
  * ## H2 대안
  *
@@ -28,6 +35,15 @@ abstract class AbstractBigQueryTest {
     companion object : KLogging() {
 
         val dataSource: HikariDataSource by lazy {
+            // Dialect 및 JDBC 드라이버 등록 (Database.connect() 이전에 반드시 먼저 등록)
+            DatabaseApi.registerDialect(BigQueryDialect.dialectName) { BigQueryDialect() }
+            Database.registerDialectMetadata(BigQueryDialect.dialectName) { PostgreSQLDialectMetadata() }
+            Database.registerJdbcDriver(
+                prefix = "jdbc:bigquery",
+                driverClassName = BigQueryDialect.DRIVER_CLASS_NAME,
+                dialect = BigQueryDialect.dialectName
+            )
+
             HikariDataSource(
                 HikariConfig().apply {
                     jdbcUrl = BigQueryEmulator.jdbcUrl
@@ -40,15 +56,12 @@ abstract class AbstractBigQueryTest {
         }
 
         val db: Database by lazy {
-            val database = Database.connect(
+            Database.connect(
                 datasource = dataSource,
                 databaseConfig = DatabaseConfig {
                     defaultMaxAttempts = 1
                 }
             )
-            DatabaseApi.registerDialect("bigquery") { BigQueryDialect() }
-            Database.registerDialectMetadata("bigquery") { PostgreSQLDialectMetadata() }
-            database
         }
     }
 

@@ -44,6 +44,11 @@ object BigQueryEmulator : KLogging() {
     const val IMAGE = "ghcr.io/goccy/bigquery-emulator:0.6.3"
     const val HTTP_PORT = 9050
 
+    /** brew install goccy/bigquery-emulator/bigquery-emulator 로 설치된 로컬 에뮬레이터 확인 */
+    private fun isLocalRunning(): Boolean = runCatching {
+        java.net.Socket("localhost", HTTP_PORT).use { true }
+    }.getOrDefault(false)
+
     val container: GenericContainer<*> by lazy {
         GenericContainer(IMAGE)
             .withExposedPorts(HTTP_PORT)
@@ -59,14 +64,23 @@ object BigQueryEmulator : KLogging() {
             }
     }
 
-    val host: String get() = container.host
-    val port: Int get() = container.getMappedPort(HTTP_PORT)
+    private val useLocal: Boolean by lazy {
+        isLocalRunning().also { local ->
+            if (local) log.info("로컬 BigQuery 에뮬레이터 사용 (localhost:$HTTP_PORT)")
+            else log.info("Testcontainers BigQuery 에뮬레이터 시작")
+        }
+    }
+
+    val host: String by lazy { if (useLocal) "localhost" else container.host }
+    val port: Int by lazy { if (useLocal) HTTP_PORT else container.getMappedPort(HTTP_PORT) }
 
     /**
-     * BigQuery JDBC 연결 URL
-     * - `http://HOST:PORT` 형식으로 에뮬레이터 엔드포인트를 지정
-     * - OAuthType=2 + 더미 AccessToken — 에뮬레이터는 인증을 검증하지 않음
+     * BigQuery 에뮬레이터 JDBC 연결 URL (Simba BigQuery JDBC 드라이버 사용)
+     *
+     * - OAuthType=0: 인증 없음 (에뮬레이터 테스트용)
+     * - BigQueryEndpoint: 에뮬레이터 HTTP 엔드포인트
+     * - DefaultDataset: 기본 데이터셋
      */
     val jdbcUrl: String
-        get() = "jdbc:bigquery://http://$host:$port;ProjectId=$PROJECT_ID;OAuthType=2;OAuthAccessToken=FAKE_TOKEN_FOR_EMULATOR"
+        get() = "jdbc:bigquery://;ProjectId=$PROJECT_ID;OAuthType=0;BigQueryEndpoint=http://$host:$port;DefaultDataset=$DATASET"
 }
