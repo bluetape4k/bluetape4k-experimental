@@ -1393,7 +1393,7 @@ object Libs {
     const val ehcache_clustered = "org.ehcache:ehcache-clustered:${Versions.ehcache}"
     const val ehcache_transactions = "org.ehcache:ehcache-transactions:${Versions.ehcache}"
 
-    // Apache Ignite
+    // Apache Ignite 2
     fun ignite(module: String, version: String = Versions.ignite) = "org.apache.ignite:ignite-$module:$version"
 
     val ignite_aop = ignite("aop")
@@ -1420,6 +1420,13 @@ object Libs {
 
     // https://ignite.apache.org/docs/latest/extensions-and-integrations/spring/spring-caching
     val ignite_spring_cache_ext = ignite("spring-cache-ext", "2.0.0")
+
+    // Apache Ignite 3 — https://mvnrepository.com/artifact/org.apache.ignite/ignite-client
+    fun ignite3(module: String) = "org.apache.ignite:ignite-$module:${Versions.ignite3}"
+
+    val ignite3_client = ignite3("client")
+    val ignite3_jdbc   = ignite3("jdbc")
+    val ignite3_spring_boot_starter = "org.apache.ignite:spring-boot-starter-ignite-client:${Versions.ignite3}"
 
     const val hazelcast = "com.hazelcast:hazelcast:${Versions.hazelcast}"
     const val hazelcast_spring = "com.hazelcast:hazelcast-spring:${Versions.hazelcast}"
