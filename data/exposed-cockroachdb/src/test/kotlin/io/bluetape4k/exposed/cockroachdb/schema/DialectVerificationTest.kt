@@ -2,8 +2,9 @@ package io.bluetape4k.exposed.cockroachdb.schema
 
 import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.exposed.cockroachdb.dialect.CockroachDialect
-import org.amshove.kluent.shouldBeInstanceOf
 import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeInstanceOf
+import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 class DialectVerificationTest : AbstractCockroachDBTest() {
@@ -14,8 +15,8 @@ class DialectVerificationTest : AbstractCockroachDBTest() {
     }
 
     @Test
-    fun `supportsWindowFrameGroupsMode should be false`() {
-        db.dialect.supportsWindowFrameGroupsMode.shouldBeFalse()
+    fun `supportsWindowFrameGroupsMode should be true on v26_1+`() {
+        db.dialect.supportsWindowFrameGroupsMode.shouldBeTrue()
     }
 
     @Test

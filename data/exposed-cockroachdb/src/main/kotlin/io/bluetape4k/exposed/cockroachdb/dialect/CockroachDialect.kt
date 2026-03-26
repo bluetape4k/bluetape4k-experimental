@@ -20,8 +20,8 @@ class CockroachDialect : PostgreSQLDialect(name = dialectName) {
         const val dialectName: String = "CockroachDB"
     }
 
-    // CockroachDB v24.1 기준 WINDOW FRAME GROUPS 미지원
-    override val supportsWindowFrameGroupsMode: Boolean = false
+    // CockroachDB v26.1 부터 WINDOW FRAME GROUPS 지원
+    override val supportsWindowFrameGroupsMode: Boolean = true
 
     // ALTER COLUMN TYPE 미지원
     override val supportsColumnTypeChange: Boolean get() = false
