@@ -1,7 +1,7 @@
 # exposed-bigquery
 
 JetBrains Exposed ORM을 사용하여 Google BigQuery에 연결하는 모듈.
-`BigQueryDialect`를 제공하며, H2 PostgreSQL 모드 기반 테스트를 지원합니다.
+`BigQueryDialect`를 제공하며, `goccy/bigquery-emulator`를 이용한 로컬 테스트를 지원합니다.
 
 ## 지원/미지원 기능
 
@@ -15,49 +15,72 @@ JetBrains Exposed ORM을 사용하여 Google BigQuery에 연결하는 모듈.
 | SERIAL / SEQUENCE (auto-increment) | ❌ | BigQuery 미지원 |
 | Multiple Generated Keys | ❌ | `supportsMultipleGeneratedKeys = false` |
 
-## JDBC 드라이버 설정
-
-BigQuery JDBC 드라이버는 Maven Central에 배포되지 않아 수동 설치가 필요합니다.
-
-### Simba JDBC 드라이버 설치
-
-```bash
-# 1. 드라이버 다운로드
-curl -O https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
-
-# 2. 압축 해제
-unzip SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip -d simba-bq-jdbc
-
-# 3. 모든 JAR을 모듈 libs/ 디렉토리에 복사
-cp simba-bq-jdbc/*.jar data/exposed-bigquery/libs/
-```
-
-> `libs/` 디렉토리는 `.gitignore`에 포함되어 있어 저장소에 커밋되지 않습니다.
-
-### 알려진 제한사항: 에뮬레이터 미지원
-
-**Simba BigQuery JDBC 드라이버(1.6.5)는 `BigQueryEndpoint` 파라미터를 무시하고 항상 `https://bigquery.googleapis.com`으로 요청을 보냅니다.**
-`goccy/bigquery-emulator`와 JDBC로 연결하는 것은 현재 불가능합니다.
-
-이에 따라 테스트는 **H2 PostgreSQL 모드**를 사용합니다.
-
 ## 테스트 방법
 
-### H2 모드 (기본, CI/CD 환경)
+테스트는 **Simba JDBC 드라이버 없이** `google-api-services-bigquery-v2` REST 클라이언트로
+`goccy/bigquery-emulator`에 직접 연결합니다. 별도 설치 없이 바로 실행 가능합니다.
 
-`AbstractBigQueryH2Test`를 상속하면 H2 인메모리 DB에서 PostgreSQL 호환 모드로 테스트합니다.
-BigQueryDialect가 등록되며 DDL/DML이 정상 동작합니다.
+### 로컬 에뮬레이터 (권장)
+
+```bash
+# macOS (Homebrew)
+brew install goccy/bigquery-emulator/bigquery-emulator
+
+# 에뮬레이터 시작
+bigquery-emulator --project=test --dataset=testdb --port=9050
+```
+
+에뮬레이터가 `localhost:9050`에서 실행 중이면 테스트가 자동으로 이를 사용합니다.
+
+### Docker (Testcontainers)
+
+로컬 에뮬레이터가 없으면 Testcontainers가 Docker 컨테이너를 자동 시작합니다.
+Docker가 설치되어 있으면 별도 설정 없이 동작합니다.
+
+### 테스트 실행
 
 ```bash
 ./gradlew :exposed-bigquery:test
 ```
 
-### 실제 BigQuery 연결 (프로덕션)
+## 의존성
+
+`google-api-services-bigquery`는 Maven Central에서 제공됩니다. 별도 로컬 설치 불필요.
+
+```kotlin
+// build.gradle.kts
+testImplementation(Libs.google_api_services_bigquery)
+```
+
+## 실제 BigQuery 연결 (프로덕션)
+
+실제 환경에서는 Simba JDBC 드라이버와 HikariCP를 사용합니다.
+드라이버는 Maven Central에 없으므로 수동 설치가 필요합니다.
+
+### Simba JDBC 드라이버 설치
+
+```bash
+# 1. 드라이버 다운로드
+# https://storage.googleapis.com/simba-bq-release/jdbc/
+curl -O https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
+
+# 2. 로컬 Maven 저장소에 설치
+unzip SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip -d simba-bq-jdbc
+mvn install:install-file \
+  -Dfile=simba-bq-jdbc/GoogleBigQueryJDBC42.jar \
+  -DgroupId=com.simba.googlebigquery \
+  -DartifactId=googlebigquery-jdbc42 \
+  -Dversion=1.6.5.1002 \
+  -Dpackaging=jar
+```
+
+### Dialect 등록 및 연결
 
 ```kotlin
 val dataSource = HikariDataSource(HikariConfig().apply {
-    jdbcUrl = "jdbc:bigquery://;ProjectId=my-project;OAuthType=0;OAuthServiceAcctEmail=...;OAuthPvtKeyPath=..."
-    driverClassName = BigQueryDialect.DRIVER_CLASS_NAME
+    jdbcUrl = "jdbc:bigquery://;ProjectId=my-project;OAuthType=0;" +
+              "OAuthServiceAcctEmail=...;OAuthPvtKeyPath=..."
+    driverClassName = "com.simba.googlebigquery.jdbc.Driver"
 })
 
 val database = Database.connect(datasource = dataSource)
@@ -65,41 +88,7 @@ DatabaseApi.registerDialect("bigquery") { BigQueryDialect() }
 Database.registerDialectMetadata("bigquery") { PostgreSQLDialectMetadata() }
 ```
 
-## 사용 예제
+## 알려진 제한사항
 
-### Dialect 등록
-
-```kotlin
-val database = Database.connect(
-    datasource = dataSource,
-    databaseConfig = DatabaseConfig { defaultMaxAttempts = 1 }
-)
-DatabaseApi.registerDialect("bigquery") { BigQueryDialect() }
-Database.registerDialectMetadata("bigquery") { PostgreSQLDialectMetadata() }
-```
-
-### SELECT
-
-```kotlin
-transaction(db) {
-    val rows = Events.selectAll()
-        .where { Events.region eq "kr" }
-        .orderBy(Events.userId, SortOrder.DESC)
-        .toList()
-}
-```
-
-### batchInsert
-
-```kotlin
-transaction(db) {
-    Events.batchInsert(fixtures) { f ->
-        this[Events.eventId]    = f.eventId
-        this[Events.userId]     = f.userId
-        this[Events.eventType]  = f.eventType
-        this[Events.region]     = f.region
-        this[Events.amount]     = f.amount
-        this[Events.occurredAt] = f.occurredAt
-    }
-}
-```
+- **Simba JDBC 1.6.5는 에뮬레이터 미지원**: `BigQueryEndpoint` 파라미터를 무시하고 항상 `https://bigquery.googleapis.com`으로 연결합니다. 로컬 테스트에는 REST 클라이언트를 사용합니다.
+- **`DROP TABLE IF EXISTS` 미지원**: `goccy/bigquery-emulator`가 `IF EXISTS` 구문을 처리하지 못합니다. 테스트에서는 `runCatching`으로 오류를 무시합니다.
