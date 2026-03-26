@@ -25,7 +25,7 @@ PostgreSQL 호환 분산 SQL 데이터베이스인 CockroachDB를 Exposed와 함
 | JSONB @> contains 연산자 | ✅ 지원 | |
 | Window 함수 (ROW_NUMBER, RANK, SUM OVER 등) | ✅ 지원 | |
 | LAG / LEAD 함수 | ✅ 지원 | |
-| WINDOW FRAME GROUPS 모드 | ❌ 미지원 | CockroachDB v24.1 제한 |
+| WINDOW FRAME GROUPS 모드 | ✅ 지원 | v26.1+ 이상 필요 |
 | ALTER COLUMN TYPE | ❌ 미지원 | CockroachDB 제한 |
 | 다중 GENERATED KEYS | ❌ 미지원 | CockroachDB 제한 |
 | R2DBC (비동기) | ❌ 미지원 | JDBC 전용 |
@@ -297,9 +297,9 @@ CockroachDB는 serializable isolation level을 기본으로 사용하여, 동시
 CockroachDB는 스키마 마이그레이션 시 컬럼 타입 변경을 지원하지 않습니다.
 대신 새 컬럼을 생성하고 데이터를 마이그레이션한 후 기존 컬럼을 삭제하는 방식을 권장합니다.
 
-### 4. Window Frame GROUPS 미지원
+### 4. Window Frame GROUPS 지원 (v26.1+)
 
-CockroachDB v24.1은 `ROWS` 및 `RANGE` 프레임 모드는 지원하지만, `GROUPS` 모드는 미지원합니다.
+CockroachDB v26.1부터 `GROUPS` 프레임 모드를 지원합니다. `ROWS`, `RANGE`, `GROUPS` 세 가지 모드 모두 사용 가능합니다.
 
 ## 설정 예제 (Spring Boot)
 
@@ -337,8 +337,102 @@ class DatabaseConfiguration {
 }
 ```
 
+## CockroachDB 장점
+
+### 1. 수평 확장 (Horizontal Scalability)
+
+노드를 추가하기만 하면 자동으로 데이터를 재분산합니다. 단일 노드 한계를 넘는 데이터 볼륨과 트래픽을 처리할 수 있습니다.
+
+### 2. 고가용성 (High Availability)
+
+Raft 합의 알고리즘 기반 데이터 복제로 노드 장애 시에도 자동 failover합니다. 기본 3-way replication으로 2개 노드가 동시에 장애 나도 서비스가 유지됩니다.
+
+### 3. 지리적 분산 (Geo-Distribution)
+
+멀티 리전 클러스터를 구성하여 데이터를 사용자에 가깝게 배치할 수 있습니다. `REGIONAL BY ROW` 테이블로 행 단위 지역 고정을 지원합니다.
+
+### 4. Serializable Isolation 기본 보장
+
+기본 격리 수준이 `SERIALIZABLE`이므로 데이터 정합성을 최고 수준으로 보장합니다. 직렬화 이상(write skew, phantom read 등)이 원천 차단됩니다.
+
+### 5. PostgreSQL 호환성
+
+PostgreSQL 프로토콜 및 SQL 문법을 지원하여 기존 PostgreSQL 드라이버, ORM, 툴을 그대로 사용할 수 있습니다.
+
+### 6. 온라인 스키마 변경
+
+`CREATE INDEX`, `ADD COLUMN` 등 스키마 변경이 서비스 중단 없이 온라인으로 실행됩니다.
+
+### 7. JSONB 네이티브 지원
+
+PostgreSQL과 동일한 JSONB 타입과 `@>`, `->`, `->>`, `jsonb_path_exists()` 연산자를 지원합니다.
+v26.1부터 `jsonb_path_exists()` 필터에 inverted index 가속이 적용됩니다.
+
+---
+
+## CockroachDB 한계점
+
+### 1. ALTER COLUMN TYPE 제한
+
+인덱스에 포함된 컬럼, CHECK 제약조건이 있는 컬럼, SEQUENCE를 소유한 컬럼의 타입 변경이 **불가**합니다.
+스키마 마이그레이션 시 새 컬럼 생성 → 데이터 복사 → 기존 컬럼 삭제 패턴을 사용해야 합니다.
+
+```sql
+-- ❌ 불가 (인덱스 포함 컬럼)
+ALTER TABLE orders ALTER COLUMN status TYPE VARCHAR(100);
+
+-- ✅ 우회 방법
+ALTER TABLE orders ADD COLUMN status_new VARCHAR(100);
+UPDATE orders SET status_new = status::VARCHAR(100);
+ALTER TABLE orders DROP COLUMN status;
+ALTER TABLE orders RENAME COLUMN status_new TO status;
+```
+
+### 2. Serializable 충돌 재시도 필요
+
+고동시성 환경에서 트랜잭션 충돌 시 `40001` 에러가 발생합니다. 애플리케이션 레벨에서 반드시 재시도 로직을 구현해야 합니다. Exposed의 `DatabaseConfig.defaultMaxAttempts`로 자동 재시도를 설정하세요.
+
+### 3. 다중 Generated Keys 미지원 (`RETURNING *` 제한)
+
+JDBC의 `getGeneratedKeys()`는 단일 키만 반환합니다. 삽입된 여러 컬럼 값이 필요한 경우 별도 SELECT 쿼리를 실행해야 합니다.
+
+### 4. 명시적 트랜잭션 내 DDL 제한
+
+명시적 트랜잭션(`BEGIN ... COMMIT`) 내에서 DDL과 DML을 함께 실행하면 DDL 실패 시 전체 트랜잭션이 취소됩니다. DDL과 DML은 별도 트랜잭션으로 분리해야 합니다.
+
+### 5. 순차 PK (SERIAL) 성능 한계
+
+분산 환경에서 순차 증가 PK는 핫스팟을 유발합니다. CockroachDB는 내부적으로 `unique_rowid()`(랜덤 분산 값)를 사용하므로, 순서를 보장하는 AUTO_INCREMENT와 동작이 다릅니다.
+
+### 6. PostgreSQL 완전 호환 아님
+
+일부 PostgreSQL 전용 기능은 미지원입니다:
+
+| 기능 | 상태 |
+|------|------|
+| `pg_catalog` 직접 접근 | 일부 제한 (v26.1+에서 더 강화됨) |
+| Stored Procedure (PL/pgSQL) | 미지원 (UDF는 지원) |
+| `LISTEN` / `NOTIFY` | 미지원 |
+| `COPY FROM STDIN` 스트리밍 | 미지원 |
+| Advisory Lock | 미지원 |
+
+### 7. Innovation Release 주기 유의
+
+CockroachDB는 LTS(Long-Term Support) 버전과 Innovation 버전으로 나뉩니다.
+
+| 버전 | 종류 | 특징 |
+|------|------|------|
+| v25.2.x | **LTS** | 장기 지원, 안정성 우선 |
+| v26.1.x | Innovation | 신기능 포함, 6개월 지원 |
+| v26.2.x (예정) | LTS | 차기 장기 지원 |
+
+프로덕션 환경에서는 LTS 버전 사용을 권장합니다.
+
+---
+
 ## 참고
 
 - [CockroachDB 공식 문서](https://www.cockroachlabs.com/docs/)
+- [CockroachDB v26.1 릴리스 노트](https://www.cockroachlabs.com/docs/releases/v26.1)
 - [Exposed 공식 문서](https://github.com/jetbrains/exposed)
 - [PostgreSQL JDBC 드라이버](https://jdbc.postgresql.org/)
