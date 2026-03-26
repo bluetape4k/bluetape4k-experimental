@@ -4,6 +4,13 @@ import com.google.api.services.bigquery.Bigquery
 import com.google.api.services.bigquery.model.DatasetReference
 import com.google.api.services.bigquery.model.QueryRequest
 import com.google.api.services.bigquery.model.QueryResponse
+import com.google.api.services.bigquery.model.TableRow
+import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.statements.DeleteStatement
@@ -14,74 +21,99 @@ import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
- * BigQuery REST API 실행 컨텍스트.
+ * **Exposed SQL generator + BigQuery REST executor** 컨텍스트.
  *
- * Exposed DSL과 유사한 방식으로 BigQuery 에뮬레이터 또는 실제 BigQuery에 쿼리를 실행합니다.
- * JDBC 드라이버 없이 `google-api-services-bigquery-v2` REST 클라이언트를 사용합니다.
+ * Exposed DSL로 만든 Query를 SQL로 변환(H2 PostgreSQL 모드)한 뒤 BigQuery REST API로 실행합니다.
+ * JDBC 드라이버 없이 `google-api-services-bigquery-v2`를 사용합니다.
  *
- * ## 사용 예
+ * ## 포지셔닝
+ *
+ * - **보장**: SELECT/filter/order/group/aggregate, 기본 DML(INSERT/UPDATE/DELETE)
+ * - **제한**: SchemaUtils DDL 자동화, DAO 완전 호환, JDBC 트랜잭션 의미론
+ * - **조건부**: join/alias(컬럼명 기준 접근), 대용량 결과셋(pagination 자동 처리)
+ *
+ * ## 동기 사용 예
  *
  * ```kotlin
- * val context = BigQueryContext(bigquery, projectId, datasetId, sqlGenDb)
+ * val context = BigQueryContext.create(bigquery, projectId = "my-project", datasetId = "my-dataset")
  *
  * with(context) {
- *     // SELECT
  *     val rows = Events.selectAll().where { Events.region eq "kr" }.withBigQuery().toList()
- *     val region: String = rows[0][Events.region]
- *
- *     // INSERT
- *     Events.execInsert {
- *         it[eventId]   = 1L
- *         it[region]    = "kr"
- *     }
- *
- *     // UPDATE / DELETE
+ *     Events.execInsert { it[eventId] = 1L; it[region] = "kr" }
  *     Events.execUpdate(Events.region eq "kr") { it[eventType] = "UPDATED" }
  *     Events.execDelete(Events.region eq "us")
+ * }
+ * ```
  *
- *     // 원시 SQL
- *     runRawQuery("SELECT COUNT(*) FROM events")
+ * ## 코루틴 사용 예
+ *
+ * ```kotlin
+ * with(context) {
+ *     // suspend — IO 스레드에서 블로킹 REST 호출
+ *     val rows = Events.selectAll().where { Events.region eq "kr" }.withBigQuery().toListSuspending()
+ *
+ *     // Flow — 페이지 단위 스트리밍 (대용량 결과셋에 적합)
+ *     Events.selectAll().withBigQuery().toFlow().collect { row -> ... }
+ *
+ *     // suspend DML
+ *     Events.execInsertSuspending { it[eventId] = 1L; it[region] = "kr" }
  * }
  * ```
  *
  * @param bigquery BigQuery REST API 클라이언트
  * @param projectId BigQuery 프로젝트 ID
  * @param datasetId BigQuery 데이터셋 ID
- * @param sqlGenDb Exposed Statement → SQL 변환 전용 데이터베이스 (PostgreSQL 모드 권장)
+ * @param sqlGenDb Exposed Statement → SQL 변환 전용 DB (PostgreSQL 모드 권장; [create] 팩토리로 자동 생성 가능)
+ * @param dispatcher suspend 함수 실행 시 사용할 디스패처. 기본값은 [Dispatchers.IO].
+ *   Virtual Thread 사용 시: `Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()`
  */
 class BigQueryContext(
     val bigquery: Bigquery,
     val projectId: String,
     val datasetId: String,
     val sqlGenDb: Database,
+    val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
+    companion object : KLogging() {
+        /**
+         * H2(PostgreSQL 모드) sqlGenDb를 자동 생성하는 팩토리.
+         * 별도 Database 설정 없이 바로 사용 가능합니다.
+         */
+        fun create(
+            bigquery: Bigquery,
+            projectId: String,
+            datasetId: String,
+            dispatcher: CoroutineDispatcher = Dispatchers.IO,
+        ): BigQueryContext {
+            val sqlGenDb = Database.connect(
+                url = "jdbc:h2:mem:bq_sqlgen_${projectId}_${datasetId};MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+            )
+            return BigQueryContext(bigquery, projectId, datasetId, sqlGenDb, dispatcher)
+        }
+    }
 
     // ── RAW SQL ───────────────────────────────────────────────────────────────
 
-    /** 원시 SQL 문자열을 BigQuery에서 실행합니다. */
+    /** 원시 SQL 문자열을 BigQuery에서 실행합니다. DML 또는 단순 조회에 사용합니다. */
     fun runRawQuery(sql: String): QueryResponse {
         val request = QueryRequest()
             .setQuery(sql.trimIndent().trim())
             .setUseLegacySql(false)
-            .setDefaultDataset(
-                DatasetReference()
-                    .setProjectId(projectId)
-                    .setDatasetId(datasetId)
-            )
+            .setDefaultDataset(DatasetReference().setProjectId(projectId).setDatasetId(datasetId))
             .setTimeoutMs(30_000L)
 
         return bigquery.jobs().query(projectId, request).execute()
-            .also { response ->
-                if (response.errors?.isNotEmpty() == true) {
-                    val msg = response.errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
-                    throw RuntimeException("BigQuery 쿼리 오류: $msg\nSQL: ${sql.take(200)}")
-                }
-            }
+            .also { it.checkErrors(sql) }
     }
+
+    /** 원시 SQL 문자열을 BigQuery에서 비동기로 실행합니다. */
+    suspend fun runRawQuerySuspending(sql: String): QueryResponse =
+        withContext(dispatcher) { runRawQuery(sql) }
 
     // ── SELECT ────────────────────────────────────────────────────────────────
 
-    /** Exposed [Query]를 SQL로 변환한 뒤 실행하고 [com.google.api.services.bigquery.model.QueryResponse]를 반환합니다. */
+    /** Exposed [Query]를 SQL로 변환한 뒤 실행하고 [QueryResponse]를 반환합니다. */
     fun runQuery(query: Query): QueryResponse {
         val sql = transaction(sqlGenDb) { query.prepareSQL(this, prepared = false) }
         return runRawQuery(sql)
@@ -89,13 +121,7 @@ class BigQueryContext(
 
     /**
      * Exposed [Query]를 [BigQueryQueryExecutor]로 래핑합니다.
-     *
-     * ```kotlin
-     * with(context) {
-     *     val rows = Events.selectAll().where { Events.region eq "kr" }.withBigQuery().toList()
-     *     val region: String = rows[0][Events.region]
-     * }
-     * ```
+     * [BigQueryQueryExecutor.toList]는 pageToken/jobComplete를 처리하여 전체 결과를 반환합니다.
      */
     fun Query.withBigQuery(): BigQueryQueryExecutor =
         BigQueryQueryExecutor(this, this@BigQueryContext)
@@ -107,12 +133,7 @@ class BigQueryContext(
      *
      * ```kotlin
      * with(context) {
-     *     Events.execInsert {
-     *         it[eventId]   = 1L
-     *         it[userId]    = 100L
-     *         it[eventType] = "PURCHASE"
-     *         it[region]    = "kr"
-     *     }
+     *     Events.execInsert { it[eventId] = 1L; it[region] = "kr" }
      * }
      * ```
      */
@@ -122,6 +143,10 @@ class BigQueryContext(
         val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
         return runRawQuery(sql)
     }
+
+    /** Exposed INSERT DSL을 BigQuery에서 비동기로 실행합니다. */
+    suspend fun <T : Table> T.execInsertSuspending(body: T.(InsertStatement<Number>) -> Unit): QueryResponse =
+        withContext(dispatcher) { execInsert(body) }
 
     // ── UPDATE ────────────────────────────────────────────────────────────────
 
@@ -144,6 +169,12 @@ class BigQueryContext(
         return runRawQuery(sql)
     }
 
+    /** Exposed UPDATE DSL을 BigQuery에서 비동기로 실행합니다. */
+    suspend fun <T : Table> T.execUpdateSuspending(
+        where: Op<Boolean>,
+        body: T.(UpdateStatement) -> Unit,
+    ): QueryResponse = withContext(dispatcher) { execUpdate(where, body) }
+
     // ── DELETE ────────────────────────────────────────────────────────────────
 
     /**
@@ -159,5 +190,125 @@ class BigQueryContext(
         val stmt = DeleteStatement(this, where = where)
         val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
         return runRawQuery(sql)
+    }
+
+    /** Exposed DELETE DSL을 BigQuery에서 비동기로 실행합니다. */
+    suspend fun <T : Table> T.execDeleteSuspending(where: Op<Boolean>): QueryResponse =
+        withContext(dispatcher) { execDelete(where) }
+
+    // ── INTERNAL ──────────────────────────────────────────────────────────────
+
+    /**
+     * SQL을 실행하고 pageToken/jobComplete를 처리하여 전체 행을 수집합니다.
+     * [BigQueryQueryExecutor.toList]에서 내부적으로 사용합니다.
+     */
+    internal fun collectAllRows(sql: String): List<BigQueryResultRow> {
+        val (schema, allRows) = fetchAllPages(sql)
+        val fieldNames = schema?.fields?.map { it.name.lowercase() } ?: emptyList()
+        return allRows.map { row ->
+            val data = fieldNames.zip(row.f).associate { (name, cell) -> name to cell.v }
+            BigQueryResultRow(data)
+        }
+    }
+
+    /**
+     * SQL을 실행하고 페이지 단위로 [BigQueryResultRow]를 emit하는 [Flow]를 반환합니다.
+     * 대용량 결과셋을 메모리에 모두 올리지 않고 처리할 때 적합합니다.
+     * [BigQueryQueryExecutor.toFlow]에서 내부적으로 사용합니다.
+     */
+    internal fun collectRowsFlow(sql: String): Flow<BigQueryResultRow> = flow {
+        val request = QueryRequest()
+            .setQuery(sql.trimIndent().trim())
+            .setUseLegacySql(false)
+            .setDefaultDataset(DatasetReference().setProjectId(projectId).setDatasetId(datasetId))
+            .setTimeoutMs(30_000L)
+
+        val initial = withContext(dispatcher) {
+            bigquery.jobs().query(projectId, request).execute()
+        }
+        initial.checkErrors(sql)
+
+        var schema = initial.schema
+        val jobId = initial.jobReference?.jobId
+        var pageToken = initial.pageToken
+        var jobComplete = initial.jobComplete ?: true
+
+        // 첫 페이지 emit
+        val firstFieldNames = schema?.fields?.map { it.name.lowercase() } ?: emptyList()
+        initial.rows?.forEach { row ->
+            val data = firstFieldNames.zip(row.f).associate { (name, cell) -> name to cell.v }
+            emit(BigQueryResultRow(data))
+        }
+
+        // 추가 페이지 emit
+        while (!jobComplete || pageToken != null) {
+            checkNotNull(jobId) { "jobReference가 없는 상태에서 추가 페이지를 요청할 수 없습니다." }
+            val page = withContext(dispatcher) {
+                bigquery.jobs().getQueryResults(projectId, jobId)
+                    .apply { if (pageToken != null) setPageToken(pageToken) }
+                    .setTimeoutMs(30_000L)
+                    .execute()
+            }
+
+            page.errors?.takeIf { it.isNotEmpty() }?.let { errors ->
+                val msg = errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
+                throw RuntimeException("BigQuery 쿼리 오류: $msg")
+            }
+
+            if (schema == null) schema = page.schema
+            val fieldNames = schema?.fields?.map { it.name.lowercase() } ?: emptyList()
+            page.rows?.forEach { row ->
+                val data = fieldNames.zip(row.f).associate { (name, cell) -> name to cell.v }
+                emit(BigQueryResultRow(data))
+            }
+            pageToken = page.pageToken
+            jobComplete = page.jobComplete ?: true
+        }
+    }
+
+    private fun fetchAllPages(sql: String): Pair<com.google.api.services.bigquery.model.TableSchema?, List<TableRow>> {
+        val request = QueryRequest()
+            .setQuery(sql.trimIndent().trim())
+            .setUseLegacySql(false)
+            .setDefaultDataset(DatasetReference().setProjectId(projectId).setDatasetId(datasetId))
+            .setTimeoutMs(30_000L)
+
+        val initial = bigquery.jobs().query(projectId, request).execute()
+        initial.checkErrors(sql)
+
+        val jobId = initial.jobReference?.jobId
+        val allRows = mutableListOf<TableRow>()
+        allRows.addAll(initial.rows ?: emptyList())
+
+        var schema = initial.schema
+        var pageToken = initial.pageToken
+        var jobComplete = initial.jobComplete ?: true
+
+        while (!jobComplete || pageToken != null) {
+            checkNotNull(jobId) { "jobReference가 없는 상태에서 추가 페이지를 요청할 수 없습니다." }
+            val page = bigquery.jobs().getQueryResults(projectId, jobId)
+                .apply { if (pageToken != null) setPageToken(pageToken) }
+                .setTimeoutMs(30_000L)
+                .execute()
+
+            page.errors?.takeIf { it.isNotEmpty() }?.let { errors ->
+                val msg = errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
+                throw RuntimeException("BigQuery 쿼리 오류: $msg")
+            }
+
+            if (schema == null) schema = page.schema
+            allRows.addAll(page.rows ?: emptyList())
+            pageToken = page.pageToken
+            jobComplete = page.jobComplete ?: true
+        }
+
+        return schema to allRows
+    }
+
+    private fun QueryResponse.checkErrors(sql: String) {
+        if (errors?.isNotEmpty() == true) {
+            val msg = errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
+            throw RuntimeException("BigQuery 쿼리 오류: $msg\nSQL: ${sql.take(200)}")
+        }
     }
 }

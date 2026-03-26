@@ -1,40 +1,47 @@
 # exposed-bigquery
 
-JetBrains Exposed ORM을 사용하여 Google BigQuery에 연결하는 모듈.
-`BigQueryDialect`와 `BigQueryContext` DSL을 제공하며, JDBC 없이 REST API로 동작합니다.
+**Exposed SQL generator + BigQuery REST executor** 모듈.
 
-## 지원/미지원 기능
+Exposed DSL로 쿼리를 작성하고, `google-api-services-bigquery-v2` REST API로 실행합니다.
+Simba JDBC 드라이버 없이 동작하며, Coroutines/Flow/Virtual Thread를 지원합니다.
 
-| 기능 | 지원 여부 | 비고 |
-|------|-----------|------|
-| SELECT / WHERE / ORDER BY | ✅ | |
-| GROUP BY / COUNT / SUM | ✅ | |
-| INSERT / UPDATE / DELETE | ✅ | Exposed DSL 또는 원시 SQL |
-| WINDOW FRAME GROUPS | ✅ | `supportsWindowFrameGroupsMode = true` |
-| ALTER COLUMN TYPE | ❌ | `supportsColumnTypeChange = false` |
-| SERIAL / SEQUENCE (auto-increment) | ❌ | BigQuery 미지원 |
-| Multiple Generated Keys | ❌ | `supportsMultipleGeneratedKeys = false` |
+## 포지셔닝
+
+| 구분 | 내용 |
+|------|------|
+| **보장** | SELECT/WHERE/ORDER BY/GROUP BY/aggregate, INSERT/UPDATE/DELETE, 페이지네이션 자동 처리 |
+| **제한** | SchemaUtils DDL 자동화, DAO 완전 호환, JDBC 트랜잭션 의미론 |
+| **조건부** | join/alias(컬럼명 기준 접근), 집계 표현식은 `row["컬럼명"]` 사용 |
 
 ## BigQueryContext DSL
 
-`BigQueryContext`는 Exposed DSL과 유사한 방식으로 BigQuery REST API를 호출합니다.
-JDBC 드라이버 없이 `google-api-services-bigquery-v2`를 사용합니다.
+### 생성
 
 ```kotlin
-val context = BigQueryContext(
+// create() 팩토리 — H2 sqlGenDb 자동 생성 (권장)
+val context = BigQueryContext.create(
     bigquery = Bigquery.Builder(transport, json, credential)
         .setRootUrl("http://localhost:9050/")  // 에뮬레이터 또는 실제 BigQuery
+        .setApplicationName("my-app")
         .build(),
     projectId = "my-project",
-    datasetId  = "my-dataset",
-    sqlGenDb   = Database.connect(             // Exposed → SQL 변환 전용 H2
-        "jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
-        "org.h2.Driver"
-    ),
+    datasetId = "my-dataset",
 )
 
+// Virtual Thread dispatcher 사용
+val vtContext = BigQueryContext.create(
+    bigquery = bigquery,
+    projectId = "my-project",
+    datasetId = "my-dataset",
+    dispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher(),
+)
+```
+
+### 동기 API
+
+```kotlin
 with(context) {
-    // SELECT — Exposed Query를 그대로 사용, row[Column<T>] 타입 안전 접근
+    // SELECT — 전체 페이지네이션 자동 처리
     val rows = Events.selectAll()
         .where { Events.region eq "kr" }
         .orderBy(Events.userId, SortOrder.DESC)
@@ -45,28 +52,65 @@ with(context) {
     val userId: Long        = rows[0][Events.userId]
     val amount: BigDecimal? = rows[0][Events.amount]  // nullable 컬럼
 
+    // 단건 조회
+    val row = Events.selectAll().where { Events.eventId eq 1L }.withBigQuery().singleOrNull()
+
     // INSERT
     Events.execInsert {
-        it[eventId]    = 1L
-        it[userId]     = 100L
-        it[eventType]  = "PURCHASE"
-        it[region]     = "kr"
-        it[amount]     = BigDecimal("9900.00")
+        it[eventId]   = 1L
+        it[userId]    = 100L
+        it[eventType] = "PURCHASE"
+        it[region]    = "kr"
+        it[amount]    = BigDecimal("9900.00")
         it[occurredAt] = Instant.now()
     }
 
     // UPDATE
-    Events.execUpdate(Events.region eq "kr") {
-        it[eventType] = "UPDATED"
-    }
+    Events.execUpdate(Events.region eq "kr") { it[eventType] = "UPDATED" }
 
     // DELETE
     Events.execDelete(Events.region eq "us")
 
-    // 원시 SQL (집계 등 DSL로 표현이 어려울 때)
+    // 원시 SQL
     runRawQuery("SELECT COUNT(*) FROM events WHERE region = 'kr'")
 }
 ```
+
+### 코루틴 API
+
+`BigQueryContext.dispatcher` (기본값 `Dispatchers.IO`)를 사용해 블로킹 REST 호출을 비동기로 처리합니다.
+
+```kotlin
+with(context) {
+    // suspend — 전체 결과 반환
+    val rows = Events.selectAll()
+        .where { Events.region eq "kr" }
+        .withBigQuery()
+        .toListSuspending()
+
+    // Flow — 페이지 단위 스트리밍 (대용량 결과셋에 적합)
+    Events.selectAll().withBigQuery().toFlow().collect { row ->
+        println(row[Events.region])
+    }
+
+    // suspend DML
+    Events.execInsertSuspending { it[eventId] = 1L; it[region] = "kr" }
+    Events.execUpdateSuspending(Events.region eq "kr") { it[eventType] = "UPDATED" }
+    Events.execDeleteSuspending(Events.region eq "us")
+    runRawQuerySuspending("SELECT COUNT(*) FROM events")
+}
+```
+
+### BigQueryQueryExecutor 헬퍼
+
+| 함수 | 설명 |
+|------|------|
+| `toList()` | 전체 결과 반환 (페이지네이션 자동 처리) |
+| `toListSuspending()` | suspend 버전 |
+| `toFlow()` | 페이지 단위 Flow 스트리밍 |
+| `single()` | 정확히 1건, 아니면 예외 |
+| `singleOrNull()` | 0건이면 null, 2건 이상이면 예외 |
+| `firstOrNull()` | 첫 번째 행 또는 null |
 
 ### BigQueryResultRow 컬럼 타입 변환
 
@@ -76,11 +120,9 @@ with(context) {
 | STRING | `VarCharColumnType` | `String` |
 | NUMERIC | `DecimalColumnType` | `BigDecimal` |
 | TIMESTAMP | `JavaInstantColumnType` | `Instant` |
+| 그 외 | — | `ColumnType.valueFromDB()` 위임 |
 
 ## 테스트 방법
-
-테스트는 JDBC 드라이버 없이 `google-api-services-bigquery-v2` REST 클라이언트로
-`goccy/bigquery-emulator`에 직접 연결합니다.
 
 ### 로컬 에뮬레이터 (권장)
 
@@ -106,8 +148,6 @@ bigquery-emulator --project=test --dataset=testdb --port=9050
 
 ### AbstractBigQueryTest 상속
 
-테스트에서 `AbstractBigQueryTest`를 상속하면 `withBigQuery()`, `execInsert()` 등을 바로 사용할 수 있습니다.
-
 ```kotlin
 class MyTest : AbstractBigQueryTest() {
 
@@ -132,8 +172,9 @@ class MyTest : AbstractBigQueryTest() {
 
 ```kotlin
 // build.gradle.kts
-implementation(Libs.google_api_services_bigquery)  // Maven Central, 별도 설치 불필요
-testImplementation(Libs.h2_v2)                     // SQL 생성 전용 (테스트에서 sqlGenDb 생성 시)
+implementation(Libs.google_api_services_bigquery)  // Maven Central
+implementation(Libs.kotlinx_coroutines_core)        // Flow/suspend 지원
+testImplementation(Libs.h2_v2)                     // SQL 생성 전용
 ```
 
 ## 실제 BigQuery 연결 (프로덕션)
@@ -145,14 +186,15 @@ val credential = GoogleCredential.fromStream(FileInputStream("service-account.js
 val bigquery = Bigquery.Builder(
     GoogleNetHttpTransport.newTrustedTransport(),
     GsonFactory.getDefaultInstance(),
-    credential
+    credential,
 ).setApplicationName("my-app").build()
 
-val context = BigQueryContext(
-    bigquery   = bigquery,
-    projectId  = "my-gcp-project",
-    datasetId  = "my_dataset",
-    sqlGenDb   = Database.connect("jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "org.h2.Driver"),
+val context = BigQueryContext.create(
+    bigquery  = bigquery,
+    projectId = "my-gcp-project",
+    datasetId = "my_dataset",
+    // Virtual Thread 사용 시:
+    // dispatcher = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher(),
 )
 ```
 
