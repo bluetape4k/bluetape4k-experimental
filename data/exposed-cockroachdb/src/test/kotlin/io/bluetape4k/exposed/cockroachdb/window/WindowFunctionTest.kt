@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.rank
 import org.jetbrains.exposed.v1.core.rowNumber
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.api.Test
@@ -22,8 +23,8 @@ import java.math.BigDecimal
 /**
  * CockroachDB Window Function 테스트.
  *
- * CockroachDB 미지원 사항:
- * - WINDOW FRAME GROUPS 모드 (`groups()`) — 미지원이므로 테스트 제외
+ * CockroachDB v26.1+ 지원 사항:
+ * - WINDOW FRAME GROUPS 모드 (`GROUPS BETWEEN ...`) — v26.1에서 실행 가능
  */
 class WindowFunctionTest : AbstractCockroachDBTest() {
 
@@ -161,6 +162,35 @@ class WindowFunctionTest : AbstractCockroachDBTest() {
             user1Rows.shouldNotBeEmpty()
             // 첫 행의 LAG 값은 null (파티션 내 이전 행 없음)
             user1Rows.first()[lagExpr] // null 허용 — assertion 없이 접근만 검증
+        }
+    }
+
+    @Test
+    fun `GROUPS FRAME - amount ORDER BY 그룹 누적 합계 (v26_1+)`() {
+        withTables(Orders) {
+            insertFixtures()
+
+            // GROUPS 프레임 모드: ORDER BY 값이 같은 행들을 하나의 그룹으로 취급
+            val sql = """
+                SELECT amount,
+                       SUM(amount) OVER (
+                           ORDER BY amount
+                           GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING
+                       ) AS group_sum
+                FROM orders
+                ORDER BY amount
+            """.trimIndent()
+
+            val results = (this as JdbcTransaction).exec(sql) { rs ->
+                val list = mutableListOf<Pair<BigDecimal, BigDecimal>>()
+                while (rs.next()) {
+                    list.add(rs.getBigDecimal("amount") to rs.getBigDecimal("group_sum"))
+                }
+                list
+            } ?: emptyList()
+
+            results.shouldNotBeEmpty()
+            log.debug("GROUPS frame results: $results")
         }
     }
 
