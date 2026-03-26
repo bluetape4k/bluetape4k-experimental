@@ -10,6 +10,6 @@ dependencies {
     testImplementation(Libs.testcontainers)
     testImplementation(Libs.testcontainers_gcloud)
 
-    // BigQuery REST API 클라이언트 (에뮬레이터 직접 연결용)
-    testImplementation(Libs.google_api_services_bigquery)
+    // BigQuery REST API 클라이언트 (에뮬레이터 및 프로덕션 연결용)
+    implementation(Libs.google_api_services_bigquery)
 }
