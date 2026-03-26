@@ -551,6 +551,57 @@ Simple is best. 확장이 필요할 때 확장하세요.
 
 ---
 
+## CockroachDB 도입 전에 다시 생각해볼 것들
+
+### "글로벌 랭킹/인벤토리가 필요해" → Kafka + Redis로 충분
+
+게임 랭킹처럼 보이는 CockroachDB 사용 사례도 실제로는 더 나은 대안이 있습니다.
+
+```
+게임 서버 (전 세계)
+    │ 이벤트 발행
+    ▼
+Kafka (이벤트 스트림)
+    │
+    ├─ 실시간 집계 → Flink/Spark Streaming
+    │                    │
+    │                    ▼
+    │               Redis Sorted Set  ← 글로벌 랭킹 (μs 조회)
+    │
+    └─ 영구 저장 → PostgreSQL/S3     ← 배치 집계, 리포트
+                        │
+                        ▼ CDC (Debezium)
+                   리전별 Redis 캐시  ← 로컬 랭킹 조회
+```
+
+| 데이터 종류 | 최적 도구 | 이유 |
+|------------|---------|------|
+| 실시간 랭킹 | Redis Sorted Set | μs 조회, ZRANGE 네이티브 |
+| 인벤토리 (쓰기 빈번) | Redis Hash + 주기적 PostgreSQL 동기화 | 속도 + 영속성 |
+| 결제/구매 | PostgreSQL | ACID 보장 필요 |
+| 행동 로그 | Kafka → S3 → 분석 | 대용량 스트림 처리 |
+
+### "샤딩이 힘들어" → 샤딩 한계에 도달했을 때 검토
+
+CockroachDB 실제 도입 기업(Zynga, Chime, DoorDash 등)의 공통점:
+> **이미 PostgreSQL 샤딩을 운영하다 한계에 부딪힌 후** 도입했습니다.
+
+처음부터 CockroachDB로 시작한 사례는 드뭅니다.
+
+### CockroachDB가 진짜 필요한 순간 체크리스트
+
+아래 항목 중 **2개 이상** 해당할 때만 도입을 진지하게 검토하세요.
+
+- [ ] PostgreSQL 샤딩을 이미 운영 중이고 한계에 도달했다
+- [ ] 쓰기가 3개 이상의 리전에서 동시에 발생한다
+- [ ] 단일 리전 장애 시 자동 복구가 SLA에 명시되어 있다
+- [ ] 데이터 주권 규제로 특정 리전에 데이터를 고정해야 한다
+- [ ] API 레이턴시 50ms 이하가 비즈니스 요구사항이다
+
+**0~1개라면: 그냥 PostgreSQL 쓰세요.** 😄
+
+---
+
 ## 참고
 
 - [CockroachDB 공식 문서](https://www.cockroachlabs.com/docs/)
