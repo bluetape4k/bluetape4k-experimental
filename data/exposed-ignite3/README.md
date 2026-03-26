@@ -169,6 +169,28 @@ dependencies {
 
 **결론:** Ignite 3는 "분산 SQL DB"로 포지셔닝은 맞지만, 대부분의 서비스에서는 PostgreSQL + Redis 조합이 더 성숙하고 생태계가 풍부합니다. 특수 목적(대규모 인메모리 분산 처리)이 아니면 도입 근거가 약합니다.
 
+## Apache Ignite 3 vs CockroachDB
+
+수평 확장과 고가용성은 두 DB 모두 지원하지만, 설계 철학이 다릅니다.
+
+| | Apache Ignite 3 | CockroachDB |
+|--|-----------------|-------------|
+| **주 목적** | 인메모리 컴퓨팅/캐시 | 지리적 분산 SQL DB |
+| **데이터 위치** | 메모리 우선, 디스크 보조 | 디스크 (NVMe SSD) |
+| **지리적 분산** | 제한적 (DC-aware topology 수준) | ✅ 멀티 리전 네이티브 (`REGIONAL BY ROW`) |
+| **레이턴시** | μs 단위 (메모리) | ms 단위 (디스크 I/O) |
+| **데이터 크기** | 메모리 용량에 종속 | TB~PB 급 |
+| **ACID** | Serializable (설정 필요) | Serializable (기본) |
+| **SQL 호환** | ANSI SQL (일부 제한) | PostgreSQL 호환 |
+
+**선택 기준:**
+- **Apache Ignite 3** — 극저지연 필요, 캐시 레이어, 컴퓨팅과 스토리지 동시 활용
+- **CockroachDB** — 글로벌 서비스, 데이터 크기 > 메모리, 정합성이 최우선
+
+핵심 트레이드오프: **"얼마나 빠르게"(Ignite 3) vs "얼마나 멀리 퍼져서 안전하게"(CockroachDB)**
+
+---
+
 ## 참고
 
 - [Apache Ignite 3 공식 문서](https://ignite.apache.org/docs/ignite3/latest/)
