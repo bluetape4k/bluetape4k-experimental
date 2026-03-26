@@ -82,5 +82,5 @@ object BigQueryEmulator : KLogging() {
      * - DefaultDataset: 기본 데이터셋
      */
     val jdbcUrl: String
-        get() = "jdbc:bigquery://;ProjectId=$PROJECT_ID;OAuthType=2;OAuthAccessToken=EMULATOR_FAKE_TOKEN;BigQueryEndpoint=http://$host:$port;DefaultDataset=$DATASET"
+        get() = "jdbc:bigquery://;ProjectId=$PROJECT_ID;OAuthType=0;BigQueryEndpoint=http://$host:$port;DefaultDataset=$DATASET"
 }
