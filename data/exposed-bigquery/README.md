@@ -1,7 +1,7 @@
 # exposed-bigquery
 
 JetBrains Exposed ORM을 사용하여 Google BigQuery에 연결하는 모듈.
-`BigQueryDialect`를 제공하며, `goccy/bigquery-emulator`를 이용한 로컬 테스트를 지원합니다.
+`BigQueryDialect`와 `BigQueryContext` DSL을 제공하며, JDBC 없이 REST API로 동작합니다.
 
 ## 지원/미지원 기능
 
@@ -9,16 +9,78 @@ JetBrains Exposed ORM을 사용하여 Google BigQuery에 연결하는 모듈.
 |------|-----------|------|
 | SELECT / WHERE / ORDER BY | ✅ | |
 | GROUP BY / COUNT / SUM | ✅ | |
-| batchInsert | ✅ | BigQuery DML |
+| INSERT / UPDATE / DELETE | ✅ | Exposed DSL 또는 원시 SQL |
 | WINDOW FRAME GROUPS | ✅ | `supportsWindowFrameGroupsMode = true` |
 | ALTER COLUMN TYPE | ❌ | `supportsColumnTypeChange = false` |
 | SERIAL / SEQUENCE (auto-increment) | ❌ | BigQuery 미지원 |
 | Multiple Generated Keys | ❌ | `supportsMultipleGeneratedKeys = false` |
 
+## BigQueryContext DSL
+
+`BigQueryContext`는 Exposed DSL과 유사한 방식으로 BigQuery REST API를 호출합니다.
+JDBC 드라이버 없이 `google-api-services-bigquery-v2`를 사용합니다.
+
+```kotlin
+val context = BigQueryContext(
+    bigquery = Bigquery.Builder(transport, json, credential)
+        .setRootUrl("http://localhost:9050/")  // 에뮬레이터 또는 실제 BigQuery
+        .build(),
+    projectId = "my-project",
+    datasetId  = "my-dataset",
+    sqlGenDb   = Database.connect(             // Exposed → SQL 변환 전용 H2
+        "jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
+        "org.h2.Driver"
+    ),
+)
+
+with(context) {
+    // SELECT — Exposed Query를 그대로 사용, row[Column<T>] 타입 안전 접근
+    val rows = Events.selectAll()
+        .where { Events.region eq "kr" }
+        .orderBy(Events.userId, SortOrder.DESC)
+        .withBigQuery()
+        .toList()
+
+    val region: String      = rows[0][Events.region]
+    val userId: Long        = rows[0][Events.userId]
+    val amount: BigDecimal? = rows[0][Events.amount]  // nullable 컬럼
+
+    // INSERT
+    Events.execInsert {
+        it[eventId]    = 1L
+        it[userId]     = 100L
+        it[eventType]  = "PURCHASE"
+        it[region]     = "kr"
+        it[amount]     = BigDecimal("9900.00")
+        it[occurredAt] = Instant.now()
+    }
+
+    // UPDATE
+    Events.execUpdate(Events.region eq "kr") {
+        it[eventType] = "UPDATED"
+    }
+
+    // DELETE
+    Events.execDelete(Events.region eq "us")
+
+    // 원시 SQL (집계 등 DSL로 표현이 어려울 때)
+    runRawQuery("SELECT COUNT(*) FROM events WHERE region = 'kr'")
+}
+```
+
+### BigQueryResultRow 컬럼 타입 변환
+
+| BigQuery 타입 | Exposed Column 타입 | Kotlin 타입 |
+|--------------|---------------------|-------------|
+| INT64 | `LongColumnType` | `Long` |
+| STRING | `VarCharColumnType` | `String` |
+| NUMERIC | `DecimalColumnType` | `BigDecimal` |
+| TIMESTAMP | `JavaInstantColumnType` | `Instant` |
+
 ## 테스트 방법
 
-테스트는 **Simba JDBC 드라이버 없이** `google-api-services-bigquery-v2` REST 클라이언트로
-`goccy/bigquery-emulator`에 직접 연결합니다. 별도 설치 없이 바로 실행 가능합니다.
+테스트는 JDBC 드라이버 없이 `google-api-services-bigquery-v2` REST 클라이언트로
+`goccy/bigquery-emulator`에 직접 연결합니다.
 
 ### 로컬 에뮬레이터 (권장)
 
@@ -30,12 +92,11 @@ brew install goccy/bigquery-emulator/bigquery-emulator
 bigquery-emulator --project=test --dataset=testdb --port=9050
 ```
 
-에뮬레이터가 `localhost:9050`에서 실행 중이면 테스트가 자동으로 이를 사용합니다.
+`localhost:9050`에서 실행 중이면 테스트가 자동으로 감지하여 사용합니다.
 
 ### Docker (Testcontainers)
 
 로컬 에뮬레이터가 없으면 Testcontainers가 Docker 컨테이너를 자동 시작합니다.
-Docker가 설치되어 있으면 별도 설정 없이 동작합니다.
 
 ### 테스트 실행
 
@@ -43,52 +104,60 @@ Docker가 설치되어 있으면 별도 설정 없이 동작합니다.
 ./gradlew :exposed-bigquery:test
 ```
 
-## 의존성
+### AbstractBigQueryTest 상속
 
-`google-api-services-bigquery`는 Maven Central에서 제공됩니다. 별도 로컬 설치 불필요.
+테스트에서 `AbstractBigQueryTest`를 상속하면 `withBigQuery()`, `execInsert()` 등을 바로 사용할 수 있습니다.
+
+```kotlin
+class MyTest : AbstractBigQueryTest() {
+
+    @Test
+    fun `이벤트 조회`() {
+        withEventsTable {
+            Events.execInsert { it[eventId] = 1L; it[region] = "kr" }
+
+            val rows = Events.selectAll()
+                .where { Events.region eq "kr" }
+                .withBigQuery()
+                .toList()
+
+            rows.size shouldBeEqualTo 1
+            rows[0][Events.region] shouldBeEqualTo "kr"
+        }
+    }
+}
+```
+
+## 의존성
 
 ```kotlin
 // build.gradle.kts
-testImplementation(Libs.google_api_services_bigquery)
+implementation(Libs.google_api_services_bigquery)  // Maven Central, 별도 설치 불필요
+testImplementation(Libs.h2_v2)                     // SQL 생성 전용 (테스트에서 sqlGenDb 생성 시)
 ```
 
 ## 실제 BigQuery 연결 (프로덕션)
 
-실제 환경에서는 Simba JDBC 드라이버와 HikariCP를 사용합니다.
-드라이버는 Maven Central에 없으므로 수동 설치가 필요합니다.
-
-### Simba JDBC 드라이버 설치
-
-```bash
-# 1. 드라이버 다운로드
-# https://storage.googleapis.com/simba-bq-release/jdbc/
-curl -O https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
-
-# 2. 로컬 Maven 저장소에 설치
-unzip SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip -d simba-bq-jdbc
-mvn install:install-file \
-  -Dfile=simba-bq-jdbc/GoogleBigQueryJDBC42.jar \
-  -DgroupId=com.simba.googlebigquery \
-  -DartifactId=googlebigquery-jdbc42 \
-  -Dversion=1.6.5.1002 \
-  -Dpackaging=jar
-```
-
-### Dialect 등록 및 연결
-
 ```kotlin
-val dataSource = HikariDataSource(HikariConfig().apply {
-    jdbcUrl = "jdbc:bigquery://;ProjectId=my-project;OAuthType=0;" +
-              "OAuthServiceAcctEmail=...;OAuthPvtKeyPath=..."
-    driverClassName = "com.simba.googlebigquery.jdbc.Driver"
-})
+val credential = GoogleCredential.fromStream(FileInputStream("service-account.json"))
+    .createScoped(listOf("https://www.googleapis.com/auth/bigquery"))
 
-val database = Database.connect(datasource = dataSource)
-DatabaseApi.registerDialect("bigquery") { BigQueryDialect() }
-Database.registerDialectMetadata("bigquery") { PostgreSQLDialectMetadata() }
+val bigquery = Bigquery.Builder(
+    GoogleNetHttpTransport.newTrustedTransport(),
+    GsonFactory.getDefaultInstance(),
+    credential
+).setApplicationName("my-app").build()
+
+val context = BigQueryContext(
+    bigquery   = bigquery,
+    projectId  = "my-gcp-project",
+    datasetId  = "my_dataset",
+    sqlGenDb   = Database.connect("jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DB_CLOSE_DELAY=-1", "org.h2.Driver"),
+)
 ```
 
 ## 알려진 제한사항
 
-- **Simba JDBC 1.6.5는 에뮬레이터 미지원**: `BigQueryEndpoint` 파라미터를 무시하고 항상 `https://bigquery.googleapis.com`으로 연결합니다. 로컬 테스트에는 REST 클라이언트를 사용합니다.
+- **Simba JDBC 1.6.5는 에뮬레이터 미지원**: `BigQueryEndpoint` 파라미터를 무시하고 항상 `https://bigquery.googleapis.com`으로 연결합니다. 이 모듈은 REST 클라이언트를 사용하므로 JDBC가 불필요합니다.
 - **`DROP TABLE IF EXISTS` 미지원**: `goccy/bigquery-emulator`가 `IF EXISTS` 구문을 처리하지 못합니다. 테스트에서는 `runCatching`으로 오류를 무시합니다.
+- **집계 표현식 Column 접근 불가**: `COUNT()`, `SUM()` 등 집계 표현식은 `row[Column]` 방식 대신 `row["컬럼명"]` 또는 원시 `QueryResponse`를 사용하세요.
