@@ -8,6 +8,11 @@ import com.google.api.services.bigquery.model.DatasetReference
 import com.google.api.services.bigquery.model.QueryRequest
 import com.google.api.services.bigquery.model.QueryResponse
 import io.bluetape4k.logging.KLogging
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.DeleteStatement
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -21,20 +26,34 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
  *
  * ## 사전 조건
  *
- * bigquery-emulator 설치:
  * ```bash
  * brew install goccy/bigquery-emulator/bigquery-emulator
  * bigquery-emulator --project=test --dataset=testdb --port=9050
+ * ```
+ *
+ * ## 사용 예
+ *
+ * ```kotlin
+ * // SELECT — Exposed Query 객체로 실행
+ * val rows = Events.selectAll().where { Events.region eq "kr" }.withBigQuery().toList()
+ * val region: String = rows[0][Events.region]
+ *
+ * // INSERT — Exposed DSL로 실행
+ * Events.execInsert { it[eventId] = 1L; it[region] = "kr" }
+ *
+ * // UPDATE / DELETE
+ * Events.execUpdate(Events.region eq "kr") { it[eventType] = "UPDATED" }
+ * Events.execDelete(Events.region eq "us")
+ *
+ * // 원시 SQL 직접 실행
+ * runRawQuery("SELECT COUNT(*) FROM events")
  * ```
  */
 abstract class AbstractBigQueryTest {
 
     companion object : KLogging() {
 
-        /**
-         * BigQuery REST API 클라이언트 (google-api-services-bigquery-v2).
-         * 에뮬레이터 HTTP 엔드포인트를 setRootUrl 로 지정합니다.
-         */
+        /** BigQuery REST API 클라이언트. 에뮬레이터 HTTP 엔드포인트를 setRootUrl 로 지정합니다. */
         val bigquery: Bigquery by lazy {
             val transport = GoogleNetHttpTransport.newTrustedTransport()
             val json = GsonFactory.getDefaultInstance()
@@ -45,20 +64,15 @@ abstract class AbstractBigQueryTest {
                 .build()
         }
 
-        /**
-         * Exposed Query → SQL 변환 전용 H2 연결.
-         * BigQueryDialect 가 PostgreSQLDialect 를 상속하므로 기본 DML/DQL SQL은 호환됩니다.
-         */
-        private val sqlGenDb: Database by lazy {
+        /** Exposed Statement → SQL 변환 전용 H2 연결. 실제 데이터 저장 없이 SQL 생성만 담당합니다. */
+        val sqlGenDb: Database by lazy {
             Database.connect(
                 url = "jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
                 driver = "org.h2.Driver",
             )
         }
 
-        /**
-         * 원시 SQL 문자열을 에뮬레이터에서 실행합니다.
-         */
+        /** 원시 SQL 문자열을 에뮬레이터에서 실행합니다. */
         fun runRawQuery(sql: String): QueryResponse {
             val request = QueryRequest()
                 .setQuery(sql.trimIndent().trim())
@@ -79,18 +93,88 @@ abstract class AbstractBigQueryTest {
                 }
         }
 
-        /**
-         * Exposed [Query] 객체를 SQL 문자열로 변환한 뒤 에뮬레이터에서 실행합니다.
-         *
-         * H2(PostgreSQL 모드) 연결을 통해 SQL을 생성하므로 BigQuery 전용 함수는 지원하지 않습니다.
-         */
+        /** Exposed [Query] 객체를 SQL로 변환한 뒤 에뮬레이터에서 실행합니다. */
         fun runQuery(query: Query): QueryResponse {
-            val sql = transaction(sqlGenDb) {
-                query.prepareSQL(this, prepared = false)
-            }
+            val sql = transaction(sqlGenDb) { query.prepareSQL(this, prepared = false) }
             return runRawQuery(sql)
         }
     }
+
+    // ── SELECT ────────────────────────────────────────────────────────────────
+
+    /**
+     * Exposed [Query]를 BigQuery 에뮬레이터에서 실행하는 [BigQueryQueryExecutor]를 반환합니다.
+     *
+     * ```kotlin
+     * val rows = Events.selectAll().where { Events.region eq "kr" }.withBigQuery().toList()
+     * val region: String = rows[0][Events.region]
+     * ```
+     */
+    protected fun Query.withBigQuery(): BigQueryQueryExecutor =
+        BigQueryQueryExecutor(this, bigquery, BigQueryEmulator.PROJECT_ID, BigQueryEmulator.DATASET, sqlGenDb)
+
+    // ── INSERT ────────────────────────────────────────────────────────────────
+
+    /**
+     * Exposed INSERT DSL을 BigQuery 에뮬레이터에서 실행합니다.
+     *
+     * ```kotlin
+     * Events.execInsert {
+     *     it[eventId]    = 1L
+     *     it[userId]     = 100L
+     *     it[eventType]  = "PURCHASE"
+     *     it[region]     = "kr"
+     *     it[amount]     = BigDecimal("9900.00")
+     *     it[occurredAt] = Instant.now()
+     * }
+     * ```
+     */
+    protected fun <T : Table> T.execInsert(body: T.(InsertStatement<Number>) -> Unit): QueryResponse {
+        val stmt = InsertStatement<Number>(this)
+        body(stmt)
+        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        return runRawQuery(sql)
+    }
+
+    // ── UPDATE ────────────────────────────────────────────────────────────────
+
+    /**
+     * Exposed UPDATE DSL을 BigQuery 에뮬레이터에서 실행합니다.
+     *
+     * ```kotlin
+     * Events.execUpdate(Events.region eq "kr") {
+     *     it[eventType] = "UPDATED"
+     * }
+     * ```
+     */
+    protected fun <T : Table> T.execUpdate(
+        where: Op<Boolean>,
+        body: T.(UpdateStatement) -> Unit,
+    ): QueryResponse {
+        val stmt = UpdateStatement(this, limit = null, where = where)
+        body(stmt)
+        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        return runRawQuery(sql)
+    }
+
+    // ── DELETE ────────────────────────────────────────────────────────────────
+
+    /**
+     * Exposed DELETE DSL을 BigQuery 에뮬레이터에서 실행합니다.
+     *
+     * ```kotlin
+     * Events.execDelete(Events.region eq "us")
+     * ```
+     */
+    protected fun <T : Table> T.execDelete(
+        where: Op<Boolean>,
+    ): QueryResponse {
+        val stmt = DeleteStatement(this, where = where)
+        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        return runRawQuery(sql)
+    }
+
+    // ── TABLE LIFECYCLE ───────────────────────────────────────────────────────
 
     /**
      * events 테이블을 생성하고 테스트 블록 실행 후 삭제합니다.
@@ -98,7 +182,6 @@ abstract class AbstractBigQueryTest {
      * NOTE: bigquery-emulator 가 `DROP TABLE IF EXISTS` 를 지원하지 않아 runCatching 으로 무시합니다.
      */
     protected fun withEventsTable(block: () -> Unit) {
-        // 이전 테스트 잔여 테이블 정리 (테이블이 없어도 에러 무시)
         runCatching { runRawQuery("DROP TABLE events") }
         runRawQuery(
             """
