@@ -12,18 +12,14 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.vendors.PostgreSQLDialectMetadata
 
 /**
- * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
+ * H2 PostgreSQL 호환 모드를 사용하는 BigQuery 테스트 기반 클래스.
  *
- * ## 사전 조건
+ * BigQuery JDBC 드라이버(Maven Central 미배포)가 없는 환경에서 로컬 개발/CI 테스트용으로 사용합니다.
+ * BigQueryDialect DSL 코드 생성과 타입 매핑을 검증할 수 있습니다.
  *
- * BigQuery JDBC 드라이버가 클래스패스에 있어야 합니다.
- * [BigQueryEmulator] 클래스 KDoc 참조.
- *
- * ## H2 대안
- *
- * JDBC 드라이버 없이 로컬 개발 시에는 [AbstractBigQueryH2Test]를 사용하세요.
+ * 실제 BigQuery 에뮬레이터 연결이 필요하면 [AbstractBigQueryTest]를 사용하세요.
  */
-abstract class AbstractBigQueryTest {
+abstract class AbstractBigQueryH2Test {
 
     companion object : KLogging() {
 
@@ -31,8 +27,8 @@ abstract class AbstractBigQueryTest {
             DatabaseApi.registerDialect(BigQueryDialect.dialectName) { BigQueryDialect() }
             Database.registerDialectMetadata(BigQueryDialect.dialectName) { PostgreSQLDialectMetadata() }
             Database.connect(
-                url = BigQueryEmulator.jdbcUrl,
-                driver = BigQueryDialect.DRIVER_CLASS_NAME,
+                url = "jdbc:h2:mem:bigquery_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
                 databaseConfig = DatabaseConfig {
                     defaultMaxAttempts = 1
                 }

@@ -1,14 +1,14 @@
 package io.bluetape4k.exposed.bigquery.query
 
-import io.bluetape4k.exposed.bigquery.AbstractBigQueryTest
+import io.bluetape4k.exposed.bigquery.AbstractBigQueryH2Test
 import io.bluetape4k.exposed.bigquery.domain.Events
 import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
-import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.select
@@ -17,10 +17,11 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
 
-class SelectTest : AbstractBigQueryTest() {
+class SelectTest: AbstractBigQueryH2Test() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
+    @Suppress("UnusedReceiverParameter")
     private fun Transaction.insertFixtures() {
         val fixtures = listOf(
             Triple(1L, 100L, "kr"),
