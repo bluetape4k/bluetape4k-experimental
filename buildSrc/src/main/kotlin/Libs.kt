@@ -1361,7 +1361,9 @@ object Libs {
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
     const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
-    const val bigquery_connector_jdbc = "com.google.cloud.bigquery:bigquery-connector-jdbc:1.6.4"  // https://mvnrepository.com/artifact/com.google.cloud.bigquery/bigquery-connector-jdbc
+    const val bigquery_connector_jdbc = "com.simba.googlebigquery:googlebigquery-jdbc42:1.6.5.1002"  // 로컬 Maven 설치 필요: https://storage.googleapis.com/simba-bq-release/jdbc/SimbaJDBCDriverforGoogleBigQuery42_1.6.5.1002.zip
+    const val google_api_client = "com.google.api-client:google-api-client:2.7.2"  // Simba BigQuery JDBC 드라이버 런타임 의존성
+    const val google_auth_library_oauth2_http = "com.google.auth:google-auth-library-oauth2-http:1.38.0"  // Simba BigQuery JDBC 드라이버 런타임 의존성
 
     // NOTE: Apache Ignite 에서는 꼭 1.4.197 를 써야 합니다.
     const val h2 = "com.h2database:h2:1.4.197"

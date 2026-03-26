@@ -3,7 +3,6 @@ package io.bluetape4k.exposed.bigquery.insert
 import io.bluetape4k.exposed.bigquery.AbstractBigQueryH2Test
 import io.bluetape4k.exposed.bigquery.domain.Events
 import io.bluetape4k.logging.KLogging
-import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -12,9 +11,9 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
 
-class InsertTest : AbstractBigQueryH2Test() {
+class InsertTest: AbstractBigQueryH2Test() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     private data class EventFixture(
         val eventId: Long,

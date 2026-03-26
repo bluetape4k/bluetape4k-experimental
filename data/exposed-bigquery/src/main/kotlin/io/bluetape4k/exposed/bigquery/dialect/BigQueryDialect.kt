@@ -20,7 +20,7 @@ class BigQueryDialect : PostgreSQLDialect(name = dialectName) {
 
     companion object : KLogging() {
         const val dialectName: String = "BigQuery"
-        const val DRIVER_CLASS_NAME: String = "com.google.cloud.bigquery.connector.jdbc.BigQueryDriver"
+        const val DRIVER_CLASS_NAME: String = "com.simba.googlebigquery.jdbc.Driver"
     }
 
     // BigQuery는 ALTER COLUMN TYPE 미지원

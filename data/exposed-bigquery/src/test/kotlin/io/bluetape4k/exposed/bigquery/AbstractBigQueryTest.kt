@@ -1,7 +1,10 @@
 package io.bluetape4k.exposed.bigquery
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.exposed.bigquery.dialect.BigQueryDialect
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.ShutdownQueue
 import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.Table
@@ -14,29 +17,38 @@ import org.jetbrains.exposed.v1.jdbc.vendors.PostgreSQLDialectMetadata
 /**
  * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
  *
- * ## 사전 조건
- *
- * BigQuery JDBC 드라이버가 클래스패스에 있어야 합니다.
- * [BigQueryEmulator] 클래스 KDoc 참조.
+ * [BigQueryEmulator] 컨테이너를 시작하고 HikariCP DataSource로 연결합니다.
  *
  * ## H2 대안
  *
- * JDBC 드라이버 없이 로컬 개발 시에는 [AbstractBigQueryH2Test]를 사용하세요.
+ * 에뮬레이터 없이 로컬 개발 시에는 [AbstractBigQueryH2Test]를 사용하세요.
  */
 abstract class AbstractBigQueryTest {
 
     companion object : KLogging() {
 
+        val dataSource: HikariDataSource by lazy {
+            HikariDataSource(
+                HikariConfig().apply {
+                    jdbcUrl = BigQueryEmulator.jdbcUrl
+                    driverClassName = BigQueryDialect.DRIVER_CLASS_NAME
+                    maximumPoolSize = 3
+                    connectionTimeout = 30_000
+                    isAutoCommit = true
+                }
+            ).also { ShutdownQueue.register(it) }
+        }
+
         val db: Database by lazy {
-            DatabaseApi.registerDialect(BigQueryDialect.dialectName) { BigQueryDialect() }
-            Database.registerDialectMetadata(BigQueryDialect.dialectName) { PostgreSQLDialectMetadata() }
-            Database.connect(
-                url = BigQueryEmulator.jdbcUrl,
-                driver = BigQueryDialect.DRIVER_CLASS_NAME,
+            val database = Database.connect(
+                datasource = dataSource,
                 databaseConfig = DatabaseConfig {
                     defaultMaxAttempts = 1
                 }
             )
+            DatabaseApi.registerDialect("bigquery") { BigQueryDialect() }
+            Database.registerDialectMetadata("bigquery") { PostgreSQLDialectMetadata() }
+            database
         }
     }
 

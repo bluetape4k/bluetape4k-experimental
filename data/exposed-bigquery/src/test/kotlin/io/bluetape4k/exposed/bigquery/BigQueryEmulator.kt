@@ -64,8 +64,9 @@ object BigQueryEmulator : KLogging() {
 
     /**
      * BigQuery JDBC 연결 URL
-     * OAuthType=0 — 인증 없이 에뮬레이터에 직접 연결
+     * - `http://HOST:PORT` 형식으로 에뮬레이터 엔드포인트를 지정
+     * - OAuthType=2 + 더미 AccessToken — 에뮬레이터는 인증을 검증하지 않음
      */
     val jdbcUrl: String
-        get() = "jdbc:bigquery://;ProjectId=$PROJECT_ID;OAuthType=0;BigQueryEndpoint=http://$host:$port"
+        get() = "jdbc:bigquery://http://$host:$port;ProjectId=$PROJECT_ID;OAuthType=2;OAuthAccessToken=FAKE_TOKEN_FOR_EMULATOR"
 }
