@@ -29,7 +29,7 @@ class InsertTest: AbstractBigQueryTest() {
     private fun insertFixtures() {
         fixtures.forEach { f ->
             val amountSql = f.amount?.toPlainString() ?: "NULL"
-            runQuery(
+            runRawQuery(
                 """
                 INSERT INTO events (event_id, user_id, event_type, region, amount, occurred_at)
                 VALUES (${f.eventId}, ${f.userId}, '${f.eventType}', '${f.region}', $amountSql, TIMESTAMP '2024-01-01 00:00:00 UTC')
@@ -43,7 +43,7 @@ class InsertTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery("SELECT COUNT(*) as cnt FROM events")
+            val response = runRawQuery("SELECT COUNT(*) as cnt FROM events")
             val count = response.rows.first().f.first().v.toString().toLong()
             count shouldBeEqualTo fixtures.size.toLong()
         }
@@ -54,11 +54,11 @@ class InsertTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val krResponse = runQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
+            val krResponse = runRawQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
             val krCount = krResponse.rows.first().f.first().v.toString().toLong()
             krCount shouldBeEqualTo 2L
 
-            val purchaseResponse = runQuery("SELECT COUNT(*) as cnt FROM events WHERE event_type = 'PURCHASE'")
+            val purchaseResponse = runRawQuery("SELECT COUNT(*) as cnt FROM events WHERE event_type = 'PURCHASE'")
             val purchaseCount = purchaseResponse.rows.first().f.first().v.toString().toLong()
             purchaseCount shouldBeEqualTo 3L
         }

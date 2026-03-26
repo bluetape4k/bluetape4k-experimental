@@ -6,6 +6,7 @@ dependencies {
 
     testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.bluetape4k_testcontainers)
+    testImplementation(Libs.h2_v2)
     testImplementation(Libs.testcontainers)
     testImplementation(Libs.testcontainers_gcloud)
 

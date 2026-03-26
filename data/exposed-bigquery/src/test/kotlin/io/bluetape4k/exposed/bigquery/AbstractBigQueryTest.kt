@@ -8,6 +8,9 @@ import com.google.api.services.bigquery.model.DatasetReference
 import com.google.api.services.bigquery.model.QueryRequest
 import com.google.api.services.bigquery.model.QueryResponse
 import io.bluetape4k.logging.KLogging
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
@@ -43,9 +46,20 @@ abstract class AbstractBigQueryTest {
         }
 
         /**
-         * BigQuery 표준 SQL을 에뮬레이터에서 실행하고 결과를 반환합니다.
+         * Exposed Query → SQL 변환 전용 H2 연결.
+         * BigQueryDialect 가 PostgreSQLDialect 를 상속하므로 기본 DML/DQL SQL은 호환됩니다.
          */
-        fun runQuery(sql: String): QueryResponse {
+        private val sqlGenDb: Database by lazy {
+            Database.connect(
+                url = "jdbc:h2:mem:sqlgen;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
+                driver = "org.h2.Driver",
+            )
+        }
+
+        /**
+         * 원시 SQL 문자열을 에뮬레이터에서 실행합니다.
+         */
+        fun runRawQuery(sql: String): QueryResponse {
             val request = QueryRequest()
                 .setQuery(sql.trimIndent().trim())
                 .setUseLegacySql(false)
@@ -64,6 +78,18 @@ abstract class AbstractBigQueryTest {
                     }
                 }
         }
+
+        /**
+         * Exposed [Query] 객체를 SQL 문자열로 변환한 뒤 에뮬레이터에서 실행합니다.
+         *
+         * H2(PostgreSQL 모드) 연결을 통해 SQL을 생성하므로 BigQuery 전용 함수는 지원하지 않습니다.
+         */
+        fun runQuery(query: Query): QueryResponse {
+            val sql = transaction(sqlGenDb) {
+                query.prepareSQL(this, prepared = false)
+            }
+            return runRawQuery(sql)
+        }
     }
 
     /**
@@ -73,8 +99,8 @@ abstract class AbstractBigQueryTest {
      */
     protected fun withEventsTable(block: () -> Unit) {
         // 이전 테스트 잔여 테이블 정리 (테이블이 없어도 에러 무시)
-        runCatching { runQuery("DROP TABLE events") }
-        runQuery(
+        runCatching { runRawQuery("DROP TABLE events") }
+        runRawQuery(
             """
             CREATE TABLE events (
                 event_id    INT64     NOT NULL,
@@ -89,7 +115,7 @@ abstract class AbstractBigQueryTest {
         try {
             block()
         } finally {
-            runCatching { runQuery("DROP TABLE events") }
+            runCatching { runRawQuery("DROP TABLE events") }
         }
     }
 }

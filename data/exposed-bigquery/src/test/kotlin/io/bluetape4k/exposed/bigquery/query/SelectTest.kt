@@ -20,7 +20,7 @@ class SelectTest: AbstractBigQueryTest() {
             Triple(5L, 300L, "eu"),
         )
         fixtures.forEach { (id, userId, region) ->
-            runQuery(
+            runRawQuery(
                 """
                 INSERT INTO events (event_id, user_id, event_type, region, amount, occurred_at)
                 VALUES ($id, $userId, 'PURCHASE', '$region', 10.00, TIMESTAMP '2024-01-01 00:00:00 UTC')
@@ -34,7 +34,7 @@ class SelectTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery("SELECT * FROM events")
+            val response = runRawQuery("SELECT * FROM events")
             response.rows.shouldNotBeEmpty()
             response.rows.size shouldBeEqualTo 5
         }
@@ -45,7 +45,7 @@ class SelectTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
+            val response = runRawQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
             val count = response.rows.first().f.first().v.toString().toLong()
             count shouldBeEqualTo 2L
         }
@@ -56,7 +56,7 @@ class SelectTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery("SELECT user_id FROM events ORDER BY user_id DESC LIMIT 1")
+            val response = runRawQuery("SELECT user_id FROM events ORDER BY user_id DESC LIMIT 1")
             val userId = response.rows.first().f.first().v.toString().toLong()
             userId shouldBeEqualTo 300L
         }
@@ -67,7 +67,7 @@ class SelectTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery(
+            val response = runRawQuery(
                 "SELECT region, COUNT(*) as cnt FROM events GROUP BY region ORDER BY region"
             )
             response.rows.shouldNotBeEmpty()
@@ -82,7 +82,7 @@ class SelectTest: AbstractBigQueryTest() {
         withEventsTable {
             insertFixtures()
 
-            val response = runQuery(
+            val response = runRawQuery(
                 "SELECT region, SUM(amount) as total FROM events GROUP BY region"
             )
             response.rows.shouldNotBeEmpty()
