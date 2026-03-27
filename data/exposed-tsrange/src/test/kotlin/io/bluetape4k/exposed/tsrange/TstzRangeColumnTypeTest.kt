@@ -1,54 +1,43 @@
 package io.bluetape4k.exposed.tsrange
 
+import io.bluetape4k.exposed.tests.AbstractExposedTest
+import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.Instant
 
-object EventTable : LongIdTable("events") {
-    val name = varchar("name", 100)
-    val period = tstzRange("period")
-}
+/**
+ * TstzRangeColumnType 통합 테스트.
+ *
+ * H2 및 PostgreSQL 다이얼렉트에서 TimestampRange 저장/조회를 검증한다.
+ */
+class TstzRangeColumnTypeTest : AbstractExposedTest() {
 
-class TstzRangeColumnTypeTest {
-
-    private lateinit var db: Database
-
-    @BeforeEach
-    fun setUp() {
-        db = Database.connect(
-            url = "jdbc:h2:mem:tsrange_test;DB_CLOSE_DELAY=-1",
-            driver = "org.h2.Driver"
-        )
-        transaction(db) {
-            SchemaUtils.create(EventTable)
+    companion object : KLogging() {
+        object EventTable : LongIdTable("tsrange_events") {
+            val name = varchar("name", 100)
+            val period = tstzRange("period")
         }
     }
 
-    @AfterEach
-    fun tearDown() {
-        transaction(db) {
-            SchemaUtils.drop(EventTable)
-        }
-    }
-
-    @Test
-    fun `범위 저장 및 조회 - 기본 경계`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `범위 저장 및 조회 - 기본 경계`(testDB: TestDB) {
         val start = Instant.parse("2024-01-01T00:00:00Z")
         val end = Instant.parse("2024-12-31T23:59:59Z")
         val range = TimestampRange(start, end)
 
-        transaction(db) {
+        withTables(testDB, EventTable) {
             EventTable.insert {
                 it[name] = "2024 연간 이벤트"
                 it[period] = range
@@ -64,13 +53,14 @@ class TstzRangeColumnTypeTest {
         }
     }
 
-    @Test
-    fun `범위 저장 및 조회 - 양쪽 포함 경계`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `범위 저장 및 조회 - 양쪽 포함 경계`(testDB: TestDB) {
         val start = Instant.parse("2024-06-01T09:00:00Z")
         val end = Instant.parse("2024-06-01T18:00:00Z")
         val range = TimestampRange(start, end, lowerInclusive = true, upperInclusive = true)
 
-        transaction(db) {
+        withTables(testDB, EventTable) {
             EventTable.insert {
                 it[name] = "회의"
                 it[period] = range
@@ -86,13 +76,14 @@ class TstzRangeColumnTypeTest {
         }
     }
 
-    @Test
-    fun `범위 저장 및 조회 - 양쪽 미포함 경계`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `범위 저장 및 조회 - 양쪽 미포함 경계`(testDB: TestDB) {
         val start = Instant.parse("2024-03-01T00:00:00Z")
         val end = Instant.parse("2024-03-31T23:59:59Z")
         val range = TimestampRange(start, end, lowerInclusive = false, upperInclusive = false)
 
-        transaction(db) {
+        withTables(testDB, EventTable) {
             EventTable.insert {
                 it[name] = "3월 이벤트"
                 it[period] = range
@@ -116,8 +107,8 @@ class TstzRangeColumnTypeTest {
         )
 
         range.contains(Instant.parse("2024-06-15T12:00:00Z")).shouldBeTrue()
-        range.contains(Instant.parse("2024-01-01T00:00:00Z")).shouldBeTrue()  // lowerInclusive
-        range.contains(Instant.parse("2024-12-31T23:59:59Z")).shouldBeFalse() // upperExclusive
+        range.contains(Instant.parse("2024-01-01T00:00:00Z")).shouldBeTrue()
+        range.contains(Instant.parse("2024-12-31T23:59:59Z")).shouldBeFalse()
         range.contains(Instant.parse("2023-12-31T23:59:59Z")).shouldBeFalse()
         range.contains(Instant.parse("2025-01-01T00:00:00Z")).shouldBeFalse()
     }
@@ -148,12 +139,12 @@ class TstzRangeColumnTypeTest {
             Instant.parse("2024-12-31T23:59:59Z"),
         )
 
-        // range1 upper=exclusive, range2 lower=inclusive 이지만 end == start 이므로 겹치지 않음
         range1.overlaps(range2).shouldBeFalse()
     }
 
-    @Test
-    fun `여러 범위 저장 및 조회`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `여러 범위 저장 및 조회`(testDB: TestDB) {
         val ranges = listOf(
             "Q1" to TimestampRange(
                 Instant.parse("2024-01-01T00:00:00Z"),
@@ -169,10 +160,10 @@ class TstzRangeColumnTypeTest {
             ),
         )
 
-        transaction(db) {
-            ranges.forEach { (name, range) ->
+        withTables(testDB, EventTable) {
+            ranges.forEach { (n, range) ->
                 EventTable.insert {
-                    it[EventTable.name] = name
+                    it[name] = n
                     it[period] = range
                 }
             }

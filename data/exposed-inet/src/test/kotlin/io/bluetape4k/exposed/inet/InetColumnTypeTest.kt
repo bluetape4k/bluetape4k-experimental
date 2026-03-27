@@ -1,49 +1,37 @@
 package io.bluetape4k.exposed.inet
 
+import io.bluetape4k.exposed.tests.AbstractExposedTest
+import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.exposed.tests.withTables
+import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.net.InetAddress
 
-object NetworkTable : LongIdTable("networks") {
-    val ip = inetAddress("ip")
-    val network = cidr("network")
-}
+/**
+ * InetAddress / CIDR 컬럼 타입 통합 테스트.
+ *
+ * H2 및 PostgreSQL 다이얼렉트에서 IPv4/IPv6 주소 및 CIDR 블록 저장/조회를 검증한다.
+ */
+class InetColumnTypeTest : AbstractExposedTest() {
 
-class InetColumnTypeTest {
+    companion object : KLogging()
 
-    private lateinit var db: Database
-
-    @BeforeEach
-    fun setUp() {
-        db = Database.connect(
-            url = "jdbc:h2:mem:inet_test;DB_CLOSE_DELAY=-1",
-            driver = "org.h2.Driver"
-        )
-        transaction(db) {
-            SchemaUtils.create(NetworkTable)
-        }
+    object NetworkTable : LongIdTable("inet_networks") {
+        val ip = inetAddress("ip")
+        val network = cidr("network")
     }
 
-    @AfterEach
-    fun tearDown() {
-        transaction(db) {
-            SchemaUtils.drop(NetworkTable)
-        }
-    }
-
-    @Test
-    fun `IPv4 주소 저장 및 조회`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `IPv4 주소 저장 및 조회`(testDB: TestDB) {
         val addr = InetAddress.getByName("192.168.1.1")
-        transaction(db) {
+        withTables(testDB, NetworkTable) {
             NetworkTable.insert {
                 it[ip] = addr
                 it[network] = "192.168.0.0/24"
@@ -56,10 +44,11 @@ class InetColumnTypeTest {
         }
     }
 
-    @Test
-    fun `IPv6 주소 저장 및 조회`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `IPv6 주소 저장 및 조회`(testDB: TestDB) {
         val addr = InetAddress.getByName("::1")
-        transaction(db) {
+        withTables(testDB, NetworkTable) {
             NetworkTable.insert {
                 it[ip] = addr
                 it[network] = "::1/128"
@@ -72,9 +61,10 @@ class InetColumnTypeTest {
         }
     }
 
-    @Test
-    fun `CIDR 문자열 저장 및 조회`() {
-        transaction(db) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `CIDR 문자열 저장 및 조회`(testDB: TestDB) {
+        withTables(testDB, NetworkTable) {
             NetworkTable.insert {
                 it[ip] = InetAddress.getByName("10.0.0.1")
                 it[network] = "10.0.0.0/8"

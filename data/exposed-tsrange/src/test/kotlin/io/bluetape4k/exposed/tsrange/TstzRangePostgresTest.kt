@@ -1,61 +1,34 @@
 package io.bluetape4k.exposed.tsrange
 
+import io.bluetape4k.exposed.tests.AbstractExposedTest
+import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-object PgEventTable : LongIdTable("pg_events") {
-    val name = varchar("name", 100)
-    val period = tstzRange("period")
-}
-
-object PgOverlapTestTable : LongIdTable("pg_overlap_test") {
-    val label = varchar("label", 100)
-    val range1 = tstzRange("range1")
-    val range2 = tstzRange("range2")
-}
-
-class TstzRangePostgresTest {
+/**
+ * PostgreSQL 전용 TSTZRANGE 네이티브 타입 및 범위 연산자 테스트.
+ */
+class TstzRangePostgresTest : AbstractExposedTest() {
 
     companion object : KLogging() {
-        @JvmStatic
-        val postgres = PostgreSQLServer.Launcher.postgres
-    }
-
-    private lateinit var db: Database
-
-    @BeforeEach
-    fun setUp() {
-        db = Database.connect(
-            url = postgres.jdbcUrl,
-            driver = PostgreSQLServer.DRIVER_CLASS_NAME,
-            user = postgres.username.orEmpty(),
-            password = postgres.password.orEmpty(),
-        )
-        transaction(db) {
-            SchemaUtils.create(PgEventTable)
-            SchemaUtils.create(PgOverlapTestTable)
+        object PgEventTable : LongIdTable("pg_tsrange_events") {
+            val name = varchar("name", 100)
+            val period = tstzRange("period")
         }
-    }
 
-    @AfterEach
-    fun tearDown() {
-        transaction(db) {
-            SchemaUtils.drop(PgOverlapTestTable)
-            SchemaUtils.drop(PgEventTable)
+        object PgOverlapTestTable : LongIdTable("pg_overlap_test") {
+            val label = varchar("label", 100)
+            val range1 = tstzRange("range1")
+            val range2 = tstzRange("range2")
         }
     }
 
@@ -65,7 +38,7 @@ class TstzRangePostgresTest {
         val end = Instant.parse("2024-12-31T23:59:59Z")
         val range = TimestampRange(start, end)
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgEventTable) {
             PgEventTable.insert {
                 it[name] = "2024 연간 이벤트"
                 it[period] = range
@@ -87,7 +60,7 @@ class TstzRangePostgresTest {
         val end = Instant.parse("2024-06-01T18:00:00Z")
         val range = TimestampRange(start, end, lowerInclusive = true, upperInclusive = true)
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgEventTable) {
             PgEventTable.insert {
                 it[name] = "회의"
                 it[period] = range
@@ -114,7 +87,7 @@ class TstzRangePostgresTest {
             Instant.parse("2024-12-31T23:59:59Z"),
         )
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgOverlapTestTable) {
             PgOverlapTestTable.insert {
                 it[label] = "겹침"
                 it[range1] = overlapping1
@@ -141,7 +114,7 @@ class TstzRangePostgresTest {
             Instant.parse("2024-12-31T23:59:59Z"),
         )
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgOverlapTestTable) {
             PgOverlapTestTable.insert {
                 it[label] = "안 겹침"
                 it[range1] = noOverlap1
@@ -167,7 +140,7 @@ class TstzRangePostgresTest {
             Instant.parse("2024-06-01T00:00:00Z"),
         )
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgOverlapTestTable) {
             PgOverlapTestTable.insert {
                 it[label] = "포함"
                 it[range1] = outer
@@ -200,7 +173,7 @@ class TstzRangePostgresTest {
             ),
         )
 
-        transaction(db) {
+        withTables(TestDB.POSTGRESQL, PgEventTable) {
             ranges.forEach { (label, range) ->
                 PgEventTable.insert {
                     it[name] = label

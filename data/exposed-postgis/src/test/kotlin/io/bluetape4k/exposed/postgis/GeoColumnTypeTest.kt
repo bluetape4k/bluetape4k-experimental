@@ -1,5 +1,6 @@
 package io.bluetape4k.exposed.postgis
 
+import io.bluetape4k.exposed.tests.AbstractExposedTest
 import io.bluetape4k.logging.KLogging
 import net.postgis.jdbc.geometry.LinearRing
 import net.postgis.jdbc.geometry.Point
@@ -7,22 +8,25 @@ import net.postgis.jdbc.geometry.Polygon
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 /**
  * PostGIS 컬럼 타입 및 공간 함수 통합 테스트.
+ *
+ * PostGIS 전용 컨테이너(`postgis/postgis:16-3.4`)를 사용한다.
+ * `TestDB.POSTGRESQL`은 PostGIS 확장이 없으므로 별도 컨테이너를 사용한다.
  */
-class GeoColumnTypeTest {
+class GeoColumnTypeTest : AbstractExposedTest() {
 
     companion object : KLogging() {
         private const val SRID = 4326
@@ -31,20 +35,34 @@ class GeoColumnTypeTest {
             .asCompatibleSubstituteFor("postgres")
 
         @JvmStatic
-        val postgisContainer: PostgreSQLContainer<Nothing> =
+        val postgisContainer: PostgreSQLContainer<*> =
             PostgreSQLContainer<Nothing>(postgisImage)
                 .apply { start() }
+
+        @JvmStatic
+        val db: Database by lazy {
+            Database.connect(
+                url = postgisContainer.jdbcUrl,
+                driver = "org.postgresql.Driver",
+                user = postgisContainer.username,
+                password = postgisContainer.password,
+            ).also { db ->
+                transaction(db) {
+                    exec("CREATE EXTENSION IF NOT EXISTS postgis")
+                }
+            }
+        }
 
         /**
          * Point 생성 헬퍼. PostGIS 좌표 순서: x=경도(lng), y=위도(lat)
          */
-        private fun point(lng: Double, lat: Double): Point =
+        fun point(lng: Double, lat: Double): Point =
             Point(lng, lat).apply { srid = SRID }
 
         /**
          * 사각형 폴리곤 생성 헬퍼.
          */
-        private fun rectanglePolygon(
+        fun rectanglePolygon(
             minLng: Double,
             minLat: Double,
             maxLng: Double,
@@ -63,37 +81,33 @@ class GeoColumnTypeTest {
         }
     }
 
-    object Locations : LongIdTable("locations") {
+    object Locations : LongIdTable("geo_locations") {
         val name = varchar("name", 255)
         val point = geoPoint("point")
     }
 
-    object Regions : LongIdTable("regions") {
+    object Regions : LongIdTable("geo_regions") {
         val name = varchar("name", 255)
         val point = geoPoint("point")
         val area = geoPolygon("area")
     }
 
-    private lateinit var db: Database
-
-    @BeforeEach
-    fun setUp() {
-        db = Database.connect(
-            url = postgisContainer.jdbcUrl,
-            driver = "org.postgresql.Driver",
-            user = postgisContainer.username,
-            password = postgisContainer.password,
-        )
+    /**
+     * PostGIS 전용 테이블 생성/삭제를 처리하는 헬퍼.
+     */
+    private fun withGeoTables(vararg tables: Table, statement: JdbcTransaction.() -> Unit) {
         transaction(db) {
-            exec("CREATE EXTENSION IF NOT EXISTS postgis")
-            SchemaUtils.create(Locations, Regions)
+            runCatching { SchemaUtils.drop(*tables) }
+            SchemaUtils.create(*tables)
         }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        transaction(db) {
-            SchemaUtils.drop(Locations, Regions)
+        try {
+            transaction(db) {
+                statement()
+            }
+        } finally {
+            transaction(db) {
+                runCatching { SchemaUtils.drop(*tables) }
+            }
         }
     }
 
@@ -101,7 +115,7 @@ class GeoColumnTypeTest {
     fun `서울 좌표 Point 저장 및 조회`() {
         val seoul = point(lng = 126.9780, lat = 37.5665)
 
-        transaction(db) {
+        withGeoTables(Locations) {
             Locations.insert {
                 it[name] = "서울"
                 it[point] = seoul
@@ -125,7 +139,7 @@ class GeoColumnTypeTest {
             "인천" to point(126.7052, 37.4563),
         )
 
-        transaction(db) {
+        withGeoTables(Locations) {
             cities.forEach { (cityName, cityPoint) ->
                 Locations.insert {
                     it[name] = cityName
@@ -144,7 +158,7 @@ class GeoColumnTypeTest {
         val incheon = point(126.7052, 37.4563)
         val busan = point(129.0756, 35.1796)
 
-        transaction(db) {
+        withGeoTables(Locations) {
             Locations.insert { it[name] = "서울"; it[point] = seoul }
             Locations.insert { it[name] = "인천"; it[point] = incheon }
             Locations.insert { it[name] = "부산"; it[point] = busan }
@@ -162,15 +176,13 @@ class GeoColumnTypeTest {
 
     @Test
     fun `ST_Within - 폴리곤 내 포인트 확인`() {
-        // 한반도 대략적인 바운딩 박스
         val koreaBounds = rectanglePolygon(
             minLng = 124.0, minLat = 33.0,
             maxLng = 132.0, maxLat = 43.0,
         )
-
         val seoul = point(126.9780, 37.5665)
 
-        transaction(db) {
+        withGeoTables(Regions) {
             Regions.insert {
                 it[name] = "서울"
                 it[point] = seoul
@@ -189,16 +201,14 @@ class GeoColumnTypeTest {
 
     @Test
     fun `ST_Within - 폴리곤 밖 포인트 제외`() {
-        // 서울 근처만 포함하는 작은 폴리곤
         val smallArea = rectanglePolygon(
             minLng = 126.9, minLat = 37.5,
             maxLng = 127.1, maxLat = 37.6,
         )
-
         val seoul = point(126.9780, 37.5665)
         val busan = point(129.0756, 35.1796)
 
-        transaction(db) {
+        withGeoTables(Regions) {
             Regions.insert {
                 it[name] = "서울"
                 it[point] = seoul
@@ -227,7 +237,7 @@ class GeoColumnTypeTest {
             maxLng = 127.0, maxLat = 38.0,
         )
 
-        transaction(db) {
+        withGeoTables(Regions) {
             Regions.insert {
                 it[name] = "테스트 영역"
                 it[point] = point(126.5, 37.5)

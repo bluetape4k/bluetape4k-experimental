@@ -5,6 +5,7 @@ dependencies {
     api(Libs.bluetape4k_exposed_core)
 
     testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.postgresql_driver)
     testImplementation(Libs.bluetape4k_testcontainers)

@@ -8,5 +8,6 @@ dependencies {
     api(Libs.libphonenumber)
 
     testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
     testImplementation(Libs.h2_v2)
 }

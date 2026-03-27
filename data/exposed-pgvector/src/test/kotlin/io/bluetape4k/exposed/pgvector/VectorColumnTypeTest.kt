@@ -1,62 +1,83 @@
 package io.bluetape4k.exposed.pgvector
 
 import com.pgvector.PGvector
+import io.bluetape4k.exposed.tests.AbstractExposedTest
 import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNear
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.testcontainers.postgresql.PostgreSQLContainer
+import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
 
 /**
  * pgvector 컬럼 타입 및 거리 연산 통합 테스트.
+ *
+ * pgvector 전용 컨테이너(`pgvector/pgvector:pg16`)를 사용한다.
+ * `TestDB.POSTGRESQL`은 pgvector 확장이 없으므로 별도 컨테이너를 사용한다.
  */
-class VectorColumnTypeTest {
+class VectorColumnTypeTest : AbstractExposedTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val DIMENSION = 3
 
         @JvmStatic
-        val pgvectorContainer: PostgreSQLContainer = PostgreSQLContainer("pgvector/pgvector:pg16")
-            .apply { start() }
+        val pgvectorContainer: PostgreSQLContainer<*> =
+            PostgreSQLContainer(
+                DockerImageName.parse("pgvector/pgvector:pg16")
+                    .asCompatibleSubstituteFor("postgres")
+            ).apply { start() }
+
+        @JvmStatic
+        val db: Database by lazy {
+            Database.connect(
+                url = pgvectorContainer.jdbcUrl,
+                driver = "org.postgresql.Driver",
+                user = pgvectorContainer.username,
+                password = pgvectorContainer.password,
+            ).also { db ->
+                transaction(db) {
+                    exec("CREATE EXTENSION IF NOT EXISTS vector")
+                    PGvector.addVectorType(connection.connection as java.sql.Connection)
+                }
+            }
+        }
     }
 
-    object Embeddings: LongIdTable("embeddings") {
+    object Embeddings : LongIdTable("embeddings") {
         val name = varchar("name", 255)
         val embedding = vector("embedding", DIMENSION)
     }
 
-    private lateinit var db: Database
-
-    @BeforeEach
-    fun setUp() {
-        db = Database.connect(
-            url = pgvectorContainer.jdbcUrl,
-            driver = "org.postgresql.Driver",
-            user = pgvectorContainer.username,
-            password = pgvectorContainer.password,
-        )
+    /**
+     * pgvector 전용 테이블 생성/삭제를 처리하는 헬퍼.
+     *
+     * [PGvector.addVectorType]을 매 트랜잭션마다 호출해야 한다.
+     */
+    private fun withVectorTables(vararg tables: Table, statement: JdbcTransaction.() -> Unit) {
         transaction(db) {
-            exec("CREATE EXTENSION IF NOT EXISTS vector")
-            PGvector.addVectorType(connection.connection as java.sql.Connection)
-            SchemaUtils.create(Embeddings)
+            runCatching { SchemaUtils.drop(*tables) }
+            SchemaUtils.create(*tables)
         }
-    }
-
-    @AfterEach
-    fun tearDown() {
-        transaction(db) {
-            SchemaUtils.drop(Embeddings)
+        try {
+            transaction(db) {
+                PGvector.addVectorType(connection.connection as java.sql.Connection)
+                statement()
+            }
+        } finally {
+            transaction(db) {
+                runCatching { SchemaUtils.drop(*tables) }
+            }
         }
     }
 
@@ -64,8 +85,7 @@ class VectorColumnTypeTest {
     fun `벡터 저장 및 조회`() {
         val vector = floatArrayOf(1.0f, 2.0f, 3.0f)
 
-        transaction(db) {
-            PGvector.addVectorType(connection.connection as java.sql.Connection)
+        withVectorTables(Embeddings) {
             Embeddings.insert {
                 it[name] = "test"
                 it[embedding] = vector
@@ -85,9 +105,7 @@ class VectorColumnTypeTest {
 
     @Test
     fun `코사인 거리 기준 유사도 검색`() {
-        transaction(db) {
-            PGvector.addVectorType(connection.connection as java.sql.Connection)
-
+        withVectorTables(Embeddings) {
             Embeddings.insert {
                 it[name] = "a"
                 it[embedding] = floatArrayOf(1.0f, 0.0f, 0.0f)
@@ -101,12 +119,9 @@ class VectorColumnTypeTest {
                 it[embedding] = floatArrayOf(0.9f, 0.1f, 0.0f)
             }
 
-            // 코사인 거리 연산자가 정상 실행되는지 검증
             val results = Embeddings
                 .selectAll()
-                .orderBy(
-                    Embeddings.embedding.cosineDistance(Embeddings.embedding) to SortOrder.ASC
-                )
+                .orderBy(Embeddings.embedding.cosineDistance(Embeddings.embedding) to SortOrder.ASC)
                 .map { it[Embeddings.name] }
 
             results.size shouldBeEqualTo 3
@@ -115,9 +130,7 @@ class VectorColumnTypeTest {
 
     @Test
     fun `L2 거리 기준 유사도 검색`() {
-        transaction(db) {
-            PGvector.addVectorType(connection.connection as java.sql.Connection)
-
+        withVectorTables(Embeddings) {
             Embeddings.insert {
                 it[name] = "origin"
                 it[embedding] = floatArrayOf(0.0f, 0.0f, 0.0f)
@@ -133,9 +146,7 @@ class VectorColumnTypeTest {
 
             val results = Embeddings
                 .selectAll()
-                .orderBy(
-                    Embeddings.embedding.l2Distance(Embeddings.embedding) to SortOrder.ASC
-                )
+                .orderBy(Embeddings.embedding.l2Distance(Embeddings.embedding) to SortOrder.ASC)
                 .map { it[Embeddings.name] }
 
             results.size shouldBeEqualTo 3
@@ -164,9 +175,7 @@ class VectorColumnTypeTest {
 
     @Test
     fun `여러 벡터 저장 후 전체 조회`() {
-        transaction(db) {
-            PGvector.addVectorType(connection.connection as java.sql.Connection)
-
+        withVectorTables(Embeddings) {
             repeat(5) { i ->
                 Embeddings.insert {
                     it[name] = "item-$i"
