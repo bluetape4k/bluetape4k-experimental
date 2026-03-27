@@ -78,6 +78,105 @@ fun Column<Point>.stWithin(polygon: Column<Polygon>): Op<Boolean> {
 }
 
 /**
+ * PostGIS `ST_Contains` 함수를 사용하여 polygon이 다른 polygon을 완전히 포함하는지 확인한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @param other 포함 여부를 확인할 대상 polygon 컬럼
+ * @return 포함 여부 [Op]
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stContains(other: Column<Polygon>): Op<Boolean> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stContains 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StContainsPolygonOp(this, other)
+}
+
+/**
+ * PostGIS `ST_Contains` 함수를 사용하여 polygon이 point를 완전히 포함하는지 확인한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @param point 포함 여부를 확인할 point 컬럼
+ * @return 포함 여부 [Op]
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stContainsPoint(point: Column<Point>): Op<Boolean> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stContainsPoint 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StContainsPointOp(this, point)
+}
+
+/**
+ * PostGIS `ST_Overlaps` 함수를 사용하여 두 polygon이 부분적으로 겹치는지 확인한다.
+ *
+ * 한쪽이 다른 쪽을 완전히 포함하는 경우에는 false를 반환한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @param other 비교 대상 polygon 컬럼
+ * @return 겹침 여부 [Op]
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stOverlaps(other: Column<Polygon>): Op<Boolean> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stOverlaps 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StOverlapsOp(this, other)
+}
+
+/**
+ * PostGIS `ST_Intersects` 함수를 사용하여 두 polygon이 교차(공유 영역 존재)하는지 확인한다.
+ *
+ * 포함 관계 및 부분 겹침 모두 true를 반환한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @param other 비교 대상 polygon 컬럼
+ * @return 교차 여부 [Op]
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stIntersects(other: Column<Polygon>): Op<Boolean> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stIntersects 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StIntersectsOp(this, other)
+}
+
+/**
+ * PostGIS `ST_Disjoint` 함수를 사용하여 두 polygon이 완전히 분리(공유 영역 없음)되어 있는지 확인한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @param other 비교 대상 polygon 컬럼
+ * @return 분리 여부 [Op]
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stDisjoint(other: Column<Polygon>): Op<Boolean> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stDisjoint 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StDisjointOp(this, other)
+}
+
+/**
+ * PostGIS `ST_Area` 함수를 사용하여 polygon의 넓이(degree² 단위)를 반환한다.
+ *
+ * PostgreSQL(PostGIS) dialect 전용.
+ *
+ * @return 넓이 표현식
+ * @throws IllegalStateException PostgreSQL이 아닌 dialect에서 호출 시
+ */
+fun Column<Polygon>.stArea(): Expression<Double> {
+    check(currentDialect is PostgreSQLDialect) {
+        "stArea 는 PostgreSQL(PostGIS) dialect 에서만 지원됩니다."
+    }
+    return StAreaExpr(this)
+}
+
+/**
  * PostGIS `ST_Distance(left, right)` SQL 표현식.
  */
 class StDistanceExpr(
@@ -121,6 +220,99 @@ class StWithinOp(
         queryBuilder.append("ST_Within(")
         queryBuilder.append(point)
         queryBuilder.append(", ")
+        queryBuilder.append(polygon)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Contains(polygon, other_polygon)` SQL 표현식.
+ */
+class StContainsPolygonOp(
+    private val polygon: Expression<Polygon>,
+    private val other: Expression<Polygon>,
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Contains(")
+        queryBuilder.append(polygon)
+        queryBuilder.append(", ")
+        queryBuilder.append(other)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Contains(polygon, point)` SQL 표현식.
+ */
+class StContainsPointOp(
+    private val polygon: Expression<Polygon>,
+    private val point: Expression<Point>,
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Contains(")
+        queryBuilder.append(polygon)
+        queryBuilder.append(", ")
+        queryBuilder.append(point)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Overlaps(left, right)` SQL 표현식.
+ */
+class StOverlapsOp(
+    private val left: Expression<Polygon>,
+    private val right: Expression<Polygon>,
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Overlaps(")
+        queryBuilder.append(left)
+        queryBuilder.append(", ")
+        queryBuilder.append(right)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Intersects(left, right)` SQL 표현식.
+ */
+class StIntersectsOp(
+    private val left: Expression<Polygon>,
+    private val right: Expression<Polygon>,
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Intersects(")
+        queryBuilder.append(left)
+        queryBuilder.append(", ")
+        queryBuilder.append(right)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Disjoint(left, right)` SQL 표현식.
+ */
+class StDisjointOp(
+    private val left: Expression<Polygon>,
+    private val right: Expression<Polygon>,
+) : Op<Boolean>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Disjoint(")
+        queryBuilder.append(left)
+        queryBuilder.append(", ")
+        queryBuilder.append(right)
+        queryBuilder.append(")")
+    }
+}
+
+/**
+ * PostGIS `ST_Area(polygon)` SQL 표현식.
+ */
+class StAreaExpr(
+    private val polygon: Expression<Polygon>,
+) : Expression<Double>() {
+    override fun toQueryBuilder(queryBuilder: QueryBuilder) {
+        queryBuilder.append("ST_Area(")
         queryBuilder.append(polygon)
         queryBuilder.append(")")
     }
