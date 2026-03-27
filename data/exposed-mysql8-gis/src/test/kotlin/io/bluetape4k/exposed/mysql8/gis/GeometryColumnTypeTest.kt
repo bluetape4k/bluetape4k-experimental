@@ -11,31 +11,31 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 import kotlin.math.abs
 
-class GeometryColumnTypeTest : AbstractMySqlGisTest() {
+class GeometryColumnTypeTest: AbstractMySqlGisTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 테이블 선언은 dialect 체크가 있으므로 트랜잭션 내에서만 초기화되도록
      * 클래스(인스턴스)로 선언한다. withGeoTables 내에서 인스턴스를 생성하면
      * 이미 트랜잭션이 활성화된 상태에서 컬럼이 등록된다.
      */
-    class GeoPoints : LongIdTable("geo_points") {
+    class GeoPoints: LongIdTable("geo_points") {
         val name = varchar("name", 255)
         val location = geoPoint("location")
     }
 
-    class GeoPolygons : LongIdTable("geo_polygons") {
+    class GeoPolygons: LongIdTable("geo_polygons") {
         val name = varchar("name", 255)
         val area = geoPolygon("area")
     }
 
-    class GeoLines : LongIdTable("geo_lines") {
+    class GeoLines: LongIdTable("geo_lines") {
         val name = varchar("name", 255)
         val path = geoLineString("path")
     }
 
-    class GeoGeometries : LongIdTable("geo_geometries") {
+    class GeoGeometries: LongIdTable("geo_geometries") {
         val name = varchar("name", 255)
         val geom = geoGeometry("geom")
     }

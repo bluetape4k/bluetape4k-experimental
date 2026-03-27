@@ -3,6 +3,7 @@ package io.bluetape4k.exposed.pgvector
 import com.pgvector.PGvector
 import io.bluetape4k.exposed.tests.AbstractExposedTest
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.ShutdownQueue
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNear
 import org.amshove.kluent.shouldNotBeNull
@@ -17,7 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 /**
@@ -26,17 +27,19 @@ import org.testcontainers.utility.DockerImageName
  * pgvector 전용 컨테이너(`pgvector/pgvector:pg16`)를 사용한다.
  * `TestDB.POSTGRESQL`은 pgvector 확장이 없으므로 별도 컨테이너를 사용한다.
  */
-class VectorColumnTypeTest : AbstractExposedTest() {
+class VectorColumnTypeTest: AbstractExposedTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val DIMENSION = 3
 
         @JvmStatic
-        val pgvectorContainer: PostgreSQLContainer<*> =
+        val pgvectorContainer: PostgreSQLContainer =
             PostgreSQLContainer(
-                DockerImageName.parse("pgvector/pgvector:pg16")
-                    .asCompatibleSubstituteFor("postgres")
-            ).apply { start() }
+                DockerImageName.parse("pgvector/pgvector:pg16").asCompatibleSubstituteFor("postgres")
+            ).apply {
+                start()
+                ShutdownQueue.register(this)
+            }
 
         @JvmStatic
         val db: Database by lazy {
@@ -54,7 +57,7 @@ class VectorColumnTypeTest : AbstractExposedTest() {
         }
     }
 
-    object Embeddings : LongIdTable("embeddings") {
+    object Embeddings: LongIdTable("embeddings") {
         val name = varchar("name", 255)
         val embedding = vector("embedding", DIMENSION)
     }

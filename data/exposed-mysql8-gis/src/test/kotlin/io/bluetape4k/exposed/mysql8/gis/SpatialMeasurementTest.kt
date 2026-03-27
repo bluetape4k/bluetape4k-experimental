@@ -9,29 +9,28 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 
-class SpatialMeasurementTest : AbstractMySqlGisTest() {
+class SpatialMeasurementTest: AbstractMySqlGisTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     // Point 테이블 (거리 측정용) — 두 포인트 컬럼을 한 행에 저장하여 stDistance 비교
-    class PointMeasureTable : LongIdTable("measure_points") {
+    class PointMeasureTable: LongIdTable("measure_points") {
         val name = varchar("name", 255)
         val pointA = geoPoint("point_a")
         val pointB = geoPoint("point_b")
     }
 
     // Polygon 테이블 (넓이 측정용)
-    class PolygonMeasureTable : LongIdTable("measure_polygons") {
+    class PolygonMeasureTable: LongIdTable("measure_polygons") {
         val name = varchar("name", 255)
         val area = geoPolygon("area")
     }
 
     // LineString 테이블 (길이 측정용)
-    class LineMeasureTable : LongIdTable("measure_lines") {
+    class LineMeasureTable: LongIdTable("measure_lines") {
         val name = varchar("name", 255)
         val path = geoLineString("path")
     }

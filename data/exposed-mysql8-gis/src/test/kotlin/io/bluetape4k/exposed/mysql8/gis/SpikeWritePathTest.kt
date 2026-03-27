@@ -30,19 +30,12 @@ import org.locationtech.jts.geom.PrecisionModel
 import org.locationtech.jts.io.ByteOrderValues
 import org.locationtech.jts.io.WKBReader
 import org.locationtech.jts.io.WKBWriter
-import org.testcontainers.containers.MySQLContainer
-import org.testcontainers.utility.DockerImageName
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.sql.DriverManager
 
-class SpikeWritePathTest {
+class SpikeWritePathTest: AbstractMySqlGisTest() {
     companion object: KLogging() {
-        @JvmStatic
-        val mysqlContainer: MySQLContainer<*> = MySQLContainer(
-            DockerImageName.parse("mysql:8.0")
-        ).apply { start() }
-
         val geometryFactory = GeometryFactory(PrecisionModel(), 4326)
     }
 

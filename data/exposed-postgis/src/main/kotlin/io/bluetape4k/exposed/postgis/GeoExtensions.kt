@@ -3,7 +3,9 @@ package io.bluetape4k.exposed.postgis
 import net.postgis.jdbc.geometry.Point
 import net.postgis.jdbc.geometry.Polygon
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
@@ -182,7 +184,9 @@ fun Column<Polygon>.stArea(): Expression<Double> {
 class StDistanceExpr(
     private val left: Expression<Point>,
     private val right: Expression<Point>,
-) : Expression<Double>() {
+): ExpressionWithColumnType<Double>() {
+    override val columnType = DoubleColumnType()
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder.append("ST_Distance(")
         queryBuilder.append(left)
@@ -310,7 +314,9 @@ class StDisjointOp(
  */
 class StAreaExpr(
     private val polygon: Expression<Polygon>,
-) : Expression<Double>() {
+): ExpressionWithColumnType<Double>() {
+    override val columnType = DoubleColumnType()
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder.append("ST_Area(")
         queryBuilder.append(polygon)

@@ -1,7 +1,6 @@
 package io.bluetape4k.exposed.mysql8.gis
 
 import io.bluetape4k.logging.KLogging
-import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
@@ -11,21 +10,21 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 
-class SpatialRelationTest : AbstractMySqlGisTest() {
+class SpatialRelationTest: AbstractMySqlGisTest() {
 
-    companion object : KLogging()
+    companion object: KLogging()
 
     /**
      * 테이블 선언은 dialect 체크가 있으므로 트랜잭션 내에서만 초기화되도록
      * 클래스(인스턴스)로 선언한다.
      */
-    class RelationTable : LongIdTable("rel_test") {
+    class RelationTable: LongIdTable("rel_test") {
         val name = varchar("name", 255)
         val zoneA = geoPolygon("zone_a")
         val zoneB = geoPolygon("zone_b")
     }
 
-    class PointTable : LongIdTable("rel_point_test") {
+    class PointTable: LongIdTable("rel_point_test") {
         val name = varchar("name", 255)
         val pointA = geoPoint("point_a")
         val pointB = geoPoint("point_b")

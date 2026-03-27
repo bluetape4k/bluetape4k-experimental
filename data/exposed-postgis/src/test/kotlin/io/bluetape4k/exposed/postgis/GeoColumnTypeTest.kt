@@ -2,11 +2,14 @@ package io.bluetape4k.exposed.postgis
 
 import io.bluetape4k.exposed.tests.AbstractExposedTest
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.utils.ShutdownQueue
+import net.postgis.jdbc.PGgeometry
 import net.postgis.jdbc.geometry.LinearRing
 import net.postgis.jdbc.geometry.Point
 import net.postgis.jdbc.geometry.Polygon
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeGreaterOrEqualTo
+import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
@@ -17,10 +20,11 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 /**
@@ -29,18 +33,20 @@ import org.testcontainers.utility.DockerImageName
  * PostGIS 전용 컨테이너(`postgis/postgis:16-3.4`)를 사용한다.
  * `TestDB.POSTGRESQL`은 PostGIS 확장이 없으므로 별도 컨테이너를 사용한다.
  */
-class GeoColumnTypeTest : AbstractExposedTest() {
+class GeoColumnTypeTest: AbstractExposedTest() {
 
-    companion object : KLogging() {
+    companion object: KLogging() {
         private const val SRID = 4326
 
         private val postgisImage = DockerImageName.parse("postgis/postgis:16-3.4")
             .asCompatibleSubstituteFor("postgres")
 
         @JvmStatic
-        val postgisContainer: PostgreSQLContainer<*> =
-            PostgreSQLContainer<Nothing>(postgisImage)
-                .apply { start() }
+        val postgisContainer: PostgreSQLContainer = PostgreSQLContainer(postgisImage)
+            .apply {
+                start()
+                ShutdownQueue.register(this)
+            }
 
         @JvmStatic
         val db: Database by lazy {
@@ -84,12 +90,18 @@ class GeoColumnTypeTest : AbstractExposedTest() {
         }
     }
 
-    object Locations : LongIdTable("geo_locations") {
+    object Locations: LongIdTable("geo_locations") {
         val name = varchar("name", 255)
         val point = geoPoint("point")
     }
 
-    object Regions : LongIdTable("geo_regions") {
+    object PointPairs: LongIdTable("geo_point_pairs") {
+        val name = varchar("name", 255)
+        val pointA = geoPoint("point_a")
+        val pointB = geoPoint("point_b")
+    }
+
+    object Regions: LongIdTable("geo_regions") {
         val name = varchar("name", 255)
         val point = geoPoint("point")
         val area = geoPolygon("area")
@@ -98,7 +110,7 @@ class GeoColumnTypeTest : AbstractExposedTest() {
     /**
      * 두 폴리곤 간의 공간 관계(포함/겹침/분리)를 테스트하기 위한 테이블.
      */
-    object PolygonZones : LongIdTable("geo_polygon_zones") {
+    object PolygonZones: LongIdTable("geo_polygon_zones") {
         val name = varchar("name", 255)
         val zoneA = geoPolygon("zone_a")
         val zoneB = geoPolygon("zone_b")
@@ -165,24 +177,79 @@ class GeoColumnTypeTest : AbstractExposedTest() {
     }
 
     @Test
-    fun `ST_DWithin - 서울에서 약 1도 이내 포인트 검색`() {
+    fun `GeoPointColumnType 은 UNKNOWN SRID 를 WGS84 로 보정한다`() {
+        val point = Point(126.9780, 37.5665).apply { srid = Point.UNKNOWN_SRID }
+
+        val geometry = GeoPointColumnType().notNullValueToDB(point) as PGgeometry
+
+        point.srid shouldBeEqualTo SRID
+        (geometry.geometry as Point).srid shouldBeEqualTo SRID
+    }
+
+    @Test
+    fun `GeoPolygonColumnType 은 문자열과 PGgeometry 를 Polygon 으로 복원한다`() {
+        val polygonType = GeoPolygonColumnType()
+        val polygonWkt = "SRID=4326;POLYGON((126 37,127 37,127 38,126 38,126 37))"
+
+        val fromString = polygonType.valueFromDB(polygonWkt)
+        val fromGeometry = polygonType.valueFromDB(PGgeometry(polygonWkt))
+
+        fromString.srid shouldBeEqualTo SRID
+        fromGeometry.numRings() shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `Geo 컬럼 타입은 PostgreSQL dialect 에서 기대한 SQL 타입을 노출한다`() {
+        transaction(db) {
+            GeoPointColumnType().sqlType() shouldBeEqualTo "GEOMETRY(POINT, 4326)"
+            GeoPolygonColumnType().sqlType() shouldBeEqualTo "GEOMETRY(POLYGON, 4326)"
+        }
+    }
+
+    @Test
+    fun `ST_DWithin - 거리 임계값에 따라 포함 여부가 달라진다`() {
+        val seoul = point(126.9780, 37.5665)
+        val suwon = point(127.0286, 37.2636)
+
+        withGeoTables(PointPairs) {
+            PointPairs.insert {
+                it[name] = "서울-수원"
+                it[pointA] = seoul
+                it[pointB] = suwon
+            }
+
+            val withinRows = PointPairs
+                .selectAll()
+                .where { PointPairs.pointA.stDWithin(PointPairs.pointB, 0.31) }
+                .toList()
+            withinRows shouldHaveSize 1
+
+            val outsideRows = PointPairs
+                .selectAll()
+                .where { PointPairs.pointA.stDWithin(PointPairs.pointB, 0.29) }
+                .toList()
+            outsideRows shouldHaveSize 0
+        }
+    }
+
+    @Test
+    fun `ST_Distance - 두 Point 간 거리를 select(expr) 로 조회할 수 있다`() {
         val seoul = point(126.9780, 37.5665)
         val incheon = point(126.7052, 37.4563)
-        val busan = point(129.0756, 35.1796)
 
-        withGeoTables(Locations) {
-            Locations.insert { it[name] = "서울"; it[point] = seoul }
-            Locations.insert { it[name] = "인천"; it[point] = incheon }
-            Locations.insert { it[name] = "부산"; it[point] = busan }
+        withGeoTables(PointPairs) {
+            PointPairs.insert {
+                it[name] = "서울-인천"
+                it[pointA] = seoul
+                it[pointB] = incheon
+            }
 
-            // ST_DWithin(point, point, 1.0) 은 자기 자신과의 거리가 0이므로 모든 행이 true
-            // 함수 호출 자체가 정상 동작하는지 검증
-            val nearSeoul = Locations
-                .selectAll()
-                .where { Locations.point.stDWithin(Locations.point, 1.0) }
-                .map { it[Locations.name] }
+            val distanceExpr = PointPairs.pointA.stDistance(PointPairs.pointB)
+            val distance = PointPairs.select(distanceExpr).single()[distanceExpr]
 
-            nearSeoul.size shouldBeEqualTo 3
+            distance.shouldNotBeNull()
+            distance shouldBeGreaterOrEqualTo 0.29
+            distance shouldBeLessOrEqualTo 0.31
         }
     }
 
@@ -320,8 +387,8 @@ class GeoColumnTypeTest : AbstractExposedTest() {
     fun `ST_Contains - 3단 중첩 폴리곤 포함 관계`() {
         // 국가 > 광역시 > 구 3단 중첩
         val nation = rectanglePolygon(minLng = 124.0, minLat = 33.0, maxLng = 132.0, maxLat = 43.0)
-        val city   = rectanglePolygon(minLng = 126.5, minLat = 36.9, maxLng = 127.8, maxLat = 38.3)
-        val gu     = rectanglePolygon(minLng = 126.8, minLat = 37.4, maxLng = 127.0, maxLat = 37.6)
+        val city = rectanglePolygon(minLng = 126.5, minLat = 36.9, maxLng = 127.8, maxLat = 38.3)
+        val gu = rectanglePolygon(minLng = 126.8, minLat = 37.4, maxLng = 127.0, maxLat = 37.6)
 
         withGeoTables(PolygonZones) {
             PolygonZones.insert { it[name] = "국가-광역시"; it[zoneA] = nation; it[zoneB] = city }
@@ -349,7 +416,7 @@ class GeoColumnTypeTest : AbstractExposedTest() {
     @Test
     fun `ST_Overlaps - 두 폴리곤이 부분적으로 겹침`() {
         // 왼쪽 사각형: lng 126~127, lat 37~38
-        val left  = rectanglePolygon(minLng = 126.0, minLat = 37.0, maxLng = 127.0, maxLat = 38.0)
+        val left = rectanglePolygon(minLng = 126.0, minLat = 37.0, maxLng = 127.0, maxLat = 38.0)
         // 오른쪽 사각형: lng 126.5~127.5 → 0.5도 겹침
         val right = rectanglePolygon(minLng = 126.5, minLat = 37.0, maxLng = 127.5, maxLat = 38.0)
 
@@ -443,10 +510,10 @@ class GeoColumnTypeTest : AbstractExposedTest() {
 
     @Test
     fun `혼합 시나리오 - 포함, 겹침, 분리 폴리곤을 한 테이블에 저장하고 각각 필터링`() {
-        val base    = rectanglePolygon(minLng = 126.0, minLat = 37.0, maxLng = 128.0, maxLat = 39.0)
-        val inside  = rectanglePolygon(minLng = 126.5, minLat = 37.5, maxLng = 127.5, maxLat = 38.5)  // base 안
+        val base = rectanglePolygon(minLng = 126.0, minLat = 37.0, maxLng = 128.0, maxLat = 39.0)
+        val inside = rectanglePolygon(minLng = 126.5, minLat = 37.5, maxLng = 127.5, maxLat = 38.5)  // base 안
         val overlap = rectanglePolygon(minLng = 127.5, minLat = 37.5, maxLng = 129.0, maxLat = 38.5)  // base와 부분 겹침
-        val apart   = rectanglePolygon(minLng = 130.0, minLat = 35.0, maxLng = 131.0, maxLat = 36.0)  // 완전 분리
+        val apart = rectanglePolygon(minLng = 130.0, minLat = 35.0, maxLng = 131.0, maxLat = 36.0)  // 완전 분리
 
         withGeoTables(PolygonZones) {
             PolygonZones.insert { it[name] = "포함"; it[zoneA] = base; it[zoneB] = inside }
@@ -511,6 +578,28 @@ class GeoColumnTypeTest : AbstractExposedTest() {
         }
     }
 
+    @Test
+    fun `ST_Area - select(expr) 로 각 행의 넓이를 직접 조회할 수 있다`() {
+        val large = rectanglePolygon(minLng = 125.0, minLat = 36.0, maxLng = 129.0, maxLat = 40.0)
+        val small = rectanglePolygon(minLng = 126.0, minLat = 37.0, maxLng = 127.0, maxLat = 38.0)
+
+        withGeoTables(Regions) {
+            Regions.insert { it[name] = "large"; it[point] = point(127.0, 38.0); it[area] = large }
+            Regions.insert { it[name] = "small"; it[point] = point(126.5, 37.5); it[area] = small }
+
+            val areaExpr = Regions.area.stArea()
+            val areaByName = Regions.select(Regions.name, areaExpr).associate {
+                it[Regions.name] to it[areaExpr]
+            }
+
+            areaByName["large"].shouldNotBeNull()
+            areaByName["small"].shouldNotBeNull()
+            areaByName.getValue("large") shouldBeGreaterOrEqualTo 16.0
+            areaByName.getValue("small") shouldBeEqualTo 1.0
+            areaByName.getValue("large") shouldBeGreaterOrEqualTo areaByName.getValue("small")
+        }
+    }
+
     // =========================================================================
     // ST_ContainsPoint (Polygon → Point) 테스트
     // =========================================================================
@@ -538,8 +627,8 @@ class GeoColumnTypeTest : AbstractExposedTest() {
 
     @Test
     fun `여러 행정구역 폴리곤 중 특정 포인트가 속한 구역 찾기`() {
-        val seoulArea   = rectanglePolygon(minLng = 126.7, minLat = 37.4, maxLng = 127.2, maxLat = 37.7)
-        val busanArea   = rectanglePolygon(minLng = 128.9, minLat = 35.0, maxLng = 129.3, maxLat = 35.4)
+        val seoulArea = rectanglePolygon(minLng = 126.7, minLat = 37.4, maxLng = 127.2, maxLat = 37.7)
+        val busanArea = rectanglePolygon(minLng = 128.9, minLat = 35.0, maxLng = 129.3, maxLat = 35.4)
         val incheonArea = rectanglePolygon(minLng = 126.4, minLat = 37.3, maxLng = 126.8, maxLat = 37.6)
 
         // 행정구역 테이블 (area만 사용, point는 중심점)
