@@ -1378,6 +1378,10 @@ object Libs {
     // https://mvnrepository.com/artifact/net.postgis/postgis-jdbc
     const val postgis_jdbc = "net.postgis:postgis-jdbc:2023.1.0"
 
+    // JTS (Java Topology Suite) — MySQL 8.0 GIS 공간 데이터 (exposed-mysql8-gis)
+    // https://mvnrepository.com/artifact/org.locationtech.jts/jts-core
+    const val jts_core = "org.locationtech.jts:jts-core:1.20.0"
+
     // NOTE: Apache Ignite 에서는 꼭 1.4.197 를 써야 합니다.
     const val h2 = "com.h2database:h2:1.4.197"
 
