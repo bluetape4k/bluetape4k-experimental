@@ -1,3 +1,8 @@
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 dependencies {
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
