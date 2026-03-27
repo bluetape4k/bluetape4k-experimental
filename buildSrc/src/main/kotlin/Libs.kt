@@ -1361,6 +1361,7 @@ object Libs {
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
     const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
+    const val duckdb_jdbc = "org.duckdb:duckdb_jdbc:1.1.3"            // https://mvnrepository.com/artifact/org.duckdb/duckdb_jdbc
     // BigQuery REST API 클라이언트 (google-api-services-bigquery-v2)
     // https://mvnrepository.com/artifact/com.google.apis/google-api-services-bigquery
     const val google_api_services_bigquery = "com.google.apis:google-api-services-bigquery:v2-rev20240919-2.0.0"
