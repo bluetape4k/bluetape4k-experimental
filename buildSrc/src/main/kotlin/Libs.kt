@@ -1366,6 +1366,18 @@ object Libs {
     // https://mvnrepository.com/artifact/com.google.apis/google-api-services-bigquery
     const val google_api_services_bigquery = "com.google.apis:google-api-services-bigquery:v2-rev20240919-2.0.0"
 
+    // Google libphonenumber — 전화번호 E.164 정규화 (exposed-phone)
+    // https://mvnrepository.com/artifact/com.googlecode.libphonenumber/libphonenumber
+    const val libphonenumber = "com.googlecode.libphonenumber:libphonenumber:8.13.52"
+
+    // pgvector JDBC 어댑터 — PostgreSQL pgvector 확장 (exposed-pgvector)
+    // https://mvnrepository.com/artifact/com.pgvector/pgvector
+    const val pgvector = "com.pgvector:pgvector:0.1.6"
+
+    // PostGIS JDBC — PostgreSQL PostGIS 확장 (exposed-postgis)
+    // https://mvnrepository.com/artifact/net.postgis/postgis-jdbc
+    const val postgis_jdbc = "net.postgis:postgis-jdbc:2023.1.0"
+
     // NOTE: Apache Ignite 에서는 꼭 1.4.197 를 써야 합니다.
     const val h2 = "com.h2database:h2:1.4.197"
 
