@@ -1,6 +1,6 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
-import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
+import io.bluetape4k.cache.nearcache.LettuceNearCache
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.StringCodec

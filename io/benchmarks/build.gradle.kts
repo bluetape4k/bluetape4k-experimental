@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":cache-lettuce"))
+    implementation(Libs.bluetape4k_cache_lettuce)
     implementation(project(":exposed-r2dbc-spring-data"))
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_junit5)

@@ -12,7 +12,7 @@ allOpen {
 
 dependencies {
     // 기존 near cache 모듈 재사용
-    api(project(":cache-lettuce"))
+    api(Libs.bluetape4k_cache_lettuce)
 
     // bluetape4k-io: BinarySerializers (Fory/Kryo 직렬화)
     api(Libs.bluetape4k_io)

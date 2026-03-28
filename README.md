@@ -17,17 +17,16 @@ bluetape4k-experimental/
 ├── shared/          # 공통 유틸리티
 ├── kotlin/          # Kotlin 언어 기능 실험
 ├── spring-boot/     # Spring Boot 4 실험
-│   └── hibernate-cache-lettuce-near/   # Hibernate Near Cache Auto-Configuration
+│   └── hibernate-lettuce/              # Hibernate Lettuce Cache Auto-Configuration
 ├── spring-data/     # Spring Data 실험
 ├── coroutines/      # Coroutines 실험
 ├── ai/              # AI/LLM 통합 실험
 ├── data/            # 데이터 계층 실험
 ├── io/              # I/O, 직렬화 실험
 ├── infra/           # 인프라(Redis, Kafka 등) 실험
-│   ├── cache-lettuce-near/             # Lettuce Near Cache (Caffeine + Redis + CLIENT TRACKING)
-│   └── hibernate-cache-lettuce-near/   # Hibernate 7 2nd Level Cache (Near Cache 기반)
+│   └── hibernate-cache-lettuce/        # Hibernate 7 2nd Level Cache (bluetape4k-cache-lettuce 기반)
 └── examples/        # 예제 애플리케이션
-    └── hibernate-cache-lettuce-near-demo/  # Near Cache Spring Boot 데모 앱
+    └── spring-boot-hibernate-lettuce-demo/ # Spring Boot Hibernate Lettuce 데모 앱
 ```
 
 ## 주요 모듈
@@ -49,20 +48,20 @@ bluetape4k-experimental/
     - small/medium: `Kryo + Deflate`
     - large: `Kryo + Zstd`
 
-### infra/cache-lettuce-near
-Caffeine(L1) + Redis(L2) 2-tier Near Cache 구현체. RESP3 CLIENT TRACKING으로 분산 환경에서 로컬 캐시 자동 무효화를 지원한다.
-→ [README](infra/cache-lettuce-near/README.md)
+### bluetape4k-cache-lettuce
+Caffeine(L1) + Redis(L2) 2-tier Near Cache 구현체는 `bluetape4k-projects` 의 `bluetape4k-cache-lettuce` 모듈로 승격되었다.
+이 저장소에서는 해당 외부 모듈을 참조해 Hibernate / Spring Boot 통합을 검증한다.
 
-### infra/hibernate-cache-lettuce-near
+### infra/hibernate-cache-lettuce
 Hibernate 7 Second Level Cache를 Near Cache로 구현. `hibernate.cache.lettuce.*` properties로 설정.
-→ [README](infra/hibernate-cache-lettuce-near/README.md)
+→ [README](infra/hibernate-cache-lettuce/README.md)
 
-### spring-boot/hibernate-cache-lettuce-near
+### spring-boot/hibernate-lettuce
 Spring Boot 4 Auto-Configuration. `application.yml`의 `bluetape4k.cache.lettuce-near.*` 설정만으로 Hibernate 2nd Level Cache 자동 활성화. Actuator 엔드포인트 및 Micrometer 메트릭 제공.
-→ [README](spring-boot/hibernate-cache-lettuce-near/README.md)
+→ [README](spring-boot/hibernate-lettuce/README.md)
 
-### examples/hibernate-cache-lettuce-near-demo
-Near Cache를 활용한 Spring Boot REST API 데모 애플리케이션.
+### examples/spring-boot-hibernate-lettuce-demo
+Lettuce 기반 Hibernate 2nd Level Cache를 활용한 Spring Boot REST API 데모 애플리케이션.
 
 ## 빌드
 
@@ -73,10 +72,10 @@ Near Cache를 활용한 Spring Boot REST API 데모 애플리케이션.
 # 특정 모듈 테스트
 ./gradlew :<module-name>:test
 
-# Near Cache 관련 모듈 테스트
-./gradlew :cache-lettuce-near:test
-./gradlew :hibernate-cache-lettuce-near:test
-./gradlew :hibernate-redis-near:test
+# Lettuce Cache 관련 모듈 테스트
+./gradlew :hibernate-cache-lettuce:test
+./gradlew :spring-boot-hibernate-lettuce:test
+./gradlew :benchmarks:test
 
 # 사용 가능한 태스크 목록
 ./gradlew tasks

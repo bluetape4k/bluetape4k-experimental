@@ -1,9 +1,10 @@
-# infra-hibernate-cache-lettuce-near
+# infra-hibernate-cache-lettuce
 
 Hibernate 7 **2nd Level Cache** 구현체 — Lettuce Near Cache(Caffeine L1 + Redis L2) 기반.
 `hibernate.cache.lettuce.*` Hibernate properties 설정만으로 모든 Region에 Near Cache가 자동 적용된다.
 
-> Spring Boot 4와 통합하려면 [`spring-boot/hibernate-cache-lettuce-near`](../../spring-boot/hibernate-cache-lettuce-near/README.md) 참조.
+> Near Cache 코어는 `bluetape4k-projects` 의 `bluetape4k-cache-lettuce` 모듈을 사용한다.
+> Spring Boot 4와 통합하려면 [`spring-boot/hibernate-lettuce`](../../spring-boot/hibernate-lettuce/README.md) 참조.
 
 ## 아키텍처
 
@@ -40,7 +41,7 @@ graph TD
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation(project(":hibernate-cache-lettuce-near"))
+    implementation(project(":hibernate-cache-lettuce"))
 
     // 런타임 직렬화 (필수 - bluetape4k-io의 optional 의존성이므로 명시 필요)
     implementation(Libs.fory_kotlin)  // Apache Fory
@@ -186,7 +187,7 @@ sequenceDiagram
 ## 테스트 실행
 
 ```bash
-./gradlew :hibernate-cache-lettuce-near:test
+./gradlew :hibernate-cache-lettuce:test
 ```
 
 Testcontainers로 Redis 7+를 자동 실행하며 H2 인메모리 DB를 사용한다.

@@ -1,7 +1,7 @@
 package io.bluetape4k.benchmark.cache
 
-import io.bluetape4k.cache.nearcache.lettuce.LettuceNearSuspendCache
-import io.bluetape4k.cache.nearcache.lettuce.NearCacheConfig
+import io.bluetape4k.cache.nearcache.LettuceNearCacheConfig
+import io.bluetape4k.cache.nearcache.LettuceSuspendNearCache
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
@@ -40,7 +40,7 @@ open class LettuceNearSuspendCacheBenchmark {
     private lateinit var redisClient: RedisClient
     private lateinit var directConnection: StatefulRedisConnection<String, String>
     private lateinit var directCommands: RedisCommands<String, String>
-    private lateinit var cache: LettuceNearSuspendCache<String>
+    private lateinit var cache: LettuceSuspendNearCache<String>
     private lateinit var hotKey: String
 
     @Setup
@@ -53,10 +53,10 @@ open class LettuceNearSuspendCacheBenchmark {
             directCommands = directConnection.sync()
             BenchmarkRedisSupport.flushDb(directCommands)
 
-            cache = LettuceNearSuspendCache(
+            cache = LettuceSuspendNearCache(
                 redisClient = redisClient,
                 codec = StringCodec.UTF8,
-                config = NearCacheConfig(
+                config = LettuceNearCacheConfig(
                     cacheName = cacheName,
                     redisTtl = ttlDuration(),
                     useRespProtocol3 = false,

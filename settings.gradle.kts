@@ -14,6 +14,16 @@ val baseProjectName = "bluetape4k"
 
 rootProject.name = "$baseProjectName-experimental"
 
+val bluetape4kProjectsDir = file("../bluetape4k-projects")
+if (bluetape4kProjectsDir.exists()) {
+    includeBuild(bluetape4kProjectsDir) {
+        dependencySubstitution {
+            substitute(module("io.github.bluetape4k:bluetape4k-cache-lettuce"))
+                .using(project(":bluetape4k-cache-lettuce"))
+        }
+    }
+}
+
 include("shared")
 
 includeModules("kotlin", false, false)

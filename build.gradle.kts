@@ -294,6 +294,10 @@ subprojects {
 
             dependency(Libs.jsonpath)
             dependency(Libs.jsonassert)
+
+            // Redis
+            dependency(Libs.lettuce_core)
+            dependency(Libs.redisson)
         }
     }
 

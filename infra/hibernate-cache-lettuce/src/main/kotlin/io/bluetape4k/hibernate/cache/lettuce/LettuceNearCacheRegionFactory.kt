@@ -1,6 +1,6 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
-import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
+import io.bluetape4k.cache.nearcache.LettuceNearCache
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodec
 import io.bluetape4k.utils.ShutdownQueue
 import io.lettuce.core.ClientOptions

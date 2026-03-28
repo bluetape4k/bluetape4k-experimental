@@ -1,6 +1,6 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
-import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
+import io.bluetape4k.cache.nearcache.LettuceNearCache
 import org.hibernate.cache.internal.BasicCacheKeyImplementation
 import org.hibernate.cache.internal.CacheKeyImplementation
 import org.hibernate.cache.internal.NaturalIdCacheKey

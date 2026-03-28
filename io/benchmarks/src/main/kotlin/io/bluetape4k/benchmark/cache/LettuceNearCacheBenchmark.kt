@@ -1,7 +1,7 @@
 package io.bluetape4k.benchmark.cache
 
-import io.bluetape4k.cache.nearcache.lettuce.LettuceNearCache
-import io.bluetape4k.cache.nearcache.lettuce.NearCacheConfig
+import io.bluetape4k.cache.nearcache.LettuceNearCache
+import io.bluetape4k.cache.nearcache.LettuceNearCacheConfig
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
@@ -53,7 +53,7 @@ open class LettuceNearCacheBenchmark {
         cache = LettuceNearCache(
             redisClient = redisClient,
             codec = StringCodec.UTF8,
-            config = NearCacheConfig(
+            config = LettuceNearCacheConfig(
                 cacheName = cacheName,
                 redisTtl = ttlDuration(),
             ),

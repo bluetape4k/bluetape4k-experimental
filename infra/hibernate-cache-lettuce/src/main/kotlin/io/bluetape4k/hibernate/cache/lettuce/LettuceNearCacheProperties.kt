@@ -1,6 +1,6 @@
 package io.bluetape4k.hibernate.cache.lettuce
 
-import io.bluetape4k.cache.nearcache.lettuce.NearCacheConfig
+import io.bluetape4k.cache.nearcache.LettuceNearCacheConfig
 import io.bluetape4k.io.serializer.BinarySerializers
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodec
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
@@ -127,9 +127,9 @@ data class LettuceNearCacheProperties(
         else -> LettuceBinaryCodecs.default()
     }
 
-    fun buildNearCacheConfig(regionName: String): NearCacheConfig<String, Any> {
+    fun buildNearCacheConfig(regionName: String): LettuceNearCacheConfig<String, Any> {
         val ttl = resolveRedisTtl(regionName)
-        return NearCacheConfig(
+        return LettuceNearCacheConfig(
             cacheName = regionName,
             maxLocalSize = localMaxSize,
             frontExpireAfterWrite = localExpireAfterWrite,

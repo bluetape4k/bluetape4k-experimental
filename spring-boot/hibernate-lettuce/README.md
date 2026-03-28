@@ -1,4 +1,4 @@
-# spring-boot-hibernate-cache-lettuce-near
+# spring-boot-hibernate-lettuce
 
 Hibernate 7 **2nd Level Cache** (Lettuce Near Cache) 를 위한 **Spring Boot 4 Auto-Configuration**.
 
@@ -22,7 +22,7 @@ Hibernate 7 **2nd Level Cache** (Lettuce Near Cache) 를 위한 **Spring Boot 4 
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation(project(":hibernate-redis-near"))
+    implementation(project(":spring-boot-hibernate-lettuce"))
 
     // Spring Boot Starters
     implementation(Libs.springBootStarter("data-jpa"))
@@ -226,7 +226,7 @@ bluetape4k:
 ## 테스트 실행
 
 ```bash
-./gradlew :hibernate-redis-near:test
+./gradlew :spring-boot-hibernate-lettuce:test
 ```
 
 단위 테스트는 `ApplicationContextRunner`로 실제 Redis/DB 없이 실행된다. 통합 테스트(
@@ -234,6 +234,6 @@ bluetape4k:
 
 ## 관련 모듈
 
-- [`infra/cache-lettuce-near`](../../infra/cache-lettuce-near/README.md) — Near Cache 코어
-- [`infra/hibernate-cache-lettuce-near`](../../infra/hibernate-cache-lettuce-near/README.md) — Hibernate Region Factory
-- [`examples/hibernate-cache-lettuce-near-demo`](../../examples/hibernate-cache-lettuce-near-demo/) — 전체 동작 예제
+- `bluetape4k-cache-lettuce` — Near Cache 코어 (bluetape4k-projects 로 승격)
+- [`infra/hibernate-cache-lettuce`](../../infra/hibernate-cache-lettuce/README.md) — Hibernate Region Factory
+- [`examples/spring-boot-hibernate-lettuce-demo`](../../examples/spring-boot-hibernate-lettuce-demo/) — 전체 동작 예제

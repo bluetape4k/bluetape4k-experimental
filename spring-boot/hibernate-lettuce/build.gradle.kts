@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     api(project(":hibernate-cache-lettuce"))
-    api(project(":cache-lettuce"))
+    api(Libs.bluetape4k_cache_lettuce)
     api(Libs.bluetape4k_io)
     api(Libs.bluetape4k_redis)
     api(Libs.springBoot("autoconfigure"))
