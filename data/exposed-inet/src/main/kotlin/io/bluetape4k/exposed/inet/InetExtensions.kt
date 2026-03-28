@@ -4,7 +4,6 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ComparisonOp
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -43,7 +42,7 @@ fun Table.cidr(name: String): Column<String> =
 class InetContainedByOp(
     expr1: Expression<*>,
     expr2: Expression<*>,
-) : ComparisonOp(expr1, expr2, "<<")
+): ComparisonOp(expr1, expr2, "<<")
 
 /**
  * 이 INET 컬럼 값이 지정한 CIDR [cidr] 네트워크에 포함되는지 확인하는 `<<` 연산자.

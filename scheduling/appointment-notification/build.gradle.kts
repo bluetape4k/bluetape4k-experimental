@@ -8,6 +8,7 @@ dependencies {
 
     implementation(Libs.exposed_jdbc)
     implementation(Libs.bluetape4k_exposed_jdbc)
+    implementation(Libs.exposed_migration_jdbc)
     implementation(Libs.springBootStarter("web"))
 
     // HA: Leader election for scheduler throttling

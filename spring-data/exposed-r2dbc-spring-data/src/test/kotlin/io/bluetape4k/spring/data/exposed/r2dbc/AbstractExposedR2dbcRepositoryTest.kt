@@ -4,7 +4,7 @@ import io.bluetape4k.spring.data.exposed.r2dbc.repository.config.EnableExposedR2
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
-import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
+import org.jetbrains.exposed.v1.migration.r2dbc.MigrationUtils
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.BeforeEach
@@ -32,7 +32,7 @@ abstract class AbstractExposedR2dbcRepositoryTest {
             )
         }
         suspendTransaction(r2dbcDatabase) {
-            SchemaUtils.createMissingTablesAndColumns(Users)
+            MigrationUtils.statementsRequiredForDatabaseMigration(Users).forEach { exec(it) }
             Users.deleteAll()
         }
     }

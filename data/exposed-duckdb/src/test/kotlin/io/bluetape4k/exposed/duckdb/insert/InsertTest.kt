@@ -16,7 +16,9 @@ import java.time.Instant
 
 class InsertTest : AbstractDuckDBTest() {
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private val DEFAULT_OCCURRED_AT: Instant = Instant.parse("2024-01-01T00:00:00Z")
+    }
 
     private data class EventFixture(
         val eventId: Long,
@@ -24,7 +26,7 @@ class InsertTest : AbstractDuckDBTest() {
         val eventType: String,
         val region: String,
         val amount: BigDecimal?,
-        val occurredAt: Instant = Instant.parse("2024-01-01T00:00:00Z"),
+        val occurredAt: Instant = DEFAULT_OCCURRED_AT,
     )
 
     private val fixtures = listOf(

@@ -2,7 +2,7 @@ package io.bluetape4k.examples.exposed.mvc.config
 
 import io.bluetape4k.examples.exposed.mvc.domain.ProductEntity
 import io.bluetape4k.examples.exposed.mvc.domain.Products
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -14,7 +14,7 @@ class DataInitializer : ApplicationRunner {
 
     override fun run(args: ApplicationArguments) {
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Products)
+            MigrationUtils.statementsRequiredForDatabaseMigration(Products).forEach { exec(it) }
 
             if (ProductEntity.count() == 0L) {
                 ProductEntity.new {

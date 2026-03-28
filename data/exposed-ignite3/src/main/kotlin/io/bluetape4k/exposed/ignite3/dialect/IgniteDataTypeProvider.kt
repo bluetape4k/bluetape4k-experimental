@@ -31,7 +31,7 @@ object IgniteDataTypeProvider : DataTypeProvider() {
     // UUID 네이티브 지원
     override fun uuidType(): String = "UUID"
 
-    override fun uuidToDB(value: JavaUUID): Any = value.toString()
+    override fun uuidToDB(value: JavaUUID): Any = value
 
     // DATETIME → TIMESTAMP
     override fun dateTimeType(): String = "TIMESTAMP"

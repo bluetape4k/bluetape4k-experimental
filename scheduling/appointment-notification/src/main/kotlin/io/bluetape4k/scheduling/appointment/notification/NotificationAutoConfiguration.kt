@@ -7,7 +7,7 @@ import io.bluetape4k.redis.lettuce.leader.leaderGroupElection
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -49,7 +49,7 @@ class NotificationAutoConfiguration {
     fun notificationSchemaInitializer(): ApplicationRunner =
         ApplicationRunner {
             transaction {
-                SchemaUtils.createMissingTablesAndColumns(NotificationHistoryTable)
+                MigrationUtils.statementsRequiredForDatabaseMigration(NotificationHistoryTable).forEach { exec(it) }
             }
         }
 

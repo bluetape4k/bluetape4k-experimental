@@ -31,7 +31,7 @@ class SelectTest: AbstractBigQueryTest() {
 
     @Test
     fun `selectAll - 전체 이벤트 조회`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val response = runRawQuery("SELECT * FROM events")
@@ -42,7 +42,7 @@ class SelectTest: AbstractBigQueryTest() {
 
     @Test
     fun `where - 리전 필터`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val response = runRawQuery("SELECT COUNT(*) as cnt FROM events WHERE region = 'kr'")
@@ -53,7 +53,7 @@ class SelectTest: AbstractBigQueryTest() {
 
     @Test
     fun `orderBy - userId 내림차순 정렬`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val response = runRawQuery("SELECT user_id FROM events ORDER BY user_id DESC LIMIT 1")
@@ -64,7 +64,7 @@ class SelectTest: AbstractBigQueryTest() {
 
     @Test
     fun `count - 리전별 이벤트 수`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val response = runRawQuery(
@@ -79,7 +79,7 @@ class SelectTest: AbstractBigQueryTest() {
 
     @Test
     fun `sum - 리전별 매출 합계`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val response = runRawQuery(

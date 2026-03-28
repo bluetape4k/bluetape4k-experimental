@@ -5,6 +5,8 @@ import io.bluetape4k.exposed.tests.AbstractExposedTest
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.ShutdownQueue
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldBeLessThan
 import org.amshove.kluent.shouldBeNear
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -14,6 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
@@ -62,6 +65,12 @@ class VectorColumnTypeTest: AbstractExposedTest() {
         val embedding = vector("embedding", DIMENSION)
     }
 
+    object EmbeddingPairs: LongIdTable("embedding_pairs") {
+        val name = varchar("name", 255)
+        val embedding = vector("embedding", DIMENSION)
+        val query = vector("query_embedding", DIMENSION)
+    }
+
     /**
      * pgvector 전용 테이블 생성/삭제를 처리하는 헬퍼.
      *
@@ -108,51 +117,61 @@ class VectorColumnTypeTest: AbstractExposedTest() {
 
     @Test
     fun `코사인 거리 기준 유사도 검색`() {
-        withVectorTables(Embeddings) {
-            Embeddings.insert {
-                it[name] = "a"
+        withVectorTables(EmbeddingPairs) {
+            EmbeddingPairs.insert {
+                it[name] = "aligned"
                 it[embedding] = floatArrayOf(1.0f, 0.0f, 0.0f)
+                it[query] = floatArrayOf(1.0f, 0.0f, 0.0f)
             }
-            Embeddings.insert {
-                it[name] = "b"
+            EmbeddingPairs.insert {
+                it[name] = "orthogonal"
                 it[embedding] = floatArrayOf(0.0f, 1.0f, 0.0f)
+                it[query] = floatArrayOf(1.0f, 0.0f, 0.0f)
             }
-            Embeddings.insert {
-                it[name] = "c"
+            EmbeddingPairs.insert {
+                it[name] = "near"
                 it[embedding] = floatArrayOf(0.9f, 0.1f, 0.0f)
+                it[query] = floatArrayOf(1.0f, 0.0f, 0.0f)
             }
 
-            val results = Embeddings
+            val results = EmbeddingPairs
                 .selectAll()
-                .orderBy(Embeddings.embedding.cosineDistance(Embeddings.embedding) to SortOrder.ASC)
-                .map { it[Embeddings.name] }
+                .orderBy(EmbeddingPairs.embedding.cosineDistance(EmbeddingPairs.query) to SortOrder.ASC)
+                .map { it[EmbeddingPairs.name] }
 
             results.size shouldBeEqualTo 3
+            results.first() shouldBeEqualTo "aligned"
+            results.last() shouldBeEqualTo "orthogonal"
         }
     }
 
     @Test
     fun `L2 거리 기준 유사도 검색`() {
-        withVectorTables(Embeddings) {
-            Embeddings.insert {
+        withVectorTables(EmbeddingPairs) {
+            EmbeddingPairs.insert {
                 it[name] = "origin"
                 it[embedding] = floatArrayOf(0.0f, 0.0f, 0.0f)
+                it[query] = floatArrayOf(0.0f, 0.0f, 0.0f)
             }
-            Embeddings.insert {
+            EmbeddingPairs.insert {
                 it[name] = "near"
                 it[embedding] = floatArrayOf(1.0f, 0.0f, 0.0f)
+                it[query] = floatArrayOf(0.0f, 0.0f, 0.0f)
             }
-            Embeddings.insert {
+            EmbeddingPairs.insert {
                 it[name] = "far"
                 it[embedding] = floatArrayOf(10.0f, 10.0f, 10.0f)
+                it[query] = floatArrayOf(0.0f, 0.0f, 0.0f)
             }
 
-            val results = Embeddings
+            val results = EmbeddingPairs
                 .selectAll()
-                .orderBy(Embeddings.embedding.l2Distance(Embeddings.embedding) to SortOrder.ASC)
-                .map { it[Embeddings.name] }
+                .orderBy(EmbeddingPairs.embedding.l2Distance(EmbeddingPairs.query) to SortOrder.ASC)
+                .map { it[EmbeddingPairs.name] }
 
             results.size shouldBeEqualTo 3
+            results.first() shouldBeEqualTo "origin"
+            results.last() shouldBeEqualTo "far"
         }
     }
 
@@ -174,6 +193,50 @@ class VectorColumnTypeTest: AbstractExposedTest() {
     fun `VectorColumnType sqlType 검증`() {
         val columnType = VectorColumnType(128)
         columnType.sqlType() shouldBeEqualTo "VECTOR(128)"
+    }
+
+    @Test
+    fun `VectorColumnType 은 문자열과 PGvector 를 FloatArray 로 복원한다`() {
+        val columnType = VectorColumnType(DIMENSION)
+
+        columnType.valueFromDB("[1,2,3]").toList() shouldBeEqualTo listOf(1.0f, 2.0f, 3.0f)
+        columnType.valueFromDB(PGvector(floatArrayOf(4.0f, 5.0f, 6.0f))).toList() shouldBeEqualTo listOf(4.0f, 5.0f, 6.0f)
+    }
+
+    @Test
+    fun `VectorColumnType 은 차원이 맞지 않는 벡터를 거부한다`() {
+        val columnType = VectorColumnType(DIMENSION)
+
+        assertThrows<IllegalArgumentException> {
+            columnType.notNullValueToDB(floatArrayOf(1.0f, 2.0f))
+        }
+    }
+
+    @Test
+    fun `VectorDistanceOp 는 select expr 로 거리값을 직접 조회할 수 있다`() {
+        withVectorTables(EmbeddingPairs) {
+            EmbeddingPairs.insert {
+                it[name] = "distance-check"
+                it[embedding] = floatArrayOf(1.0f, 0.0f, 0.0f)
+                it[query] = floatArrayOf(0.0f, 1.0f, 0.0f)
+            }
+
+            val cosineExpr = EmbeddingPairs.embedding.cosineDistance(EmbeddingPairs.query)
+            val l2Expr = EmbeddingPairs.embedding.l2Distance(EmbeddingPairs.query)
+            val innerExpr = EmbeddingPairs.embedding.innerProduct(EmbeddingPairs.query)
+
+            val row = EmbeddingPairs.select(cosineExpr, l2Expr, innerExpr).single()
+            val cosine = row[cosineExpr]
+            val l2 = row[l2Expr]
+            val inner = row[innerExpr]
+
+            cosine.shouldNotBeNull()
+            l2.shouldNotBeNull()
+            inner.shouldNotBeNull()
+            cosine shouldBeGreaterThan 0.9
+            l2 shouldBeGreaterThan 1.4
+            inner shouldBeLessThan 0.1
+        }
     }
 
     @Test

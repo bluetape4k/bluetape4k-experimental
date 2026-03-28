@@ -7,6 +7,7 @@ import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
+import org.junit.jupiter.api.Test
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -66,7 +67,7 @@ class PhoneNumberColumnTypeTest : AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `잘못된 번호 입력 시 예외 발생`(testDB: TestDB) {
+    fun `phoneStr 컬럼에 잘못된 형식 입력 시 예외 발생`(testDB: TestDB) {
         withTables(testDB, ContactTable) {
             assertFailsWith<IllegalArgumentException> {
                 ContactTable.insert {
@@ -89,6 +90,32 @@ class PhoneNumberColumnTypeTest : AbstractExposedTest() {
             val row = ContactTable.selectAll().single()
             val phoneStr = row[ContactTable.phoneStr]
             phoneStr shouldBeEqualTo "+821099998888"
+        }
+    }
+
+    @Test
+    fun `PhoneNumberTransformer 는 잘못된 region 을 거부한다`() {
+        assertFailsWith<IllegalArgumentException> {
+            PhoneNumberTransformer("")
+        }
+    }
+
+    @Test
+    fun `PhoneNumberTransformer 는 DB 문자열을 PhoneNumber 로 복원한다`() {
+        val transformer = PhoneNumberTransformer("US")
+
+        val phoneNumber = transformer.wrap("+1-650-253-0000")
+        val e164 = transformer.unwrap(phoneNumber)
+
+        e164 shouldBeEqualTo "+16502530000"
+    }
+
+    @Test
+    fun `PhoneNumberStringColumnType 은 잘못된 번호를 거부한다`() {
+        val columnType = PhoneNumberStringColumnType("KR")
+
+        assertFailsWith<IllegalArgumentException> {
+            columnType.notNullValueToDB("not-a-phone-number")
         }
     }
 }

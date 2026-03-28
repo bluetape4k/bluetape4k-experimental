@@ -20,7 +20,12 @@ class VectorColumnType(val dimension: Int): ColumnType<FloatArray>() {
 
     override fun sqlType(): String = "VECTOR($dimension)"
 
-    override fun notNullValueToDB(value: FloatArray): Any = PGvector(value)
+    override fun notNullValueToDB(value: FloatArray): Any {
+        require(value.size == dimension) {
+            "벡터 차원 불일치: expected=$dimension, actual=${value.size}"
+        }
+        return PGvector(value)
+    }
 
     override fun valueFromDB(value: Any): FloatArray = when (value) {
         is PGvector -> value.toArray()

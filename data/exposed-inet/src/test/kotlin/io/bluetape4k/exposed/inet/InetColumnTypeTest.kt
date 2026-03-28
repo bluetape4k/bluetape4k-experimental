@@ -9,6 +9,8 @@ import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.net.InetAddress
@@ -73,6 +75,33 @@ class InetColumnTypeTest : AbstractExposedTest() {
             val row = NetworkTable.selectAll().single()
             val result = row[NetworkTable.network]
             result shouldBeEqualTo "10.0.0.0/8"
+        }
+    }
+
+    @Test
+    fun `InetAddressColumnType 과 CidrColumnType 은 dialect 에 따라 sqlType 과 marker 를 선택한다`() {
+        val inetType = InetAddressColumnType()
+        val cidrType = CidrColumnType()
+        val addr = InetAddress.getByName("192.168.1.1")
+
+        withDb(TestDB.H2) {
+            inetType.sqlType() shouldBeEqualTo "VARCHAR(45)"
+            inetType.parameterMarker(addr) shouldBeEqualTo "?"
+            cidrType.sqlType() shouldBeEqualTo "VARCHAR(50)"
+            cidrType.parameterMarker("192.168.0.0/24") shouldBeEqualTo "?"
+        }
+
+        withDb(TestDB.POSTGRESQL) {
+            inetType.sqlType() shouldBeEqualTo "INET"
+            inetType.parameterMarker(addr) shouldBeEqualTo "?::inet"
+            cidrType.sqlType() shouldBeEqualTo "CIDR"
+            cidrType.parameterMarker("192.168.0.0/24") shouldBeEqualTo "?::cidr"
+        }
+    }
+
+    private fun withDb(testDB: TestDB, block: () -> Unit) {
+        transaction(db = testDB.connect()) {
+            block()
         }
     }
 }

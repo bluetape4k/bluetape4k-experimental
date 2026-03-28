@@ -1,10 +1,13 @@
 package io.bluetape4k.exposed.bigquery
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.bigquery.Bigquery
+import com.google.auth.http.HttpCredentialsAdapter
+import com.google.auth.oauth2.AccessToken
+import com.google.auth.oauth2.GoogleCredentials
 import com.google.api.services.bigquery.model.QueryResponse
+import io.bluetape4k.exposed.bigquery.domain.Events
 import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
@@ -12,6 +15,7 @@ import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.Query
+import org.junit.jupiter.api.BeforeAll
 
 /**
  * BigQuery 에뮬레이터(goccy/bigquery-emulator)를 사용하는 테스트 기반 클래스.
@@ -61,8 +65,9 @@ abstract class AbstractBigQueryTest {
         private val bigqueryClient: Bigquery by lazy {
             val transport = GoogleNetHttpTransport.newTrustedTransport()
             val json = GsonFactory.getDefaultInstance()
-            val credential = GoogleCredential().setAccessToken("emulator-fake-token")
-            Bigquery.Builder(transport, json, credential)
+            val credentials = GoogleCredentials.create(AccessToken("emulator-fake-token", null))
+            val requestInitializer = HttpCredentialsAdapter(credentials)
+            Bigquery.Builder(transport, json, requestInitializer)
                 .setRootUrl("http://${BigQueryEmulator.host}:${BigQueryEmulator.port}/")
                 .setApplicationName("exposed-bigquery-test")
                 .build()
@@ -83,6 +88,21 @@ abstract class AbstractBigQueryTest {
 
         /** Exposed [Query]를 SQL로 변환한 뒤 에뮬레이터에서 실행합니다. */
         fun runQuery(query: Query): QueryResponse = bqContext.runQuery(query)
+
+        /**
+         * 테스트 클래스별로 한 번만 실행됩니다.
+         *
+         * Exposed [Events] 테이블 정의에서 DDL을 생성해 에뮬레이터에 적용합니다.
+         * raw SQL 대신 [BigQueryContext.execCreateTable]을 사용하므로 컬럼 추가 시 자동으로 반영됩니다.
+         */
+        @JvmStatic
+        @BeforeAll
+        fun setupEventsTable() {
+            // 이전 테스트 실행에서 남은 테이블 정리 (에뮬레이터는 DROP TABLE IF EXISTS 미지원)
+            runCatching { runRawQuery("DROP TABLE ${Events.tableName}") }
+            // Exposed Table 정의에서 DDL 자동 생성 후 실행
+            with(bqContext) { Events.execCreateTable() }
+        }
     }
 
     // ── SELECT ────────────────────────────────────────────────────────────────
@@ -116,31 +136,16 @@ abstract class AbstractBigQueryTest {
         return with(bqContext) { t.execDelete(where) }
     }
 
-    // ── TABLE LIFECYCLE ───────────────────────────────────────────────────────
+    // ── TEST DATA LIFECYCLE ──────────────────────────────────────────────────
 
     /**
-     * events 테이블을 생성하고 테스트 블록 실행 후 삭제합니다.
+     * 테스트 전에 events 테이블 데이터를 초기화하고 블록을 실행합니다.
      *
-     * NOTE: bigquery-emulator 가 `DROP TABLE IF EXISTS` 를 지원하지 않아 runCatching 으로 무시합니다.
+     * 테이블 자체는 [setupEventsTable]에서 테스트 클래스별로 한 번만 생성됩니다.
+     * 매 테스트마다 DROP/CREATE 하지 않고 데이터만 삭제하여 테스트 속도를 개선합니다.
      */
-    protected fun withEventsTable(block: () -> Unit) {
-        runCatching { runRawQuery("DROP TABLE events") }
-        runRawQuery(
-            """
-            CREATE TABLE events (
-                event_id    INT64     NOT NULL,
-                user_id     INT64     NOT NULL,
-                event_type  STRING    NOT NULL,
-                region      STRING    NOT NULL,
-                amount      NUMERIC,
-                occurred_at TIMESTAMP NOT NULL
-            )
-            """.trimIndent()
-        )
-        try {
-            block()
-        } finally {
-            runCatching { runRawQuery("DROP TABLE events") }
-        }
+    protected fun withEventsData(block: () -> Unit) {
+        with(bqContext) { Events.execDeleteAll() }
+        block()
     }
 }

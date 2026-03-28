@@ -4,11 +4,13 @@ import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.warn
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnDiff
+import org.jetbrains.exposed.v1.core.DatabaseApi
 import org.jetbrains.exposed.v1.core.Index
 import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.transactions.currentTransaction
 import org.jetbrains.exposed.v1.core.vendors.VendorDialect
+import org.jetbrains.exposed.v1.jdbc.Database
 
 private val log = KotlinLogging.logger {}
 
@@ -28,7 +30,16 @@ class IgniteDialect : VendorDialect(
     dataTypeProvider = IgniteDataTypeProvider,
     functionProvider = IgniteFunctionProvider,
 ) {
-    companion object : DialectNameProvider("Ignite")
+    companion object : DialectNameProvider("Ignite") {
+        const val JDBC_DRIVER = "org.apache.ignite.jdbc.IgniteJdbcDriver"
+        const val JDBC_URL_PREFIX = "jdbc:ignite:thin"
+
+        init {
+            Database.registerJdbcDriver(JDBC_URL_PREFIX, JDBC_DRIVER, dialectName)
+            DatabaseApi.registerDialect(dialectName) { IgniteDialect() }
+            Database.registerDialectMetadata(dialectName) { IgniteDialectMetadata() }
+        }
+    }
 
     // Ignite 3는 다중 생성 키(RETURNING) 미지원
     override val supportsMultipleGeneratedKeys: Boolean = false

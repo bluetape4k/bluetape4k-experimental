@@ -9,6 +9,7 @@ dependencies {
     implementation(Libs.exposed_spring_boot4_starter)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_dao)
+    implementation(Libs.exposed_migration_jdbc)
     implementation(Libs.exposed_java_time)
     runtimeOnly(Libs.h2_v2)
 

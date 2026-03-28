@@ -47,7 +47,7 @@ class InsertTest: AbstractBigQueryTest() {
 
     @Test
     fun `execInsert - 이벤트 대량 적재`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val rows = Events.selectAll().withBigQuery().toList()
@@ -57,7 +57,7 @@ class InsertTest: AbstractBigQueryTest() {
 
     @Test
     fun `execInsert - 리전별 집계 검증`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val krRows = Events.selectAll()

@@ -17,7 +17,18 @@ import java.time.Instant
 
 class SelectTest : AbstractDuckDBTest() {
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private val OCCURRED_AT: Instant = Instant.parse("2024-01-01T00:00:00Z")
+        private val DEFAULT_AMOUNT = BigDecimal("10.00")
+
+        private val FIXTURES = listOf(
+            Triple(1L, 100L, "kr"),
+            Triple(2L, 101L, "kr"),
+            Triple(3L, 200L, "us"),
+            Triple(4L, 201L, "us"),
+            Triple(5L, 300L, "eu"),
+        )
+    }
 
     @BeforeEach
     fun setUp() {
@@ -28,20 +39,14 @@ class SelectTest : AbstractDuckDBTest() {
 
     private fun insertFixtures() {
         transaction(db) {
-            listOf(
-                Triple(1L, 100L, "kr"),
-                Triple(2L, 101L, "kr"),
-                Triple(3L, 200L, "us"),
-                Triple(4L, 201L, "us"),
-                Triple(5L, 300L, "eu"),
-            ).forEach { (id, userId, region) ->
+            FIXTURES.forEach { (id, userId, region) ->
                 Events.insert {
                     it[eventId] = id
                     it[Events.userId] = userId
                     it[eventType] = "PURCHASE"
                     it[Events.region] = region
-                    it[amount] = BigDecimal("10.00")
-                    it[occurredAt] = Instant.parse("2024-01-01T00:00:00Z")
+                    it[amount] = DEFAULT_AMOUNT
+                    it[occurredAt] = OCCURRED_AT
                 }
             }
         }

@@ -3,7 +3,6 @@ package io.bluetape4k.exposed.mysql8.gis
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.LineString
-import org.locationtech.jts.geom.LinearRing
 import org.locationtech.jts.geom.MultiLineString
 import org.locationtech.jts.geom.MultiPoint
 import org.locationtech.jts.geom.MultiPolygon

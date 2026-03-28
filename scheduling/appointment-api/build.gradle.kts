@@ -37,6 +37,7 @@ dependencies {
     testImplementation(Libs.springBoot("webmvc-test"))
     testImplementation(Libs.bluetape4k_junit5)
     testImplementation(Libs.kluent)
+    testImplementation(Libs.exposed_migration_jdbc)
 
     // Gatling
     gatling(Libs.gatling_charts_highcharts)

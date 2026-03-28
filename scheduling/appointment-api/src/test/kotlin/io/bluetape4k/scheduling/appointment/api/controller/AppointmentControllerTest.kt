@@ -21,7 +21,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -58,14 +58,14 @@ class AppointmentControllerTest {
     @BeforeEach
     fun setup() {
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(
+            MigrationUtils.statementsRequiredForDatabaseMigration(
                 Clinics, OperatingHoursTable, ClinicDefaultBreakTimes, BreakTimes, ClinicClosures,
                 Doctors, DoctorSchedules, DoctorAbsences,
                 TreatmentTypes, Equipments, TreatmentEquipments,
                 ConsultationTopics, Holidays,
                 Appointments, AppointmentNotes,
                 RescheduleCandidates, AppointmentEventLogs,
-            )
+            ).forEach { exec(it) }
 
             // Clean up in reverse FK order
             AppointmentEventLogs.deleteAll()

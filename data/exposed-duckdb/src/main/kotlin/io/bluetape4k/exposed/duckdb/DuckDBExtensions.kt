@@ -3,6 +3,7 @@ package io.bluetape4k.exposed.duckdb
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Transaction
@@ -63,6 +64,6 @@ fun <T> queryFlow(
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     block: Transaction.() -> Iterable<T>,
 ): Flow<T> = flow {
-    val items = withContext(dispatcher) { transaction(db) { block() } }
+    val items = withContext(dispatcher) { transaction(db) { block().toList() } }
     items.forEach { emit(it) }
 }

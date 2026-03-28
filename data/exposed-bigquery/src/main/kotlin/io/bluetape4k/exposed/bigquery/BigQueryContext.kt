@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
@@ -195,6 +196,43 @@ class BigQueryContext(
     /** Exposed DELETE DSL을 BigQuery에서 비동기로 실행합니다. */
     suspend fun <T : Table> T.execDeleteSuspending(where: Op<Boolean>): QueryResponse =
         withContext(dispatcher) { execDelete(where) }
+
+    // ── DDL ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Exposed [Table] 정의에서 CREATE TABLE DDL을 생성하여 BigQuery에서 실행합니다.
+     *
+     * [sqlGenDb](H2 PostgreSQL 모드)를 이용해 표준 SQL DDL을 생성한 뒤,
+     * BigQuery(ZetaSQL) 호환 타입으로 변환하여 REST API로 전달합니다.
+     *
+     * 타입 매핑:
+     * - `BIGINT` → `INT64`
+     * - `VARCHAR(n)` → `STRING`
+     * - `DECIMAL(p, s)` → `NUMERIC`
+     * - standalone `NULL` 제거 (BigQuery는 nullable 컬럼에 NULL 키워드 불필요)
+     *
+     * 테이블이 이미 존재하면 에러가 발생하므로, 호출 전에 `DROP TABLE tableName` 을 실행하세요.
+     */
+    fun Table.execCreateTable() {
+        transaction(sqlGenDb) { SchemaUtils.createStatements(this@execCreateTable) }
+            .map { sql -> sql.toBigQueryDdl() }
+            .forEach { runRawQuery(it) }
+    }
+
+    private fun String.toBigQueryDdl(): String = this
+        .replace(Regex("\\bBIGINT\\b"), "INT64")
+        .replace(Regex("\\bVARCHAR\\(\\d+\\)"), "STRING")
+        .replace(Regex("\\bDECIMAL\\(\\d+,\\s*\\d+\\)"), "NUMERIC")
+        .replace(Regex("(?<!NOT) NULL(?=[,)])"), "")
+
+    /**
+     * 테이블의 모든 행을 삭제합니다.
+     *
+     * BigQuery는 WHERE 절 없는 DELETE를 지원하지 않으므로 `WHERE TRUE`를 사용합니다.
+     * [tableName]은 Exposed [Table] 객체의 상수값으로 SQL 인젝션 위험이 없습니다.
+     */
+    fun Table.execDeleteAll(): QueryResponse =
+        runRawQuery("DELETE FROM $tableName WHERE TRUE")
 
     // ── INTERNAL ──────────────────────────────────────────────────────────────
 

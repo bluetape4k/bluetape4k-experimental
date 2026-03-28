@@ -74,7 +74,7 @@ object Events : SnowflakeIdTable("events") {
 ```kotlin
 val db = Database.connect(
     url = "jdbc:ignite:thin://localhost:10800/PUBLIC",
-    driver = "org.apache.ignite.internal.jdbc.IgniteJdbcDriver",
+    driver = "org.apache.ignite.jdbc.IgniteJdbcDriver",
     databaseConfig = DatabaseConfig {
         defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED
     }

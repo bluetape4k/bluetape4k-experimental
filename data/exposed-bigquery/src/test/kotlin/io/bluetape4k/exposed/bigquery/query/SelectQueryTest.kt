@@ -45,7 +45,7 @@ class SelectQueryTest: AbstractBigQueryTest() {
 
     @Test
     fun `selectAll - withBigQuery로 전체 이벤트 조회`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val rows = Events.selectAll().withBigQuery().toList()
@@ -57,7 +57,7 @@ class SelectQueryTest: AbstractBigQueryTest() {
 
     @Test
     fun `where - withBigQuery로 리전 필터 후 Column 접근`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val rows = Events.selectAll()
@@ -72,7 +72,7 @@ class SelectQueryTest: AbstractBigQueryTest() {
 
     @Test
     fun `orderBy - withBigQuery로 userId 내림차순 정렬`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val rows = Events.selectAll()
@@ -86,7 +86,7 @@ class SelectQueryTest: AbstractBigQueryTest() {
 
     @Test
     fun `count - withBigQuery로 리전별 이벤트 수`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val countExpr = Events.eventId.count()
@@ -103,7 +103,7 @@ class SelectQueryTest: AbstractBigQueryTest() {
 
     @Test
     fun `sum - withBigQuery로 리전별 매출 합계 후 Column 접근`() {
-        withEventsTable {
+        withEventsData {
             insertFixtures()
 
             val sumExpr = Events.amount.sum()

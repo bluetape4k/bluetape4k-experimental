@@ -9,6 +9,7 @@ import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
+import org.awaitility.Awaitility.await
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -21,21 +22,24 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 import java.util.Collections
+import java.util.concurrent.TimeUnit.SECONDS
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
 
-    companion object: KLoggingChannel()
+    companion object: KLoggingChannel() {
+        private const val DB_URL = "jdbc:h2:mem:test-exposed-lettuce;DB_CLOSE_DELAY=-1;MODE=MySQL"
+        private const val CACHE_ONLY_ID = 99999L
+    }
 
     private lateinit var repo: ItemRepository
 
     @BeforeAll
     fun setupDb() {
-        Database.connect(
-            url = "jdbc:h2:mem:test-exposed-lettuce;DB_CLOSE_DELAY=-1;MODE=MySQL",
-            driver = "org.h2.Driver",
-        )
+        Database.connect(url = DB_URL, driver = "org.h2.Driver")
         transaction {
             SchemaUtils.create(ItemTable)
         }
@@ -205,15 +209,12 @@ class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
         // cache에 저장 → write-behind 큐에 적재
         wbRepo.save(created.id, created)
 
-        // flush 대기: 폴링으로 최대 5초 대기 (write-behind delay 기본 1000ms)
+        // flush 대기: 최대 5초 (write-behind delay 기본 1000ms)
         val itemId = created.id
-        val deadline = System.currentTimeMillis() + 5000L
-        while (System.currentTimeMillis() < deadline) {
-            val found = transaction {
+        await().atMost(5, SECONDS).untilAsserted {
+            transaction {
                 ItemTable.selectAll().where { ItemTable.id eq itemId }.singleOrNull()
-            }
-            if (found != null) break
-            Thread.sleep(100L)
+            }.shouldNotBeNull()
         }
 
         // DB에서 직접 조회하여 반영 확인
@@ -234,7 +235,7 @@ class ItemRepositoryTest: AbstractJdbcLettuceRepositoryTest() {
         noneRepo.clearCache()
 
         // DB에 없는 항목을 캐시에만 저장
-        val dto = ItemDto(99999L, "CacheOnly", BigDecimal("0.01"))
+        val dto = ItemDto(CACHE_ONLY_ID, "CacheOnly", BigDecimal("0.01"))
         noneRepo.save(dto.id, dto)
 
         // 캐시에서 조회됨

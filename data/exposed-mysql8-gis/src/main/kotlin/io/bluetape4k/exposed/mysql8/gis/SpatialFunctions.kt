@@ -10,7 +10,6 @@ import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.LineString
 import org.locationtech.jts.geom.MultiLineString
 import org.locationtech.jts.geom.MultiPolygon
-import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Polygon
 
 //

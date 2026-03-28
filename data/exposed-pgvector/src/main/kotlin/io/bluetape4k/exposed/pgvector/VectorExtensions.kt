@@ -2,7 +2,9 @@ package io.bluetape4k.exposed.pgvector
 
 import com.pgvector.PGvector
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.DoubleColumnType
 import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
@@ -82,7 +84,9 @@ class VectorDistanceOp(
     private val left: Expression<FloatArray>,
     private val right: Expression<FloatArray>,
     private val operator: String,
-): Expression<Double>() {
+) : ExpressionWithColumnType<Double>() {
+    override val columnType = DoubleColumnType()
+
     override fun toQueryBuilder(queryBuilder: QueryBuilder) {
         queryBuilder.append(left)
         queryBuilder.append(" $operator ")

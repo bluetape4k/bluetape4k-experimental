@@ -69,10 +69,10 @@ class TstzRangePostgresTest : AbstractExposedTest() {
             val row = PgEventTable.selectAll().single()
             val result = row[PgEventTable.period]
             result.shouldNotBeNull()
+            // PostgreSQL은 tstzrange를 canonical form으로 정규화하므로
+            // inclusive/exclusive 경계가 변환될 수 있으나, start/end 시각은 보존됨
             result.start shouldBeEqualTo start
             result.end shouldBeEqualTo end
-            // PostgreSQL은 tstzrange를 canonical form으로 정규화할 수 있으므로
-            // inclusive/exclusive 경계가 변환될 수 있다
         }
     }
 
@@ -153,6 +153,33 @@ class TstzRangePostgresTest : AbstractExposedTest() {
 
             rows.size shouldBeEqualTo 1
             rows.first()[PgOverlapTestTable.label] shouldBeEqualTo "포함"
+        }
+    }
+
+    @Test
+    fun `PostgreSQL TSTZRANGE adjacent 연산자`() {
+        val left = TimestampRange(
+            Instant.parse("2024-01-01T00:00:00Z"),
+            Instant.parse("2024-06-01T00:00:00Z"),
+        )
+        val right = TimestampRange(
+            Instant.parse("2024-06-01T00:00:00Z"),
+            Instant.parse("2024-12-31T23:59:59Z"),
+        )
+
+        withTables(TestDB.POSTGRESQL, PgOverlapTestTable) {
+            PgOverlapTestTable.insert {
+                it[label] = "adjacent"
+                it[range1] = left
+                it[range2] = right
+            }
+
+            val rows = PgOverlapTestTable.selectAll()
+                .where { PgOverlapTestTable.range1.isAdjacentTo(PgOverlapTestTable.range2) }
+                .toList()
+
+            rows.size shouldBeEqualTo 1
+            rows.first()[PgOverlapTestTable.label] shouldBeEqualTo "adjacent"
         }
     }
 

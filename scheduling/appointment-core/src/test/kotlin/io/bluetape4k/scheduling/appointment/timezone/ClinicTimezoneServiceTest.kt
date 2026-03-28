@@ -6,7 +6,7 @@ import io.bluetape4k.scheduling.appointment.repository.ClinicRepository
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeAll
@@ -35,7 +35,7 @@ class ClinicTimezoneServiceTest {
     fun setup() {
         Database.connect("jdbc:h2:mem:timezone_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL", "org.h2.Driver")
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(Clinics)
+            MigrationUtils.statementsRequiredForDatabaseMigration(Clinics).forEach { exec(it) }
 
             seoulClinicId = Clinics.insert {
                 it[name] = "서울 클리닉"

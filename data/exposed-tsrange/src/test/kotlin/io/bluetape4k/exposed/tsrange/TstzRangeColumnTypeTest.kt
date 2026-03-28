@@ -9,6 +9,7 @@ import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
@@ -142,6 +143,38 @@ class TstzRangeColumnTypeTest : AbstractExposedTest() {
         range1.overlaps(range2).shouldBeFalse()
     }
 
+    @Test
+    fun `TstzRangeColumnType 은 PostgreSQL JDBC literal 을 파싱한다`() {
+        val columnType = TstzRangeColumnType()
+        val literal = "[\"2024-01-01 00:00:00+00\",\"2024-12-31 23:59:59+00\")"
+
+        val result = columnType.valueFromDB(literal)
+
+        result.start shouldBeEqualTo Instant.parse("2024-01-01T00:00:00Z")
+        result.end shouldBeEqualTo Instant.parse("2024-12-31T23:59:59Z")
+        result.lowerInclusive.shouldBeTrue()
+        result.upperInclusive.shouldBeFalse()
+    }
+
+    @Test
+    fun `TstzRangeColumnType 은 dialect 에 따라 sqlType 과 parameterMarker 를 선택한다`() {
+        val columnType = TstzRangeColumnType()
+        val sample = TimestampRange(
+            Instant.parse("2024-01-01T00:00:00Z"),
+            Instant.parse("2024-01-02T00:00:00Z"),
+        )
+
+        withDb(TestDB.H2) {
+            columnType.sqlType() shouldBeEqualTo "VARCHAR(120)"
+            columnType.parameterMarker(sample) shouldBeEqualTo "?"
+        }
+
+        withDb(TestDB.POSTGRESQL) {
+            columnType.sqlType() shouldBeEqualTo "TSTZRANGE"
+            columnType.parameterMarker(sample) shouldBeEqualTo "?::tstzrange"
+        }
+    }
+
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `여러 범위 저장 및 조회`(testDB: TestDB) {
@@ -170,6 +203,12 @@ class TstzRangeColumnTypeTest : AbstractExposedTest() {
 
             val rows = EventTable.selectAll().toList()
             rows.size shouldBeEqualTo 3
+        }
+    }
+
+    private fun withDb(testDB: TestDB, block: () -> Unit) {
+        transaction(db = testDB.connect()) {
+            block()
         }
     }
 }

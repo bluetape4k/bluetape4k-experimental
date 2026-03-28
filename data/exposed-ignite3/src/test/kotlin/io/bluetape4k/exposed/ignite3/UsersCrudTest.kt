@@ -3,25 +3,40 @@ package io.bluetape4k.exposed.ignite3
 import io.bluetape4k.exposed.ignite3.domain.UserDTO
 import io.bluetape4k.exposed.ignite3.domain.Users
 import io.bluetape4k.exposed.ignite3.domain.toUserDTO
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UsersCrudTest : AbstractIgnite3Test() {
+
+    companion object : KLogging()
+
+    @BeforeAll
+    fun setupTable() {
+        dropAndCreateTables(Users)
+    }
 
     @BeforeEach
     fun setup() {
-        dropAndCreateTables(Users)
+        transaction(db) {
+            Users.deleteAll()
+            db.dialectMetadata.resetCaches()
+        }
     }
 
     @Test

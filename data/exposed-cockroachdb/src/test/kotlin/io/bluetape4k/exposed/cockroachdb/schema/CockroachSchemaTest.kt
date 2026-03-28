@@ -2,9 +2,9 @@ package io.bluetape4k.exposed.cockroachdb.schema
 
 import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.exposed.cockroachdb.domain.Users
+import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeFalse
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.junit.jupiter.api.Test
 
 class CockroachSchemaTest : AbstractCockroachDBTest() {
@@ -17,10 +17,9 @@ class CockroachSchemaTest : AbstractCockroachDBTest() {
     }
 
     @Test
-    fun `createMissingTablesAndColumns is idempotent`() {
+    fun `statementsRequiredForDatabaseMigration - 이미 존재하는 테이블은 마이그레이션 구문 없음`() {
         withTables(Users) {
-            SchemaUtils.createMissingTablesAndColumns(Users)
-            // 중복 호출해도 예외 없음
+            MigrationUtils.statementsRequiredForDatabaseMigration(Users).shouldBeEmpty()
         }
     }
 
