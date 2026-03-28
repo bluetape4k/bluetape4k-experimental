@@ -242,8 +242,8 @@ object Libs {
 
     val bluetape4k_core = bluetape4k("core")
     val bluetape4k_coroutines = bluetape4k("coroutines")
-    val bluetape4k_logging = bluetape4k("logging")
     val bluetape4k_junit5 = bluetape4k("junit5")
+    val bluetape4k_logging = bluetape4k("logging")
     val bluetape4k_testcontainers = bluetape4k("testcontainers")
 
     // Virtual Thread
@@ -274,15 +274,15 @@ object Libs {
     val bluetape4k_cassandra = bluetape4k("cassandra")
 
     val bluetape4k_exposed = bluetape4k("exposed")
+    val bluetape4k_exposed_bigquery = bluetape4k("exposed-bigquery")
     val bluetape4k_exposed_core = bluetape4k("exposed-core")
     val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
-    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
+    val bluetape4k_exposed_duckdb = bluetape4k("exposed-duckdb")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
     val bluetape4k_exposed_jackson2 = bluetape4k("exposed-jackson2")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
-    val bluetape4k_exposed_bigquery = bluetape4k("exposed-bigquery")
-    val bluetape4k_exposed_duckdb = bluetape4k("exposed-duckdb")
+    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
     val bluetape4k_exposed_jdbc_lettuce = bluetape4k("exposed-jdbc-lettuce")
     val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
     val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
@@ -319,15 +319,15 @@ object Libs {
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Spring Boot 3
-    val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
     val bluetape4k_spring_boot3_cassandra = bluetape4k("spring-boot3-cassandra")
+    val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
     val bluetape4k_spring_boot3_mongodb = bluetape4k("spring-boot3-mongodb")
     val bluetape4k_spring_boot3_r2dbc = bluetape4k("spring-boot3-r2dbc")
     val bluetape4k_spring_boot3_redis = bluetape4k("spring-boot3-redis")
 
     // Spring Boot 4
-    val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
     val bluetape4k_spring_boot4_cassandra = bluetape4k("spring-boot4-cassandra")
+    val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
     val bluetape4k_spring_boot4_mongodb = bluetape4k("spring-boot4-mongodb")
     val bluetape4k_spring_boot4_r2dbc = bluetape4k("spring-boot4-r2dbc")
     val bluetape4k_spring_boot4_redis = bluetape4k("spring-boot4-redis")
