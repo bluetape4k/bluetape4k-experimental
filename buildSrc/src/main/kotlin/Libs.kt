@@ -262,8 +262,10 @@ object Libs {
     val bluetape4k_io = bluetape4k("io")
     val bluetape4k_jackson2 = bluetape4k("jackson2")
     val bluetape4k_jackson3 = bluetape4k("jackson3")
+    val bluetape4k_json = bluetape4k("json")
     val bluetape4k_netty = bluetape4k("netty")
     val bluetape4k_okio = bluetape4k("okio")
+    val bluetape4k_protobuf = bluetape4k("protobuf")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
     val bluetape4k_tink = bluetape4k("tink")
     val bluetape4k_vertx = bluetape4k("vertx")
@@ -279,15 +281,22 @@ object Libs {
     val bluetape4k_exposed_jackson2 = bluetape4k("exposed-jackson2")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
+    val bluetape4k_exposed_bigquery = bluetape4k("exposed-bigquery")
+    val bluetape4k_exposed_duckdb = bluetape4k("exposed-duckdb")
+    val bluetape4k_exposed_jdbc_lettuce = bluetape4k("exposed-jdbc-lettuce")
     val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
     val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
     val bluetape4k_exposed_measured = bluetape4k("exposed-measured")
+    val bluetape4k_exposed_mysql8 = bluetape4k("exposed-mysql8")
+    val bluetape4k_exposed_postgresql = bluetape4k("exposed-postgresql")
     val bluetape4k_exposed_r2dbc = bluetape4k("exposed-r2dbc")
+    val bluetape4k_exposed_r2dbc_lettuce = bluetape4k("exposed-r2dbc-lettuce")
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
     val bluetape4k_exposed_tink = bluetape4k("exposed-tink")
 
     val bluetape4k_hibernate = bluetape4k("hibernate")
+    val bluetape4k_hibernate_cache_lettuce = bluetape4k("hibernate-cache-lettuce")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
 
     val bluetape4k_jdbc = bluetape4k("jdbc")
@@ -338,6 +347,9 @@ object Libs {
     val bluetape4k_measured = bluetape4k("measured")
     val bluetape4k_money = bluetape4k("money")
     val bluetape4k_mutiny = bluetape4k("mutiny")
+
+    // Timefold
+    val bluetape4k_timefold_solver_persistence_exposed = bluetape4k("timefold-solver-persistence-exposed")
 
     // kotlin
     fun kotlin(module: String, version: String = Versions.kotlin) = "org.jetbrains.kotlin:kotlin-$module:$version"
