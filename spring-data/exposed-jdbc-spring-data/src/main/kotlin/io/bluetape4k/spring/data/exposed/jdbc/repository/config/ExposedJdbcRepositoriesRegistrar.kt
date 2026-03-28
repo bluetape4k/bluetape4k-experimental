@@ -6,11 +6,11 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 /**
  * `@EnableExposedRepositories` 어노테이션으로 활성화되는 Repository 빈 등록기입니다.
  */
-class ExposedRepositoriesRegistrar : RepositoryBeanDefinitionRegistrarSupport() {
+class ExposedJdbcRepositoriesRegistrar : RepositoryBeanDefinitionRegistrarSupport() {
 
     override fun getAnnotation(): Class<out Annotation> =
-        EnableExposedRepositories::class.java
+        EnableExposedJdbcRepositories::class.java
 
     override fun getExtension(): RepositoryConfigurationExtension =
-        ExposedRepositoryConfigurationExtension()
+        ExposedJdbcRepositoryConfigurationExtension()
 }

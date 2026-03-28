@@ -1,7 +1,7 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.support
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.support.toOptional
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
@@ -9,6 +9,8 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -27,7 +29,7 @@ import java.util.function.Function
 import java.util.stream.Stream
 
 /**
- * [ExposedRepository]의 기본 CRUD 구현체입니다.
+ * [ExposedJdbcRepository]의 기본 CRUD 구현체입니다.
  * 모든 Exposed DAO 연산은 트랜잭션 내에서 실행됩니다.
  */
 
@@ -37,14 +39,17 @@ internal const val EXPOSED_TRANSACTION_MANAGER = "springTransactionManager"
 @Repository
 @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER, readOnly = true)
 @Suppress("UNCHECKED_CAST")
-class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
+class SimpleExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     private val entityInformation: ExposedEntityInformation<E, ID>,
-) : ExposedRepository<E, ID> {
+) : ExposedJdbcRepository<E, ID> {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     private val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
-    private val table: IdTable<ID> get() = entityInformation.table
+    override val table: IdTable<ID> get() = entityInformation.table
+
+    override fun extractId(entity: E): ID? =
+        if (entityInformation.isNew(entity)) null else entity.id.value
 
     // ============================================================
     // CrudRepository
@@ -66,7 +71,7 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     override fun findById(id: ID): Optional<E> = Optional.ofNullable(entityClass.findById(id))
 
-    override fun existsById(id: ID): Boolean = entityClass.findById(id) != null
+    override fun existsById(id: ID): Boolean = !entityClass.find { table.id eq id }.empty()
 
     override fun findAll(): List<E> = entityClass.all().toList()
 
@@ -88,7 +93,7 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun deleteById(id: ID) {
-        entityClass.findById(id)?.delete()
+        table.deleteWhere { table.id eq id }
     }
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
@@ -124,16 +129,15 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
             val all = findAll(pageable.sort)
             return PageImpl(all, pageable, all.size.toLong())
         }
+        val total = entityClass.count()
         val query = entityClass.all()
         if (pageable.sort.isSorted) {
             query.orderBy(*pageable.sort.toExposedOrderBy(table))
         }
-        val total = entityClass.count()
-        val content =
-            query
-                .limit(pageable.pageSize)
-                .offset(pageable.offset)
-                .toList()
+        val content = query
+            .limit(pageable.pageSize)
+            .offset(pageable.offset)
+            .toList()
         return PageImpl(content, pageable, total)
     }
 
@@ -151,40 +155,61 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     // QueryByExampleExecutor
     // ============================================================
 
-    override fun <S : E> findOne(example: Example<S>): Optional<S> = Optional.ofNullable(findByExample(example).firstOrNull())
-
-    override fun <S : E> findAll(example: Example<S>): List<S> = findByExample(example)
-
-    override fun <S : E> findAll(
-        example: Example<S>,
-        sort: Sort,
-    ): List<S> {
-        val results = findByExample(example)
-        if (sort.isUnsorted) return results
-        return results.sortedWith(ExampleSortComparator(sort))
+    override fun <S : E> findOne(example: Example<S>): Optional<S> {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        val result = if (conditions == null) entityClass.all().firstOrNull()
+        else entityClass.find { conditions }.firstOrNull()
+        return Optional.ofNullable(result as? S)
     }
 
-    override fun <S : E> findAll(
-        example: Example<S>,
-        pageable: Pageable,
-    ): Page<S> {
-        val all = findByExample(example)
-        val sorted = if (pageable.sort.isSorted) all.sortedWith(ExampleSortComparator(pageable.sort)) else all
-        val start = pageable.offset.toInt().coerceAtMost(sorted.size)
-        val end = (start + pageable.pageSize).coerceAtMost(sorted.size)
-        return PageImpl(sorted.subList(start, end), pageable, sorted.size.toLong())
+    override fun <S : E> findAll(example: Example<S>): List<S> {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        return if (conditions == null) entityClass.all().toList() as List<S>
+        else entityClass.find { conditions }.toList() as List<S>
     }
 
-    override fun <S : E> count(example: Example<S>): Long = findByExample(example).size.toLong()
+    override fun <S : E> findAll(example: Example<S>, sort: Sort): List<S> {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        val query = if (conditions == null) entityClass.all() else entityClass.find { conditions }
+        if (sort.isUnsorted) return query.toList() as List<S>
+        return query.orderBy(*sort.toExposedOrderBy(table)).toList() as List<S>
+    }
 
-    override fun <S : E> exists(example: Example<S>): Boolean = findByExample(example).isNotEmpty()
+    override fun <S : E> findAll(example: Example<S>, pageable: Pageable): Page<S> {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        val total = if (conditions == null) entityClass.count()
+        else entityClass.find { conditions }.count()
+        val query = if (conditions == null) entityClass.all() else entityClass.find { conditions }
+        if (pageable.sort.isSorted) {
+            query.orderBy(*pageable.sort.toExposedOrderBy(table))
+        }
+        val content = if (pageable.isUnpaged) {
+            query.toList() as List<S>
+        } else {
+            query.limit(pageable.pageSize).offset(pageable.offset).toList() as List<S>
+        }
+        return PageImpl(content, pageable, total)
+    }
+
+    override fun <S : E> count(example: Example<S>): Long {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        return if (conditions == null) entityClass.count()
+        else entityClass.find { conditions }.count()
+    }
+
+    override fun <S : E> exists(example: Example<S>): Boolean {
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        return if (conditions == null) entityClass.count() > 0L
+        else !entityClass.find { conditions }.empty()
+    }
 
     override fun <S : E, R> findBy(
         example: Example<S>,
         queryFunction: Function<FluentQuery.FetchableFluentQuery<S>, R>,
     ): R {
-        val results = findByExample(example)
-        @Suppress("UNCHECKED_CAST")
+        val conditions = buildExampleConditions(example.probe, example.matcher)
+        val results = if (conditions == null) entityClass.all().toList() as List<S>
+        else entityClass.find { conditions }.toList() as List<S>
         return queryFunction.apply(SimpleFluentQuery(results) as FluentQuery.FetchableFluentQuery<S>)
     }
 
@@ -192,26 +217,27 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     // Internal helpers
     // ============================================================
 
-    private fun <S : E> findByExample(example: Example<S>): List<S> {
-        val conditions = buildExampleConditions(example.probe, example.matcher)
-        return if (conditions == null) {
-            entityClass.all().toList() as List<S>
-        } else {
-            entityClass.find { conditions }.toList() as List<S>
-        }
-    }
+    /**
+     * [ExampleMatcher] 설정을 반영한 WHERE 조건을 생성합니다.
+     *
+     * - `matcher.ignoredPaths`: 지정된 경로는 조건에서 제외합니다.
+     * - `matcher.isAnyMatching`: true이면 OR, false(기본)이면 AND로 조건을 결합합니다.
+     * - `matcher.defaultStringMatcher`: CONTAINING/STARTING/ENDING은 LIKE로, 나머지는 등호(=)로 처리합니다.
+     *   단, 케이스 구분(case sensitivity)과 per-property 설정은 지원하지 않습니다.
+     */
+    private fun buildExampleConditions(probe: E, matcher: ExampleMatcher): Op<Boolean>? {
+        val ignoredPaths = matcher.ignoredPaths
+        val stringMatcher = matcher.defaultStringMatcher
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun buildExampleConditions(
-        probe: E,
-        matcher: ExampleMatcher,
-    ): Op<Boolean>? =
-        table.columns
+        val conditions = table.columns
             .asSequence()
             .filterNot { it == table.id }
             .mapNotNull { col ->
-                // 컬럼명(snake_case)을 camelCase 로 변환해 Java 필드 조회
                 val camelCaseName = toCamelCase(col.name)
+
+                // ignoredPaths 체크 (snake_case 및 camelCase 모두)
+                if (col.name in ignoredPaths || camelCaseName in ignoredPaths) return@mapNotNull null
+
                 val field =
                     runCatching {
                         probe.javaClass.getDeclaredField(col.name).apply { isAccessible = true }
@@ -222,21 +248,40 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
                         ?: return@mapNotNull null
 
                 val value = field.get(probe) ?: return@mapNotNull null
-                (col as Column<Any>).eq(value)
-            }.reduceOrNull(Op<Boolean>::and)
+
+                // String 컬럼에 대해 StringMatcher 적용
+                if (value is String) {
+                    @Suppress("UNCHECKED_CAST")
+                    val strCol = col as Column<String>
+                    when (stringMatcher) {
+                        ExampleMatcher.StringMatcher.CONTAINING -> strCol.like("%$value%")
+                        ExampleMatcher.StringMatcher.STARTING -> strCol.like("$value%")
+                        ExampleMatcher.StringMatcher.ENDING -> strCol.like("%$value")
+                        else -> strCol.eq(value)  // DEFAULT, EXACT, REGEX → 등호
+                    }
+                } else {
+                    @Suppress("UNCHECKED_CAST")
+                    (col as Column<Any>).eq(value)
+                }
+            }.toList()
+
+        if (conditions.isEmpty()) return null
+        return if (matcher.isAnyMatching) {
+            conditions.reduce { a, b -> a or b }
+        } else {
+            conditions.reduce { a, b -> a and b }
+        }
+    }
 }
 
 /**
- * In-memory 정렬을 위한 Comparator (QueryByExample 결과 정렬용)
+ * In-memory 정렬을 위한 Comparator (SimpleFluentQuery.sortBy 용)
  */
 private class ExampleSortComparator<E>(
     private val sort: Sort,
 ) : Comparator<E> {
     @Suppress("UNCHECKED_CAST")
-    override fun compare(
-        a: E,
-        b: E,
-    ): Int {
+    override fun compare(a: E, b: E): Int {
         val targetClass = (a ?: b)?.javaClass ?: return 0
         for (order in sort) {
             val field =
@@ -254,7 +299,9 @@ private class ExampleSortComparator<E>(
 }
 
 /**
- * FluentQuery 최소 구현 (findBy 지원용)
+ * FluentQuery 최소 구현 (findBy 지원용).
+ *
+ * **제약**: [project] 는 projection을 지원하지 않으며 모든 프로퍼티가 반환됩니다.
  */
 private class SimpleFluentQuery<E : Any>(
     private val results: List<E>,
@@ -266,6 +313,7 @@ private class SimpleFluentQuery<E : Any>(
     override fun <R : Any> `as`(projectionType: Class<R>): FluentQuery.FetchableFluentQuery<R> =
         SimpleFluentQuery(results.map { projectionType.cast(it) })
 
+    /** Projection은 지원되지 않습니다. 모든 프로퍼티가 반환됩니다. */
     override fun project(properties: MutableCollection<String>): FluentQuery.FetchableFluentQuery<E> = this
 
     override fun first(): Optional<E> = results.firstOrNull().toOptional()

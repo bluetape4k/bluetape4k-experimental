@@ -1,7 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.support
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.spring.data.exposed.jdbc.mapping.ExposedMappingContext
 import io.bluetape4k.spring.data.exposed.jdbc.repository.query.ExposedQueryLookupStrategy
 import io.bluetape4k.support.toOptional
 import org.jetbrains.exposed.v1.dao.Entity
@@ -17,11 +16,9 @@ import java.util.*
  * Exposed Repository 인스턴스를 생성하는 Factory입니다.
  */
 @Suppress("UNCHECKED_CAST")
-class ExposedRepositoryFactory(
-    _mappingContext: ExposedMappingContext,
-) : RepositoryFactorySupport() {
+class ExposedJdbcRepositoryFactory : RepositoryFactorySupport() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Deprecated("Spring Data 4.0에서 deprecated 된 API입니다.", ReplaceWith("getEntityInformation(metadata)"))
     override fun <T : Any, ID : Any> getEntityInformation(domainClass: Class<T>): EntityInformation<T, ID> =
@@ -32,11 +29,11 @@ class ExposedRepositoryFactory(
 
     override fun getTargetRepository(information: RepositoryInformation): Any {
         val entityInfo = exposedEntityInformation(information.domainType)
-        return SimpleExposedRepository(entityInfo)
+        return SimpleExposedJdbcRepository(entityInfo)
     }
 
     override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> =
-        SimpleExposedRepository::class.java
+        SimpleExposedJdbcRepository::class.java
 
     override fun getQueryLookupStrategy(
         key: QueryLookupStrategy.Key?,

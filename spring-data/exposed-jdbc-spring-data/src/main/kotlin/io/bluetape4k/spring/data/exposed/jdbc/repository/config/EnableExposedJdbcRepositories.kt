@@ -1,7 +1,7 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.config
 
 import io.bluetape4k.spring.data.exposed.jdbc.config.ExposedSpringDataAutoConfiguration
-import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedRepositoryFactoryBean
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedJdbcRepositoryFactoryBean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
 import org.springframework.data.repository.query.QueryLookupStrategy
@@ -19,8 +19,8 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@Import(ExposedRepositoriesRegistrar::class, ExposedSpringDataAutoConfiguration::class)
-annotation class EnableExposedRepositories(
+@Import(ExposedJdbcRepositoriesRegistrar::class, ExposedSpringDataAutoConfiguration::class)
+annotation class EnableExposedJdbcRepositories(
     /** basePackages 별칭 */
     vararg val value: String = [],
     /** 스캔할 base 패키지 목록 */
@@ -32,7 +32,7 @@ annotation class EnableExposedRepositories(
     /** 스캔에 포함할 필터 */
     val includeFilters: Array<ComponentScan.Filter> = [],
     /** 사용할 RepositoryFactoryBean 클래스 */
-    val repositoryFactoryBeanClass: KClass<*> = ExposedRepositoryFactoryBean::class,
+    val repositoryFactoryBeanClass: KClass<*> = ExposedJdbcRepositoryFactoryBean::class,
     /** 쿼리 조회 전략 */
     val queryLookupStrategy: QueryLookupStrategy.Key = QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND,
     /** 트랜잭션 매니저 빈 이름 (Exposed Spring Boot 4 Starter 기본값) */

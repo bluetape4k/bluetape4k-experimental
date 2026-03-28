@@ -3,7 +3,7 @@ package io.bluetape4k.spring.data.exposed.jdbc.repository
 import io.bluetape4k.spring.data.exposed.jdbc.annotation.Query
 import io.bluetape4k.spring.data.exposed.jdbc.domain.UserEntity
 
-interface UserRepository: ExposedRepository<UserEntity, Long> {
+interface UserJdbcRepository: ExposedJdbcRepository<UserEntity, Long> {
 
     fun findByName(name: String): List<UserEntity>
 

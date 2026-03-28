@@ -1,8 +1,8 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.config
 
 import io.bluetape4k.spring.data.exposed.jdbc.annotation.ExposedEntity
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedSuspendRepository
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.ExposedSuspendRepositoryFactoryBean
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedR2dbcRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.ExposedR2dbcRepositoryFactoryBean
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport
 import org.springframework.data.repository.core.RepositoryMetadata
 
@@ -17,13 +17,13 @@ class ExposedSuspendRepositoryConfigurationExtension : RepositoryConfigurationEx
     override fun getModulePrefix(): String = "suspendExposed"
 
     override fun getRepositoryFactoryBeanClassName(): String =
-        ExposedSuspendRepositoryFactoryBean::class.java.name
+        ExposedR2dbcRepositoryFactoryBean::class.java.name
 
     override fun getIdentifyingAnnotations(): Collection<Class<out Annotation>> =
         listOf(ExposedEntity::class.java)
 
     override fun getIdentifyingTypes(): Collection<Class<*>> =
-        listOf(ExposedSuspendRepository::class.java)
+        listOf(ExposedR2dbcRepository::class.java)
 
     /**
      * 코루틴/Flow 기반의 reactive repository를 지원합니다.

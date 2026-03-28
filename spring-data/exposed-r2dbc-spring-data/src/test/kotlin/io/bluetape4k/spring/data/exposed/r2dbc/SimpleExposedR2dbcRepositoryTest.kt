@@ -7,7 +7,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.User
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserSuspendRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.UserR2dbcRepository
 import io.bluetape4k.support.requireNotNull
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
@@ -42,7 +42,7 @@ class SimpleExposedR2dbcRepositoryTest: AbstractExposedR2dbcRepositoryTest() {
     companion object: KLoggingChannel()
 
     @Autowired
-    private lateinit var userRepository: UserSuspendRepository
+    private lateinit var userRepository: UserR2dbcRepository
 
     @AfterEach
     fun afterEach(): Unit = runBlocking {
@@ -317,5 +317,15 @@ class SimpleExposedR2dbcRepositoryTest: AbstractExposedR2dbcRepositoryTest() {
 
         userRepository.deleteAll(flowOf(alice, bob))
         userRepository.count() shouldBeEqualTo 1L
+    }
+
+    @Test
+    fun `findAll with DSL op filters correctly`() = runTest {
+        createUser("Alice", "alice@example.com", 30)
+        createUser("Bob", "bob@example.com", 17)
+
+        val adults = userRepository.findAll { Users.age greaterEq 18 }.toList()
+        adults shouldHaveSize 1
+        adults[0].name shouldBeEqualTo "Alice"
     }
 }

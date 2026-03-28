@@ -29,4 +29,9 @@ dependencies {
     testImplementation(Libs.springBootStarter("test"))
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.hikaricp)
+
+    // Multi-DB 테스트용 JDBC 드라이버
+    testImplementation(Libs.mysql_connector_j)
+    testImplementation(Libs.mariadb_java_client)
+    testImplementation(Libs.postgresql_driver)
 }

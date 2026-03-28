@@ -36,4 +36,14 @@ dependencies {
     testImplementation(Libs.h2_v2)
     testImplementation(Libs.r2dbc_h2)
     testImplementation(Libs.hikaricp)
+
+    // Multi-DB 테스트용 R2DBC 드라이버
+    testImplementation(Libs.r2dbc_mysql)
+    testImplementation(Libs.r2dbc_mariadb)
+    testImplementation(Libs.r2dbc_postgresql)
+
+    // Multi-DB 테스트용 JDBC 드라이버 (Testcontainers 컨테이너 연결용)
+    testImplementation(Libs.mysql_connector_j)
+    testImplementation(Libs.mariadb_java_client)
+    testImplementation(Libs.postgresql_driver)
 }

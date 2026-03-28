@@ -2,7 +2,7 @@ package io.bluetape4k.spring.data.exposed.jdbc
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.domain.Users
-import io.bluetape4k.spring.data.exposed.jdbc.repository.config.EnableExposedRepositories
+import io.bluetape4k.spring.data.exposed.jdbc.repository.config.EnableExposedJdbcRepositories
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteAll
@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import javax.sql.DataSource
 
-@SpringBootTest(classes = [AbstractExposedRepositoryTest.TestConfig::class])
-abstract class AbstractExposedRepositoryTest {
+@SpringBootTest(classes = [AbstractExposedJdbcRepositoryTest.TestConfig::class])
+abstract class AbstractExposedJdbcRepositoryTest {
 
     companion object: KLogging()
 
@@ -35,7 +35,7 @@ abstract class AbstractExposedRepositoryTest {
             "org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration",
         ]
     )
-    @EnableExposedRepositories(basePackages = ["io.bluetape4k.spring.data.exposed.jdbc.repository"])
+    @EnableExposedJdbcRepositories(basePackages = ["io.bluetape4k.spring.data.exposed.jdbc.repository"])
     class TestConfig {
         @Bean("springTransactionManager")
         fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =

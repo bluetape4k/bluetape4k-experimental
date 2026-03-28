@@ -3,7 +3,7 @@ package io.bluetape4k.examples.exposed.mvc.controller
 import io.bluetape4k.examples.exposed.mvc.domain.ProductDto
 import io.bluetape4k.examples.exposed.mvc.domain.ProductEntity
 import io.bluetape4k.examples.exposed.mvc.domain.toDto
-import io.bluetape4k.examples.exposed.mvc.repository.ProductRepository
+import io.bluetape4k.examples.exposed.mvc.repository.ProductJdbcRepository
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -25,17 +25,17 @@ import java.net.URI
  * 각 요청에서 DTO 변환까지 하나의 transaction 안에서 마무리한다.
  */
 class ProductController(
-    private val productRepository: ProductRepository,
+    private val productJdbcRepository: ProductJdbcRepository,
 ) {
 
     @GetMapping
     fun findAll(): List<ProductDto> =
-        transaction { productRepository.findAll().map { it.toDto() } }
+        transaction { productJdbcRepository.findAll().map { it.toDto() } }
 
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long): ResponseEntity<ProductDto> {
         val entity = transaction {
-            productRepository.findById(id).orElse(null)?.toDto()
+            productJdbcRepository.findById(id).orElse(null)?.toDto()
         }
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(entity)
@@ -56,7 +56,7 @@ class ProductController(
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @RequestBody dto: ProductDto): ResponseEntity<ProductDto> {
         val entity = transaction {
-            productRepository.findById(id).orElse(null)?.apply {
+            productJdbcRepository.findById(id).orElse(null)?.apply {
                 name = dto.name
                 price = dto.price
                 stock = dto.stock
@@ -69,7 +69,7 @@ class ProductController(
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): ResponseEntity<Void> {
         val deleted = transaction {
-            productRepository.findById(id).orElse(null)?.let {
+            productJdbcRepository.findById(id).orElse(null)?.let {
                 it.delete()
                 true
             } ?: false
@@ -80,5 +80,5 @@ class ProductController(
 
     @GetMapping("/search")
     fun findByName(name: String): List<ProductDto> =
-        transaction { productRepository.findByName(name).map { it.toDto() } }
+        transaction { productJdbcRepository.findByName(name).map { it.toDto() } }
 }

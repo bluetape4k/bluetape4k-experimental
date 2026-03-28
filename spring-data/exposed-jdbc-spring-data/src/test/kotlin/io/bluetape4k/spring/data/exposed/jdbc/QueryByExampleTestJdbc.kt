@@ -2,7 +2,7 @@ package io.bluetape4k.spring.data.exposed.jdbc
 
 import io.bluetape4k.spring.data.exposed.jdbc.domain.UserEntity
 import io.bluetape4k.spring.data.exposed.jdbc.domain.Users
-import io.bluetape4k.spring.data.exposed.jdbc.repository.UserRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.UserJdbcRepository
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Transactional
 
 @Transactional
-class QueryByExampleTest: AbstractExposedRepositoryTest() {
+class QueryByExampleTestJdbc: AbstractExposedJdbcRepositoryTest() {
 
     @Autowired
-    private lateinit var userRepository: UserRepository
+    private lateinit var userJdbcRepository: UserJdbcRepository
 
     @AfterEach
     fun tearDown() {
@@ -34,7 +34,7 @@ class QueryByExampleTest: AbstractExposedRepositoryTest() {
             UserEntity.new { name = "Charlie"; email = "charlie@example.com"; age = 25 }
         }
 
-        val results = userRepository.findAll { Users.age eq 30 }
+        val results = userJdbcRepository.findAll { Users.age eq 30 }
         results shouldHaveSize 2
     }
 
@@ -45,7 +45,7 @@ class QueryByExampleTest: AbstractExposedRepositoryTest() {
             UserEntity.new { name = "Bob"; email = "bob@example.com"; age = 25 }
         }
 
-        val count = userRepository.count { Users.age eq 30 }
+        val count = userJdbcRepository.count { Users.age eq 30 }
         count shouldBeEqualTo 1L
     }
 
@@ -55,7 +55,7 @@ class QueryByExampleTest: AbstractExposedRepositoryTest() {
             UserEntity.new { name = "Alice"; email = "alice@example.com"; age = 30 }
         }
 
-        userRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
-        userRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
+        userJdbcRepository.exists { Users.name eq "Alice" }.shouldBeTrue()
+        userJdbcRepository.exists { Users.name eq "Nobody" }.shouldBeFalse()
     }
 }

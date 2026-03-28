@@ -1,9 +1,8 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.support
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.toExposedOrderBy
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedSuspendRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedR2dbcRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -38,14 +37,14 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 @Suppress("UNCHECKED_CAST")
-class SimpleExposedSuspendRepository<R: Any, ID: Any>(
+class SimpleExposedR2dbcRepository<R : Any, ID : Any>(
     override val table: IdTable<ID>,
     private val toDomainMapper: (ResultRow) -> R,
     private val persistValuesProvider: (R) -> Map<Column<*>, Any?>,
     private val idExtractor: (R) -> ID?,
-): ExposedSuspendRepository<R, ID> {
+) : ExposedR2dbcRepository<R, ID> {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun extractId(entity: R): ID? = idExtractor(entity)
 
@@ -53,12 +52,12 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
 
     override fun toPersistValues(domain: R): Map<Column<*>, Any?> = persistValuesProvider(domain)
 
-    override suspend fun <S: R> save(entity: S): S {
+    override suspend fun <S : R> save(entity: S): S {
         val persisted = inTransaction { persist(entity) }
         return (persisted as? S) ?: entity
     }
 
-    override fun <S: R> saveAll(entities: Iterable<S>): Flow<S> = flow {
+    override fun <S : R> saveAll(entities: Iterable<S>): Flow<S> = flow {
         val results = mutableListOf<S>()
         inTransaction {
             for (entity in entities) {
@@ -68,9 +67,14 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
         emitAll(results.asFlow())
     }
 
-    override fun <S: R> saveAll(entityStream: Flow<S>): Flow<S> = flow {
-        val entities = entityStream.toList()
-        emitAll(saveAll(entities as Iterable<S>))
+    override fun <S : R> saveAll(entityStream: Flow<S>): Flow<S> = flow {
+        val results = mutableListOf<S>()
+        inTransaction {
+            entityStream.collect { entity ->
+                results.add(persist(entity) as S)
+            }
+        }
+        emitAll(results.asFlow())
     }
 
     override suspend fun findById(id: ID): R? = findByIdOrNull(id)
@@ -81,15 +85,16 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
     override suspend fun existsById(id: ID): Boolean = inTransaction { findRowById(id) != null }
 
     override suspend fun findAllAsList(): List<R> = inTransaction {
-        log.debug { "findAllAsList() ..." }
         val rows = mutableListOf<ResultRow>()
         table.selectAll().collect { rows.add(it) }
         rows.map(::toDomain)
     }
 
-    override fun findAll(): Flow<R> = flow {
-        emitAll(findAllAsList().asFlow())
-    }
+    /**
+     * 모든 row를 channelFlow + suspendTransaction으로 진짜 lazy streaming합니다.
+     * eager materialization 없이 백프레셔와 함께 처리됩니다.
+     */
+    override fun findAll(): Flow<R> = streamAll()
 
     override fun streamAll(database: R2dbcDatabase?): Flow<R> = channelFlow {
         suspendTransaction(database) {
@@ -116,6 +121,14 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
         emitAll(findAllById(ids.toList() as Iterable<ID>))
     }
 
+    override fun findAll(op: () -> Op<Boolean>): Flow<R> = channelFlow {
+        suspendTransaction {
+            table.selectAll().where { op() }.collect { row ->
+                send(toDomain(row))
+            }
+        }
+    }
+
     override suspend fun count(): Long = inTransaction { table.selectAll().count() }
 
     override suspend fun deleteById(id: ID): Unit = inTransaction {
@@ -139,8 +152,16 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
         deleteAllById(entities.mapNotNull { extractId(it) })
     }
 
-    override suspend fun <S: R> deleteAll(entityStream: Flow<S>) {
-        deleteAll(entityStream.toList() as Iterable<R>)
+    override suspend fun <S : R> deleteAll(entityStream: Flow<S>) {
+        inTransaction {
+            val ids = mutableListOf<ID>()
+            entityStream.collect { entity ->
+                extractId(entity)?.let { ids.add(it) }
+            }
+            if (ids.isNotEmpty()) {
+                table.deleteWhere { table.id inList ids }
+            }
+        }
     }
 
     override suspend fun deleteAll(): Unit = inTransaction {
@@ -148,20 +169,21 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
     }
 
     override suspend fun findAll(pageable: Pageable): Page<R> = inTransaction {
-        val base = table.selectAll()
+        // COUNT 쿼리는 ORDER BY 없이 별도로 실행 (S-2)
+        val total = table.selectAll().count()
 
+        val query = table.selectAll()
         if (pageable.sort.isSorted) {
-            base.orderBy(*pageable.sort.toExposedOrderBy(table))
+            query.orderBy(*pageable.sort.toExposedOrderBy(table))
         }
 
-        val total = base.count()
         if (pageable.isUnpaged) {
             val rows = mutableListOf<ResultRow>()
-            base.collect { rows.add(it) }
+            query.collect { rows.add(it) }
             PageImpl(rows.map(::toDomain), pageable, total)
         } else {
             val rows = mutableListOf<ResultRow>()
-            base
+            query
                 .limit(pageable.pageSize)
                 .offset(pageable.offset)
                 .collect { rows.add(it) }
@@ -194,6 +216,9 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
      * 엔티티를 저장합니다.
      * - [extractId]가 null → INSERT (auto-generated ID)
      * - [extractId]가 non-null → UPDATE 시도. 0 rows affected 이면 INSERT
+     *
+     * UPDATE 성공 시 추가 SELECT 없이 입력 entity를 그대로 반환합니다. (P-2)
+     * INSERT 후에는 DB에서 할당된 ID를 반영하기 위해 re-fetch합니다.
      */
     private suspend fun persist(entity: R): R {
         val idValue = extractId(entity)
@@ -202,7 +227,7 @@ class SimpleExposedSuspendRepository<R: Any, ID: Any>(
                 writePersistValues(stmt, entity)
             }
             if (updatedRows > 0) {
-                return findRowById(idValue)?.let(::toDomain) ?: entity
+                return entity  // UPDATE 성공: 추가 SELECT 불필요
             }
         }
         val insertedId = table.insertAndGetId { stmt ->

@@ -2,7 +2,7 @@ package io.bluetape4k.examples.exposed.webflux.repository
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
 import io.bluetape4k.examples.exposed.webflux.domain.Products
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedSuspendRepository
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.ExposedR2dbcRepository
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 /**
  * 상품 DTO에 대한 suspend CRUD Repository 입니다.
  */
-interface ProductSuspendRepository: ExposedSuspendRepository<ProductDto, Long> {
+interface ProductR2dbcRepository: ExposedR2dbcRepository<ProductDto, Long> {
 
     override val table: IdTable<Long> get() = Products
 

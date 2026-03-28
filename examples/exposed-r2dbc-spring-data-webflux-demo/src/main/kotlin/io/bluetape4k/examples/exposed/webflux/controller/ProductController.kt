@@ -1,7 +1,7 @@
 package io.bluetape4k.examples.exposed.webflux.controller
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
-import io.bluetape4k.examples.exposed.webflux.repository.ProductSuspendRepository
+import io.bluetape4k.examples.exposed.webflux.repository.ProductR2dbcRepository
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -21,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException
  * Exposed R2DBC 기반 상품 CRUD API이다.
  */
 class ProductController(
-    private val productRepository: ProductSuspendRepository,
+    private val productRepository: ProductR2dbcRepository,
 ) {
 
     @GetMapping

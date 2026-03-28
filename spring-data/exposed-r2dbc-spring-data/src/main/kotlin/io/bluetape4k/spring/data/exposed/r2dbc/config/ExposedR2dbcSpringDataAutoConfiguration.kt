@@ -16,7 +16,7 @@ import io.bluetape4k.spring.data.exposed.jdbc.config.ExposedSpringDataAutoConfig
 @AutoConfiguration(after = [JdbcExposedSpringDataAutoConfiguration::class])
 @ConditionalOnClass(EntityClass::class)
 @Configuration(proxyBeanMethods = false)
-class ExposedSuspendSpringDataAutoConfiguration {
+class ExposedR2dbcSpringDataAutoConfiguration {
 
     /**
      * Phase 1 AutoConfiguration에 의해 이미 등록된 경우 생략합니다.

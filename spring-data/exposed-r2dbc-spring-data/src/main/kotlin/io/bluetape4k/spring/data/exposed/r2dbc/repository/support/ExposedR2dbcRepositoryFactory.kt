@@ -24,7 +24,7 @@ import java.util.*
  * [getRepository] 를 직접 오버라이드합니다.
  */
 @Suppress("UNCHECKED_CAST")
-class ExposedSuspendRepositoryFactory : RepositoryFactorySupport() {
+class ExposedR2dbcRepositoryFactory : RepositoryFactorySupport() {
 
     override fun getEntityInformation(metadata: RepositoryMetadata): EntityInformation<*, *> =
         StaticEntityInformation(metadata.domainType as Class<Any>, metadata.idType as Class<Any>)
@@ -33,7 +33,7 @@ class ExposedSuspendRepositoryFactory : RepositoryFactorySupport() {
         createRepositoryImplementation(information.repositoryInterface)
 
     override fun getRepositoryBaseClass(metadata: RepositoryMetadata): Class<*> =
-        SimpleExposedSuspendRepository::class.java
+        SimpleExposedR2dbcRepository::class.java
 
     override fun getRepositoryFragments(metadata: RepositoryMetadata): RepositoryComposition.RepositoryFragments =
         RepositoryComposition.RepositoryFragments.just(createRepositoryImplementation(metadata.repositoryInterface))
@@ -45,17 +45,17 @@ class ExposedSuspendRepositoryFactory : RepositoryFactorySupport() {
 
     /**
      * Spring Data 의 프록시 인터셉터 체인(트랜잭션 래핑, 코루틴 변환 등)을 완전히 우회하여
-     * [SimpleExposedSuspendRepository] 에 직접 위임하는 JDK 프록시를 반환합니다.
+     * [SimpleExposedR2dbcRepository] 에 직접 위임하는 JDK 프록시를 반환합니다.
      */
     override fun <T : Any> getRepository(repositoryInterface: Class<T>, fragments: RepositoryComposition.RepositoryFragments): T {
         val impl = createRepositoryImplementation(repositoryInterface)
         return createDirectProxy(repositoryInterface, impl) as T
     }
 
-    private fun createRepositoryImplementation(repositoryInterface: Class<*>): SimpleExposedSuspendRepository<Any, Any> {
+    private fun createRepositoryImplementation(repositoryInterface: Class<*>): SimpleExposedR2dbcRepository<Any, Any> {
         val mapper = resolveMapper(repositoryInterface)
 
-        return SimpleExposedSuspendRepository(
+        return SimpleExposedR2dbcRepository(
             table = mapper.table,
             toDomainMapper = mapper.toDomain,
             persistValuesProvider = mapper.toPersistValues,
@@ -69,7 +69,7 @@ class ExposedSuspendRepositoryFactory : RepositoryFactorySupport() {
      * - impl 에 해당 메서드가 있으면 reflection 으로 직접 호출
      * - 없으면 interface default 메서드로 위임
      */
-    private fun createDirectProxy(repositoryInterface: Class<*>, impl: SimpleExposedSuspendRepository<Any, Any>): Any {
+    private fun createDirectProxy(repositoryInterface: Class<*>, impl: SimpleExposedR2dbcRepository<Any, Any>): Any {
         val implClass: Class<*> = impl::class.java
 
         val handler = InvocationHandler { proxy, method, args ->
