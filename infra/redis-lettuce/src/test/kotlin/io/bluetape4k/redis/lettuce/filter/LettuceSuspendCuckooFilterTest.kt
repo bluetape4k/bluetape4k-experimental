@@ -8,6 +8,7 @@ import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class LettuceSuspendCuckooFilterTest : AbstractRedisLettuceTest() {
 
@@ -47,5 +48,22 @@ class LettuceSuspendCuckooFilterTest : AbstractRedisLettuceTest() {
     @Test
     fun `delete - 없는 원소 삭제 시 false`() = runTest {
         cf.delete("none").shouldBeFalse()
+    }
+
+    @Test
+    fun `tryInit - 이미 초기화된 경우 false`() = runTest {
+        cf.tryInit().shouldBeFalse()
+    }
+
+    @Test
+    fun `tryInit - 다른 파라미터로 재초기화 시 예외`() = runTest {
+        val cf2 = LettuceSuspendCuckooFilter(
+            client.connect(StringCodec.UTF8),
+            cf.filterName,
+            CuckooFilterOptions(capacity = 2048L, bucketSize = 8),
+        )
+        cf2.use {
+            assertThrows<IllegalStateException> { it.tryInit() }
+        }
     }
 }

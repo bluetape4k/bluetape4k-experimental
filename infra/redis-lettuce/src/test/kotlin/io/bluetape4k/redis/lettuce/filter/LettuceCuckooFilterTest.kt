@@ -57,6 +57,23 @@ class LettuceCuckooFilterTest : AbstractRedisLettuceTest() {
     }
 
     @Test
+    fun `tryInit - 이미 초기화된 경우 false`() {
+        cf.tryInit().shouldBeFalse()
+    }
+
+    @Test
+    fun `tryInit - 다른 파라미터로 재초기화 시 예외`() {
+        val cf2 = LettuceCuckooFilter(
+            client.connect(StringCodec.UTF8),
+            cf.filterName,
+            CuckooFilterOptions(capacity = 2048L, bucketSize = 8),
+        )
+        cf2.use {
+            assertThrows<IllegalStateException> { it.tryInit() }
+        }
+    }
+
+    @Test
     fun `count - 삽입 및 삭제에 따른 카운트`() {
         cf.insert("a")
         cf.insert("b")

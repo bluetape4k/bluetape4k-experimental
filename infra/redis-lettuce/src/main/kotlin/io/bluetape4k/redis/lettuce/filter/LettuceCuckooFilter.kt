@@ -26,6 +26,12 @@ class LettuceCuckooFilter(
 
     private val commands: RedisCommands<String, String> = connection.sync()
 
+    /**
+     * 필터 메타데이터를 초기화합니다.
+     *
+     * 동일한 이름의 필터가 이미 존재하면 저장된 구성과 현재 옵션의 호환성을 검증합니다.
+     * `capacity`, `bucketSize`, `numBuckets` 중 하나라도 다르면 [IllegalStateException]을 던집니다.
+     */
     fun tryInit(): Boolean {
         val set = commands.hsetnx(configKey, "capacity", options.capacity.toString())
         if (set) {
@@ -37,8 +43,28 @@ class LettuceCuckooFilter(
                 )
             )
             log.debug { "CuckooFilter 초기화: name=$filterName, numBuckets=$numBuckets" }
+            return true
         }
-        return set
+
+        val storedCapacity = commands.hget(configKey, "capacity")?.toLongOrNull()
+        val storedBucketSize = commands.hget(configKey, "bucketSize")?.toIntOrNull()
+        val storedNumBuckets = commands.hget(configKey, "numBuckets")?.toLongOrNull()
+
+        if (
+            storedCapacity != null &&
+            storedBucketSize != null &&
+            storedNumBuckets != null &&
+            (storedCapacity != options.capacity ||
+                storedBucketSize != options.bucketSize ||
+                storedNumBuckets != numBuckets)
+        ) {
+            throw IllegalStateException(
+                "CuckooFilter '$filterName' 이미 다른 파라미터로 초기화됨: " +
+                    "저장된 capacity=$storedCapacity/bucketSize=$storedBucketSize/numBuckets=$storedNumBuckets, " +
+                    "현재 capacity=${options.capacity}/bucketSize=${options.bucketSize}/numBuckets=$numBuckets"
+            )
+        }
+        return false
     }
 
     fun insert(element: String): Boolean {

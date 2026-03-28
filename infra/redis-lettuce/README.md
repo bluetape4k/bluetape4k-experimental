@@ -5,6 +5,10 @@
 Lettuce 클라이언트 기반으로 Redis 확률적 자료구조(HyperLogLog, BloomFilter, CuckooFilter)를
 순수 Kotlin으로 구현한 모듈입니다. Redisson Pro가 제공하는 고급 필터 기능을 의존성 없이 사용할 수 있습니다.
 
+- 모든 구현은 호출자가 제공한 `StatefulRedisConnection`을 사용하며, 인스턴스 `close()` 시 해당 연결도 함께 닫습니다.
+- BloomFilter/CuckooFilter는 `tryInit()`로 Redis 메타데이터를 먼저 기록한 뒤 사용합니다.
+- 동일한 `filterName`을 다른 옵션으로 재사용하면 초기화 단계에서 `IllegalStateException`을 던져 구성 불일치를 차단합니다.
+
 ## 주요 기능
 
 ### HyperLogLog
@@ -92,6 +96,7 @@ hll/
 
 - **Murmur3**: Guava 등 외부 라이브러리 불필요. 순수 Kotlin x64 128-bit 구현.
 - **BloomFilter `tryInit()`**: 동일 키로 다른 파라미터(m/k) 재초기화 시 `IllegalStateException` 발생.
+- **CuckooFilter `tryInit()`**: 동일 키로 다른 `capacity`/`bucketSize`/`numBuckets` 재초기화 시 `IllegalStateException` 발생.
 - **CuckooFilter undo-log**: 삽입 중 kick-out 실패 시 변경된 버킷을 원상 복구하여 기존 원소 유실 방지.
 - **CuckooFilterScripts**: Sync/Suspend 클래스가 Lua 스크립트를 공유하는 internal object.
 
@@ -100,7 +105,7 @@ hll/
 ```kotlin
 // build.gradle.kts
 dependencies {
-    testImplementation(project(":redis-lettuce"))
+    implementation(project(":redis-lettuce"))
 }
 ```
 
