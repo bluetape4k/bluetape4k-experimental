@@ -2,7 +2,6 @@ package io.bluetape4k.examples.exposed.webflux.controller
 
 import io.bluetape4k.examples.exposed.webflux.domain.ProductDto
 import io.bluetape4k.examples.exposed.webflux.repository.ProductSuspendRepository
-import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -23,42 +22,34 @@ import org.springframework.web.server.ResponseStatusException
  */
 class ProductController(
     private val productRepository: ProductSuspendRepository,
-    private val r2dbcDatabase: R2dbcDatabase,
 ) {
 
     @GetMapping
     suspend fun findAll(): List<ProductDto> =
-        suspendTransaction(r2dbcDatabase) {
-            productRepository.findAllAsList()
-        }
+        productRepository.findAllAsList()
 
     @GetMapping("/{id}")
     suspend fun findById(@PathVariable id: Long): ProductDto =
-        suspendTransaction(r2dbcDatabase) {
-            productRepository.findByIdOrNull(id)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
-        }
+        productRepository.findByIdOrNull(id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     suspend fun create(@RequestBody dto: ProductDto): ProductDto =
-        suspendTransaction(r2dbcDatabase) {
-            productRepository.save(dto.copy(id = null))
-        }
+        productRepository.save(dto.copy(id = null))
 
     @PutMapping("/{id}")
-    suspend fun update(@PathVariable id: Long, @RequestBody dto: ProductDto): ProductDto {
-        return suspendTransaction(r2dbcDatabase) {
+    suspend fun update(@PathVariable id: Long, @RequestBody dto: ProductDto): ProductDto =
+        suspendTransaction {
             val existing = productRepository.findByIdOrNull(id)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
             productRepository.save(dto.copy(id = existing.id ?: id))
         }
-    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     suspend fun delete(@PathVariable id: Long) {
-        suspendTransaction(r2dbcDatabase) {
+        suspendTransaction {
             val existing = productRepository.findByIdOrNull(id)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found: $id")
             productRepository.deleteById(existing.id ?: id)
