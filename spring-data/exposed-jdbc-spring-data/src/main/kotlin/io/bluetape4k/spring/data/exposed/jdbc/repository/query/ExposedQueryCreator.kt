@@ -1,5 +1,7 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.toSnakeCase
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
@@ -38,7 +40,16 @@ class ExposedQueryCreator(
     tree: PartTree,
     accessor: ParameterAccessor,
     private val table: Table,
-) : AbstractQueryCreator<Op<Boolean>, Op<Boolean>>(tree, accessor) {
+): AbstractQueryCreator<Op<Boolean>, Op<Boolean>>(tree, accessor) {
+
+    companion object: KLogging() {
+        /** LIKE 패턴에서 와일드카드 문자(`%`, `_`)를 이스케이프합니다. */
+        fun escapeLikeWildcards(value: String): String =
+            value
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+    }
 
     override fun create(part: Part, iterator: Iterator<Any>): Op<Boolean> =
         buildCondition(part, iterator)
@@ -59,69 +70,69 @@ class ExposedQueryCreator(
             ?: error("Column '$colName' not found in table '${table.tableName}'")
 
         return when (part.type) {
-            Part.Type.SIMPLE_PROPERTY ->
+            Part.Type.SIMPLE_PROPERTY               ->
                 (column as Column<Any>).eq(iterator.next())
 
-            Part.Type.NEGATING_SIMPLE_PROPERTY ->
+            Part.Type.NEGATING_SIMPLE_PROPERTY      ->
                 (column as Column<Any>).neq(iterator.next())
 
             Part.Type.GREATER_THAN, Part.Type.AFTER ->
                 (column as Column<Comparable<Any>>).greater(iterator.next() as Comparable<Any>)
 
-            Part.Type.GREATER_THAN_EQUAL ->
+            Part.Type.GREATER_THAN_EQUAL            ->
                 (column as Column<Comparable<Any>>).greaterEq(iterator.next() as Comparable<Any>)
 
-            Part.Type.LESS_THAN, Part.Type.BEFORE ->
+            Part.Type.LESS_THAN, Part.Type.BEFORE   ->
                 (column as Column<Comparable<Any>>).less(iterator.next() as Comparable<Any>)
 
-            Part.Type.LESS_THAN_EQUAL ->
+            Part.Type.LESS_THAN_EQUAL               ->
                 (column as Column<Comparable<Any>>).lessEq(iterator.next() as Comparable<Any>)
 
-            Part.Type.BETWEEN -> {
+            Part.Type.BETWEEN                       -> {
                 val first = iterator.next() as Comparable<Any>
                 val second = iterator.next() as Comparable<Any>
                 (column as Column<Comparable<Any>>).between(first, second)
             }
 
-            Part.Type.IS_NULL -> column.isNull()
-            Part.Type.IS_NOT_NULL -> column.isNotNull()
+            Part.Type.IS_NULL                       -> column.isNull()
+            Part.Type.IS_NOT_NULL                   -> column.isNotNull()
 
-            Part.Type.LIKE ->
+            Part.Type.LIKE                          ->
                 (column as Column<String>).like(iterator.next() as String)
 
-            Part.Type.NOT_LIKE ->
+            Part.Type.NOT_LIKE                      ->
                 (column as Column<String>).notLike(iterator.next() as String)
 
-            Part.Type.STARTING_WITH ->
-                (column as Column<String>).like("${iterator.next()}%")
+            Part.Type.STARTING_WITH                 ->
+                (column as Column<String>).like("${escapeLikeWildcards(iterator.next() as String)}%")
 
-            Part.Type.ENDING_WITH ->
-                (column as Column<String>).like("%${iterator.next()}")
+            Part.Type.ENDING_WITH                   ->
+                (column as Column<String>).like("%${escapeLikeWildcards(iterator.next() as String)}")
 
-            Part.Type.CONTAINING ->
-                (column as Column<String>).like("%${iterator.next()}%")
+            Part.Type.CONTAINING                    ->
+                (column as Column<String>).like("%${escapeLikeWildcards(iterator.next() as String)}%")
 
-            Part.Type.NOT_CONTAINING ->
-                (column as Column<String>).notLike("%${iterator.next()}%")
+            Part.Type.NOT_CONTAINING                ->
+                (column as Column<String>).notLike("%${escapeLikeWildcards(iterator.next() as String)}%")
 
-            Part.Type.IN ->
+            Part.Type.IN                            ->
                 (column as Column<Any>).inList(iterator.next() as Collection<Any>)
 
-            Part.Type.NOT_IN ->
+            Part.Type.NOT_IN                        ->
                 (column as Column<Any>).notInList(iterator.next() as Collection<Any>)
 
-            Part.Type.TRUE ->
+            Part.Type.TRUE                          ->
                 (column as Column<Boolean>).eq(true)
 
-            Part.Type.FALSE ->
+            Part.Type.FALSE                         ->
                 (column as Column<Boolean>).eq(false)
 
-            Part.Type.EXISTS -> column.isNotNull()
+            Part.Type.EXISTS                        -> column.isNotNull()
 
-            else -> error("Unsupported Part.Type: ${part.type}")
+            else                                    -> error("Unsupported Part.Type: ${part.type}")
         }
     }
 
-    private fun toColumnName(propertyName: String): String =
-        propertyName.replace(Regex("([a-z])([A-Z])"), "$1_$2").lowercase()
+    private fun toColumnName(propertyName: String): String = toSnakeCase(propertyName)
+
 }

@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformation
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.toExposedOrderBy
 import org.jetbrains.exposed.v1.core.Op
@@ -20,6 +21,8 @@ class PartTreeExposedQuery<E : Entity<ID>, ID : Any>(
     private val queryMethod: ExposedQueryMethod,
     private val entityInformation: ExposedEntityInformation<E, ID>,
 ) : RepositoryQuery {
+
+    companion object: KLogging()
 
     private val entityClass: EntityClass<ID, E> = entityInformation.entityClass
     private val partTree: PartTree = PartTree(queryMethod.name, queryMethod.entityInformation.javaType)

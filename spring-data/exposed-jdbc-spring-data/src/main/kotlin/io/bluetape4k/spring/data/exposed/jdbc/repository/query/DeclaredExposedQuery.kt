@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformation
 import org.jetbrains.exposed.v1.core.ColumnType
 import org.jetbrains.exposed.v1.core.InternalApi
@@ -22,6 +23,9 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
     private val queryMethod: ExposedQueryMethod,
     private val entityInformation: ExposedEntityInformation<E, ID>,
 ) : RepositoryQuery {
+
+    companion object: KLogging()
+
     private data class BoundSql(
         val sql: String,
         val args: List<Pair<ColumnType<*>, Any?>>,
@@ -85,7 +89,8 @@ class DeclaredExposedQuery<E : Entity<ID>, ID : Any>(
     }
 
     private fun readIdValue(rs: ResultSet): Any? {
-        val byName = runCatching { rs.getObject("id") }.getOrNull()
+        val idColumnName = entityInformation.table.id.name
+        val byName = runCatching { rs.getObject(idColumnName) }.getOrNull()
         return byName ?: rs.getObject(1)
     }
 

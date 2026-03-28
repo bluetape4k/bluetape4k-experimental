@@ -6,6 +6,7 @@ dependencies {
     api(Libs.springData("commons"))
 
     api(Libs.kotlin_reflect)
+    api(Libs.bluetape4k_logging)
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
     api(Libs.exposed_jdbc)
@@ -15,6 +16,10 @@ dependencies {
     testImplementation(Libs.exposed_migration_jdbc)
     testImplementation(Libs.flyway_core)
     testImplementation(Libs.bluetape4k_junit5)
+
+    // Experimental 에서는 Java 25 를 사용한다.
+    // testImplementation(Libs.bluetape4k_virtualthread_jdk21)
+    testImplementation(Libs.bluetape4k_virtualthread_jdk25)
 
     api(Libs.bluetape4k_exposed_jdbc)
     testImplementation(Libs.bluetape4k_exposed_jdbc_tests)

@@ -4,13 +4,13 @@ import org.springframework.data.repository.config.RepositoryBeanDefinitionRegist
 import org.springframework.data.repository.config.RepositoryConfigurationExtension
 
 /**
- * `@EnableExposedR2dbcRepositories` 어노테이션으로 활성화되는 suspend Repository 빈 등록기입니다.
+ * `@EnableExposedSuspendRepositories` 어노테이션으로 활성화되는 suspend Repository 빈 등록기입니다.
  */
-class ExposedR2dbcRepositoriesRegistrar : RepositoryBeanDefinitionRegistrarSupport() {
+class ExposedSuspendRepositoriesRegistrar : RepositoryBeanDefinitionRegistrarSupport() {
 
     override fun getAnnotation(): Class<out Annotation> =
-        EnableExposedR2dbcRepositories::class.java
+        EnableExposedSuspendRepositories::class.java
 
     override fun getExtension(): RepositoryConfigurationExtension =
-        ExposedR2dbcRepositoryConfigurationExtension()
+        ExposedSuspendRepositoryConfigurationExtension()
 }

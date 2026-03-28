@@ -2,6 +2,7 @@ package io.bluetape4k.spring.data.exposed.jdbc
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.domain.UserEntity
 import io.bluetape4k.spring.data.exposed.jdbc.domain.Users
 import io.bluetape4k.spring.data.exposed.jdbc.repository.UserRepository
@@ -14,8 +15,9 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.transaction.annotation.Propagation
@@ -25,6 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Transactional
 class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -138,10 +142,10 @@ class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
         page.totalElements shouldBeEqualTo 10L
     }
 
+    @EnabledOnJre(JRE.JAVA_21, JRE.JAVA_25)
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     fun `findAll with paging - StructuredTaskScopeTester 병렬 조회에서도 totalElements 가 유지된다`() {
-        assumeTrue(structuredTaskScopeAvailable(), "StructuredTaskScope runtime is not available")
         repeat(6) { i -> createUser("Structured$i", "structured$i@example.com", 30 + i) }
         val totals = Collections.synchronizedList(mutableListOf<Long>())
 
@@ -156,9 +160,4 @@ class SimpleExposedRepositoryTest: AbstractExposedRepositoryTest() {
         totals shouldHaveSize 4
         totals.forEach { it shouldBeEqualTo 6L }
     }
-
-    private fun structuredTaskScopeAvailable(): Boolean =
-        runCatching {
-            Class.forName("java.util.concurrent.StructuredTaskScope\$ShutdownOnFailure")
-        }.isSuccess
 }

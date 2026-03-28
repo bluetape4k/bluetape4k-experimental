@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.support
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedRepository
 import io.bluetape4k.support.toOptional
 import org.jetbrains.exposed.v1.core.Column
@@ -7,8 +8,11 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.ExampleMatcher
 import org.springframework.data.domain.Page
@@ -36,6 +40,9 @@ internal const val EXPOSED_TRANSACTION_MANAGER = "springTransactionManager"
 class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     private val entityInformation: ExposedEntityInformation<E, ID>,
 ) : ExposedRepository<E, ID> {
+
+    companion object: KLogging()
+
     private val entityClass: EntityClass<ID, E> get() = entityInformation.entityClass
     private val table: IdTable<ID> get() = entityInformation.table
 
@@ -43,8 +50,16 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
     // CrudRepository
     // ============================================================
 
+    /**
+     * Exposed DAO 변경 감지 모델에서 [save]는 이미 트랜잭션 내에서
+     * `EntityClass.new { }` 로 생성된 엔티티를 그대로 반환합니다.
+     *
+     * **중요**: 반드시 트랜잭션 내에서 `EntityClass.new { }` 로 엔티티를 생성해야 합니다.
+     * 생성 즉시 Exposed 캐시에 등록되며, 트랜잭션 커밋 시 INSERT SQL 이 실행됩니다.
+     * 기존 엔티티의 프로퍼티 변경도 트랜잭션 커밋 시 자동으로 UPDATE 됩니다.
+     */
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
-    override fun <S : E> save(entity: S): S = entity // Exposed DAO는 변경 감지 자동 수행
+    override fun <S : E> save(entity: S): S = entity
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun <S : E> saveAll(entities: Iterable<S>): List<S> = entities.toList()
@@ -83,17 +98,21 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun deleteAllById(ids: Iterable<ID>) {
-        ids.forEach { entityClass.findById(it)?.delete() }
+        val idList = ids.toList()
+        if (idList.isEmpty()) return
+        table.deleteWhere { table.id inList idList }
     }
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun deleteAll(entities: Iterable<E>) {
-        entities.forEach { it.delete() }
+        val idList = entities.map { it.id.value }
+        if (idList.isEmpty()) return
+        table.deleteWhere { table.id inList idList }
     }
 
     @Transactional(transactionManager = EXPOSED_TRANSACTION_MANAGER)
     override fun deleteAll() {
-        entityClass.all().forEach { it.delete() }
+        table.deleteAll()
     }
 
     // ============================================================
@@ -191,10 +210,16 @@ class SimpleExposedRepository<E : Entity<ID>, ID : Any>(
             .asSequence()
             .filterNot { it == table.id }
             .mapNotNull { col ->
+                // 컬럼명(snake_case)을 camelCase 로 변환해 Java 필드 조회
+                val camelCaseName = toCamelCase(col.name)
                 val field =
                     runCatching {
                         probe.javaClass.getDeclaredField(col.name).apply { isAccessible = true }
-                    }.getOrNull() ?: return@mapNotNull null
+                    }.getOrNull()
+                        ?: runCatching {
+                            probe.javaClass.getDeclaredField(camelCaseName).apply { isAccessible = true }
+                        }.getOrNull()
+                        ?: return@mapNotNull null
 
                 val value = field.get(probe) ?: return@mapNotNull null
                 (col as Column<Any>).eq(value)
@@ -234,7 +259,9 @@ private class ExampleSortComparator<E>(
 private class SimpleFluentQuery<E : Any>(
     private val results: List<E>,
 ) : FluentQuery.FetchableFluentQuery<E> {
-    override fun sortBy(sort: Sort): FluentQuery.FetchableFluentQuery<E> = this
+    override fun sortBy(sort: Sort): FluentQuery.FetchableFluentQuery<E> =
+        if (sort.isUnsorted) this
+        else SimpleFluentQuery(results.sortedWith(ExampleSortComparator(sort)))
 
     override fun <R : Any> `as`(projectionType: Class<R>): FluentQuery.FetchableFluentQuery<R> =
         SimpleFluentQuery(results.map { projectionType.cast(it) })

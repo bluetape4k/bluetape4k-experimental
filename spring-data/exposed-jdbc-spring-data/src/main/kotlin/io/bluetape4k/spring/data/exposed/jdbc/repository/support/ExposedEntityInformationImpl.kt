@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.support
 
+import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
@@ -11,10 +12,21 @@ import kotlin.reflect.full.companionObjectInstance
  * Domain 클래스의 companion object에서 [EntityClass]를 추출합니다.
  */
 @Suppress("UNCHECKED_CAST")
-class ExposedEntityInformationImpl<E : Entity<ID>, ID : Any>(
+class ExposedEntityInformationImpl<E: Entity<ID>, ID: Any>(
     domainClass: Class<E>,
     override val entityClass: EntityClass<ID, E>,
-) : AbstractEntityInformation<E, ID>(domainClass), ExposedEntityInformation<E, ID> {
+): AbstractEntityInformation<E, ID>(domainClass), ExposedEntityInformation<E, ID> {
+
+    companion object: KLogging() {
+        @Suppress("UNCHECKED_CAST")
+        operator fun <E: Entity<ID>, ID: Any> invoke(domainClass: Class<E>): ExposedEntityInformationImpl<E, ID> {
+            val companion = domainClass.kotlin.companionObjectInstance
+                ?: error("${domainClass.name} must have a companion object (EntityClass<ID, E>)")
+            val entityClass = companion as? EntityClass<ID, E>
+                ?: error("Companion of ${domainClass.name} must be EntityClass<ID, E>")
+            return ExposedEntityInformationImpl(domainClass, entityClass)
+        }
+    }
 
     override val table: IdTable<ID> = entityClass.table
 
@@ -24,6 +36,10 @@ class ExposedEntityInformationImpl<E : Entity<ID>, ID : Any>(
     override fun getIdType(): Class<ID> =
         resolveIdType(javaType) as Class<ID>
 
+    /**
+     * Exposed DAO 엔티티가 신규(아직 DB에 INSERT 되지 않음)인지 확인합니다.
+     * 새로 생성된 엔티티는 트랜잭션 커밋 전까지 id.value 접근 시 예외를 발생시킵니다.
+     */
     override fun isNew(entity: E): Boolean =
         runCatching { entity.id.value; false }.getOrDefault(true)
 
@@ -40,17 +56,8 @@ class ExposedEntityInformationImpl<E : Entity<ID>, ID : Any>(
             }
             current = current.superclass
         }
-        return Long::class.java
+        error("Cannot resolve ID type for ${clazz.name}. Ensure Entity<ID> generic parameter is declared explicitly.")
     }
 
-    companion object {
-        @Suppress("UNCHECKED_CAST")
-        operator fun <E : Entity<ID>, ID : Any> invoke(domainClass: Class<E>): ExposedEntityInformationImpl<E, ID> {
-            val companion = domainClass.kotlin.companionObjectInstance
-                ?: error("${domainClass.name} must have a companion object (EntityClass<ID, E>)")
-            val entityClass = companion as? EntityClass<ID, E>
-                ?: error("Companion of ${domainClass.name} must be EntityClass<ID, E>")
-            return ExposedEntityInformationImpl(domainClass, entityClass)
-        }
-    }
+
 }

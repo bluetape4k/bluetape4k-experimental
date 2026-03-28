@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.domain.Users
 import io.bluetape4k.spring.data.exposed.jdbc.repository.config.EnableExposedRepositories
 import org.jetbrains.exposed.v1.core.DatabaseConfig
@@ -19,6 +20,8 @@ import javax.sql.DataSource
 
 @SpringBootTest(classes = [AbstractExposedRepositoryTest.TestConfig::class])
 abstract class AbstractExposedRepositoryTest {
+
+    companion object: KLogging()
 
     @Autowired
     private lateinit var dataSource: DataSource

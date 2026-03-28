@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.mapping
 
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.toSnakeCase
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
 import org.springframework.data.mapping.Association
@@ -31,7 +32,4 @@ class DefaultExposedPersistentProperty(
 
     override fun createAssociation(): Association<ExposedPersistentProperty> =
         Association(this, null)
-
-    private fun toSnakeCase(camelCase: String): String =
-        camelCase.replace(Regex("([a-z])([A-Z])"), "$1_$2").lowercase()
 }

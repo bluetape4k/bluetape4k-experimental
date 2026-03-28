@@ -1,6 +1,6 @@
 package io.bluetape4k.spring.data.exposed.r2dbc.repository.config
 
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.ExposedR2dbcRepositoryFactoryBean
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.ExposedSuspendRepositoryFactoryBean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Import
 import org.springframework.data.repository.query.QueryLookupStrategy
@@ -11,21 +11,21 @@ import kotlin.reflect.KClass
  *
  * ```kotlin
  * @SpringBootApplication
- * @EnableExposedR2dbcRepositories(basePackages = ["io.example.repository"])
+ * @EnableExposedSuspendRepositories(basePackages = ["io.example.repository"])
  * class Application
  * ```
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@Import(ExposedR2dbcRepositoriesRegistrar::class)
-annotation class EnableExposedR2dbcRepositories(
+@Import(ExposedSuspendRepositoriesRegistrar::class)
+annotation class EnableExposedSuspendRepositories(
     vararg val value: String = [],
     val basePackages: Array<String> = [],
     val basePackageClasses: Array<KClass<*>> = [],
     val excludeFilters: Array<ComponentScan.Filter> = [],
     val includeFilters: Array<ComponentScan.Filter> = [],
-    val repositoryFactoryBeanClass: KClass<*> = ExposedR2dbcRepositoryFactoryBean::class,
+    val repositoryFactoryBeanClass: KClass<*> = ExposedSuspendRepositoryFactoryBean::class,
     val queryLookupStrategy: QueryLookupStrategy.Key = QueryLookupStrategy.Key.CREATE_IF_NOT_FOUND,
     val transactionManagerRef: String = "springTransactionManager",
     val namedQueriesLocation: String = "",

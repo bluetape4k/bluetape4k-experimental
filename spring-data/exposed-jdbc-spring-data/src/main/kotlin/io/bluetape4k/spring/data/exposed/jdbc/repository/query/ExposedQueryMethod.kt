@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.annotation.Query
 import org.springframework.data.projection.ProjectionFactory
 import org.springframework.data.repository.core.RepositoryMetadata
@@ -16,17 +17,25 @@ class ExposedQueryMethod(
     metadata: RepositoryMetadata,
     factory: ProjectionFactory,
     parametersFunction: ((ParametersSource) -> Parameters<*, *>)? = null,
-) : QueryMethod(method, metadata, factory, parametersFunction) {
+): QueryMethod(method, metadata, factory, parametersFunction) {
+
+    companion object: KLogging()
 
     private val queryAnnotation: Query? = method.getAnnotation(Query::class.java)
 
-    /** @Query 어노테이션이 존재하는지 여부 */
+    /**
+     * @Query 어노테이션이 존재하는지 여부
+     */
     val isAnnotatedQuery: Boolean get() = queryAnnotation != null
 
-    /** @Query 어노테이션의 SQL 문자열 (없으면 null) */
+    /**
+     * @Query 어노테이션의 SQL 문자열 (없으면 null)
+     */
     fun getAnnotatedQuery(): String? = queryText
 
-    /** @Query 어노테이션의 count 쿼리 문자열 (없으면 null) */
+    /**
+     * @Query 어노테이션의 count 쿼리 문자열 (없으면 null)
+     */
     fun getCountQuery(): String? = countQueryText
 
     private val queryText: String? get() = queryAnnotation?.value

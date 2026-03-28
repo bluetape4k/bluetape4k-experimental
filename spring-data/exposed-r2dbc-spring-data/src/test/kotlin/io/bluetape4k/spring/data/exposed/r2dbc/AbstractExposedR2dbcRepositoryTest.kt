@@ -1,10 +1,11 @@
 package io.bluetape4k.spring.data.exposed.r2dbc
 
-import io.bluetape4k.spring.data.exposed.r2dbc.repository.config.EnableExposedR2dbcRepositories
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.spring.data.exposed.r2dbc.repository.config.EnableExposedSuspendRepositories
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
-import org.jetbrains.exposed.v1.migration.r2dbc.MigrationUtils
+import org.jetbrains.exposed.v1.r2dbc.SchemaUtils
 import org.jetbrains.exposed.v1.r2dbc.deleteAll
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.junit.jupiter.api.BeforeEach
@@ -14,25 +15,25 @@ import org.springframework.context.annotation.Configuration
 
 @SpringBootTest(classes = [AbstractExposedR2dbcRepositoryTest.TestConfig::class])
 abstract class AbstractExposedR2dbcRepositoryTest {
-    protected lateinit var r2dbcDatabase: R2dbcDatabase
+
+    companion object: KLoggingChannel() {
+        val r2dbcDatabase: R2dbcDatabase = R2dbcDatabase.connect(
+            url = "r2dbc:h2:mem:///coroutine_exposed_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=LEGACY",
+            driver = "h2",
+        )
+    }
 
     @Configuration
     @EnableAutoConfiguration
-    @EnableExposedR2dbcRepositories(
+    @EnableExposedSuspendRepositories(
         basePackages = ["io.bluetape4k.spring.data.exposed.r2dbc.repository"]
     )
     class TestConfig
 
     @BeforeEach
     fun setUp(): Unit = runBlocking {
-        if (!::r2dbcDatabase.isInitialized) {
-            r2dbcDatabase = R2dbcDatabase.connect(
-                url = "r2dbc:h2:mem:///coroutine_exposed_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=LEGACY",
-                driver = "h2",
-            )
-        }
         suspendTransaction(r2dbcDatabase) {
-            MigrationUtils.statementsRequiredForDatabaseMigration(Users).forEach { exec(it) }
+            SchemaUtils.createMissingTablesAndColumns(Users)
             Users.deleteAll()
         }
     }

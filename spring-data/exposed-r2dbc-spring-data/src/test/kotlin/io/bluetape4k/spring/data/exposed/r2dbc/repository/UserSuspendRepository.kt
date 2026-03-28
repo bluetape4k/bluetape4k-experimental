@@ -4,11 +4,16 @@ import io.bluetape4k.spring.data.exposed.r2dbc.domain.User
 import io.bluetape4k.spring.data.exposed.r2dbc.domain.Users
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 
 /**
- * 테스트용 suspend 기반 User CRUD Repository 입니다.
+ * 테스트용 suspend 기반 User Repository 입니다.
  */
-interface UserSuspendRepository : SuspendExposedCrudRepository<Users, User, Long> {
+interface UserSuspendRepository: ExposedSuspendRepository<User, Long> {
+
+    override val table: IdTable<Long> get() = Users
+
+    override fun extractId(entity: User): Long? = entity.id
 
     override fun toDomain(row: ResultRow): User =
         User(

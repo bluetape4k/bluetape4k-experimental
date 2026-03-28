@@ -20,6 +20,10 @@ dependencies {
     api(Libs.bluetape4k_exposed_r2dbc)
     testImplementation(Libs.bluetape4k_exposed_r2dbc_tests)
 
+    // Experimental 에서는 Java 25 를 사용한다.
+    // testImplementation(Libs.bluetape4k_virtualthread_jdk21)
+    testImplementation(Libs.bluetape4k_virtualthread_jdk25)
+
     api(Libs.bluetape4k_coroutines)
     api(Libs.kotlinx_coroutines_core)
     api(Libs.kotlinx_coroutines_reactor)  // Spring Data 코루틴 지원 요구사항

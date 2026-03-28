@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.data.repository.query.ParameterAccessor
 import org.springframework.data.repository.query.Parameters
 import org.springframework.data.repository.query.ParametersParameterAccessor
@@ -12,7 +13,7 @@ class ParameterMetadataProvider(
     val accessor: ParameterAccessor,
 ) {
 
-    companion object {
+    companion object: KLogging() {
         fun of(parameters: Parameters<*, *>, values: Array<Any?>): ParameterMetadataProvider =
             ParameterMetadataProvider(ParametersParameterAccessor(parameters, values))
     }

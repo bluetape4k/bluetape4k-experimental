@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.support
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.mapping.ExposedMappingContext
 import io.bluetape4k.spring.data.exposed.jdbc.repository.query.ExposedQueryLookupStrategy
 import io.bluetape4k.support.toOptional
@@ -19,6 +20,8 @@ import java.util.*
 class ExposedRepositoryFactory(
     _mappingContext: ExposedMappingContext,
 ) : RepositoryFactorySupport() {
+
+    companion object: KLogging()
 
     @Deprecated("Spring Data 4.0에서 deprecated 된 API입니다.", ReplaceWith("getEntityInformation(metadata)"))
     override fun <T : Any, ID : Any> getEntityInformation(domainClass: Class<T>): EntityInformation<T, ID> =

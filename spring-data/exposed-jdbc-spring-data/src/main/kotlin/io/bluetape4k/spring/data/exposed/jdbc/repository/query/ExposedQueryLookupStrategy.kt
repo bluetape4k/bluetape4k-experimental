@@ -1,5 +1,6 @@
 package io.bluetape4k.spring.data.exposed.jdbc.repository.query
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import org.jetbrains.exposed.v1.dao.Entity
 import org.springframework.data.projection.ProjectionFactory
@@ -19,6 +20,11 @@ import java.lang.reflect.Method
 class ExposedQueryLookupStrategy(
     private val key: QueryLookupStrategy.Key,
 ) : QueryLookupStrategy {
+
+    companion object: KLogging() {
+        fun create(key: QueryLookupStrategy.Key): ExposedQueryLookupStrategy = ExposedQueryLookupStrategy(key)
+    }
+    
     override fun resolveQuery(
         method: Method,
         metadata: RepositoryMetadata,
@@ -53,9 +59,5 @@ class ExposedQueryLookupStrategy(
                 }
             }
         }
-    }
-
-    companion object {
-        fun create(key: QueryLookupStrategy.Key): ExposedQueryLookupStrategy = ExposedQueryLookupStrategy(key)
     }
 }
