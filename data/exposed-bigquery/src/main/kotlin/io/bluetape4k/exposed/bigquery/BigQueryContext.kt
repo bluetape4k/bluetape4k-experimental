@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementContext
+import org.jetbrains.exposed.v1.core.statements.expandArgs
 import org.jetbrains.exposed.v1.core.statements.DeleteStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
@@ -141,7 +144,7 @@ class BigQueryContext(
     fun <T : Table> T.execInsert(body: T.(InsertStatement<Number>) -> Unit): QueryResponse {
         val stmt = InsertStatement<Number>(this)
         body(stmt)
-        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        val sql = transaction(sqlGenDb) { stmt.expandSql(this) }
         return runRawQuery(sql)
     }
 
@@ -166,7 +169,7 @@ class BigQueryContext(
     ): QueryResponse {
         val stmt = UpdateStatement(this, limit = null, where = where)
         body(stmt)
-        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        val sql = transaction(sqlGenDb) { stmt.expandSql(this) }
         return runRawQuery(sql)
     }
 
@@ -189,7 +192,7 @@ class BigQueryContext(
      */
     fun <T : Table> T.execDelete(where: Op<Boolean>): QueryResponse {
         val stmt = DeleteStatement(this, where = where)
-        val sql = transaction(sqlGenDb) { stmt.prepareSQL(this, prepared = false) }
+        val sql = transaction(sqlGenDb) { stmt.expandSql(this) }
         return runRawQuery(sql)
     }
 
@@ -347,6 +350,15 @@ class BigQueryContext(
         if (errors?.isNotEmpty() == true) {
             val msg = errors.joinToString("; ") { it.message ?: it.reason ?: "unknown" }
             throw RuntimeException("BigQuery 쿼리 오류: $msg\nSQL: ${sql.take(200)}")
+        }
+    }
+
+    private fun Statement<*>.expandSql(transaction: org.jetbrains.exposed.v1.core.Transaction): String {
+        val firstArgs = arguments().firstOrNull()
+        return if (firstArgs == null || !firstArgs.iterator().hasNext()) {
+            prepareSQL(transaction, prepared = false)
+        } else {
+            StatementContext(this, firstArgs).expandArgs(transaction)
         }
     }
 }

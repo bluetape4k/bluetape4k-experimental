@@ -3,9 +3,11 @@ package io.bluetape4k.exposed.bigquery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.DecimalColumnType
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.javatime.JavaInstantColumnType
+import java.math.BigDecimal
 import java.time.Instant
 
 /**
@@ -78,9 +80,11 @@ class BigQueryResultRow(private val data: Map<String, Any?>) {
 
     @Suppress("UNCHECKED_CAST")
     private fun <T> convertValue(raw: Any?, column: Column<T>): T? {
-        if (raw == null) return null
+        if (raw == null || raw.javaClass == Any::class.java || raw.toString() == "null") return null
         val s = raw.toString()
         return when (column.columnType) {
+            is DecimalColumnType ->
+                BigDecimal(s)
             is JavaInstantColumnType ->
                 // BigQuery REST API: TIMESTAMP = 초 단위 float 문자열 (예: "1.704067200E9")
                 Instant.ofEpochMilli((s.toDouble() * 1000).toLong())

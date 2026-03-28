@@ -1,10 +1,12 @@
 package io.bluetape4k.exposed.bigquery.query
 
 import io.bluetape4k.exposed.bigquery.AbstractBigQueryTest
+import io.bluetape4k.exposed.bigquery.BigQueryContext
 import io.bluetape4k.exposed.bigquery.domain.Events
 import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeNull
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.count
@@ -13,7 +15,10 @@ import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Test
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
 import java.math.BigDecimal
+import java.time.Instant
 
 /**
  * Exposed Query 객체를 [withBigQuery]에 전달하여 BigQuery 에뮬레이터에서 실행하는 테스트.
@@ -114,6 +119,104 @@ class SelectQueryTest: AbstractBigQueryTest() {
             response.rows.shouldNotBeEmpty()
             val krRow = response.rows.find { it.f[0].v.toString() == "kr" }!!
             BigDecimal(krRow.f[1].v.toString()).compareTo(BigDecimal("20.00")) shouldBeEqualTo 0
+        }
+    }
+
+    @Test
+    fun `singleOrNull 과 firstOrNull - public 조회 헬퍼 검증`() {
+        withEventsData {
+            insertFixtures()
+
+            val singleRow = Events.selectAll()
+                .where { Events.eventId eq 1L }
+                .withBigQuery()
+                .singleOrNull()
+            singleRow.shouldNotBeNull()
+            singleRow[Events.region] shouldBeEqualTo "kr"
+
+            val firstRow = Events.selectAll()
+                .orderBy(Events.userId, SortOrder.DESC)
+                .withBigQuery()
+                .firstOrNull()
+            firstRow.shouldNotBeNull()
+            firstRow[Events.userId] shouldBeEqualTo 300L
+        }
+    }
+
+    @Test
+    fun `toListSuspending 과 toFlow - suspend 조회 및 타입 변환 검증`() = runTest {
+        withEventsDataSuspending {
+            runRawQuery(
+                """
+                INSERT INTO events (event_id, user_id, event_type, region, amount, occurred_at)
+                VALUES (10, 999, 'PURCHASE', 'kr', 12.34, TIMESTAMP '2024-01-01 00:00:00 UTC')
+                """
+            )
+            runRawQuery(
+                """
+                INSERT INTO events (event_id, user_id, event_type, region, amount, occurred_at)
+                VALUES (11, 1000, 'VIEW', 'us', NULL, TIMESTAMP '2024-01-02 00:00:00 UTC')
+                """
+            )
+
+            val rows = Events.selectAll()
+                .orderBy(Events.eventId)
+                .withBigQuery()
+                .toListSuspending()
+
+            rows.size shouldBeEqualTo 2
+            rows[0][Events.amount] shouldBeEqualTo BigDecimal("12.34")
+            rows[0][Events.occurredAt] shouldBeEqualTo Instant.parse("2024-01-01T00:00:00Z")
+            rows[1][Events.amount] shouldBeEqualTo null
+
+            val streamed = Events.selectAll()
+                .orderBy(Events.eventId)
+                .withBigQuery()
+                .toFlow()
+                .toList()
+
+            streamed.size shouldBeEqualTo 2
+            streamed[1][Events.occurredAt] shouldBeEqualTo Instant.parse("2024-01-02T00:00:00Z")
+        }
+    }
+
+    @Test
+    fun `create 팩토리 와 suspend DML - 권장 진입점 검증`() = runTest {
+        val context = BigQueryContext.create(
+            bigquery = bqContext.bigquery,
+            projectId = bqContext.projectId,
+            datasetId = bqContext.datasetId,
+        )
+
+        withEventsDataSuspending {
+            with(context) {
+                Events.execDeleteAll()
+            Events.execInsertSuspending {
+                it[eventId] = 21L
+                it[userId] = 2100L
+                it[eventType] = "PURCHASE"
+                it[region] = "kr"
+                it[amount] = BigDecimal("77.77")
+                it[occurredAt] = Instant.parse("2024-02-01T00:00:00Z")
+            }
+            Events.execUpdateSuspending(Events.eventId eq 21L) {
+                it[eventType] = "UPDATED"
+            }
+
+            val updated = Events.selectAll()
+                .where { Events.eventId eq 21L }
+                .withBigQuery()
+                .toListSuspending()
+                .single()
+
+            updated[Events.eventType] shouldBeEqualTo "UPDATED"
+
+            Events.execDeleteSuspending(Events.eventId eq 21L)
+            Events.selectAll()
+                .where { Events.eventId eq 21L }
+                .withBigQuery()
+                .singleOrNull() shouldBeEqualTo null
+            }
         }
     }
 }

@@ -148,4 +148,14 @@ abstract class AbstractBigQueryTest {
         with(bqContext) { Events.execDeleteAll() }
         block()
     }
+
+    /**
+     * suspend 테스트 전에 events 테이블 데이터를 초기화하고 suspend 블록을 실행합니다.
+     *
+     * suspend API 회귀 테스트에서 `runTest`와 함께 사용합니다.
+     */
+    protected suspend fun withEventsDataSuspending(block: suspend () -> Unit) {
+        with(bqContext) { Events.execDeleteAll() }
+        block()
+    }
 }
