@@ -15,7 +15,7 @@
     </appender>
     <!-- formatter:on -->
 
-    <logger name="io.bluetape4k.exposed.ignite3" level="DEBUG"/>
+    <logger name="io.bluetape4k.exposed.cockroachdb" level="DEBUG"/>
     <logger name="org.apache.ignite" level="INFO"/>
 
     <root level="INFO">

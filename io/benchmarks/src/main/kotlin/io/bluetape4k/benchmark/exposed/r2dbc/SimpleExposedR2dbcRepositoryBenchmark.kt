@@ -65,6 +65,7 @@ private fun newRepository(): SimpleExposedR2dbcRepository<BenchmarkUser, Long> =
         table = BenchmarkUsers,
         toDomainMapper = ::benchmarkUserFrom,
         persistValuesProvider = ::benchmarkPersistValues,
+        idExtractor = { it.id },
     )
 
 @State(Scope.Benchmark)
