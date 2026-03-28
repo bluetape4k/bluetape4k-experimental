@@ -22,35 +22,27 @@ io.bluetape4k.scheduling.appointment.event
 sealed class AppointmentDomainEvent {
     data class StatusChanged(
         val appointmentId: Long,
-        val fromStatus: String,
-        val toStatus: String,
-        val timestamp: Instant
+        val clinicId: Long,
+        val fromState: String,
+        val toState: String,
+        val reason: String? = null,
     ) : AppointmentDomainEvent()
 
     data class Created(
         val appointmentId: Long,
         val clinicId: Long,
-        val doctorId: Long,
-        val treatmentTypeId: Long,
-        val appointmentDate: LocalDate,
-        val startTime: LocalTime,
-        val endTime: LocalTime,
-        val timestamp: Instant
     ) : AppointmentDomainEvent()
 
     data class Cancelled(
         val appointmentId: Long,
-        val reason: String?,
-        val timestamp: Instant
+        val clinicId: Long,
+        val reason: String,
     ) : AppointmentDomainEvent()
 
     data class Rescheduled(
-        val originalAppointmentId: Long,
-        val newAppointmentId: Long,
-        val newDate: LocalDate,
-        val newStartTime: LocalTime,
-        val newEndTime: LocalTime,
-        val timestamp: Instant
+        val originalId: Long,
+        val newId: Long,
+        val clinicId: Long,
     ) : AppointmentDomainEvent()
 }
 ```
@@ -64,9 +56,10 @@ sealed class AppointmentDomainEvent {
 | 칼럼 | 타입 | 설명 |
 |------|------|------|
 | `id` | Long | Primary Key |
-| `event_type` | String | 이벤트 타입 (StatusChanged, Created, Cancelled, Rescheduled) |
+| `event_type` | String | 이벤트 타입 (`Created`, `StatusChanged`, `Cancelled`, `Rescheduled`) |
 | `entity_type` | String | 엔티티 타입 (항상 "Appointment") |
-| `entity_id` | Long | 예약 ID |
+| `entity_id` | Long | 예약 ID 또는 원본 예약 ID |
+| `clinic_id` | Long | 클리닉 ID |
 | `payload_json` | Text | 이벤트 전체 JSON |
 | `created_at` | Timestamp | 생성 시각 |
 
@@ -80,18 +73,23 @@ sealed class AppointmentDomainEvent {
 @Component
 class AppointmentEventLogger {
     @EventListener
-    suspend fun onStatusChanged(event: AppointmentDomainEvent.StatusChanged) {
+    fun onStatusChanged(event: AppointmentDomainEvent.StatusChanged) {
         // DB에 이벤트 로그 저장
     }
 
     @EventListener
-    suspend fun onCreated(event: AppointmentDomainEvent.Created) {
+    fun onCreated(event: AppointmentDomainEvent.Created) {
         // DB에 이벤트 로그 저장
     }
 
     // ... onCancelled, onRescheduled
 }
 ```
+
+### 직렬화 주의사항
+
+- 로그 payload 는 사람이 읽기 쉬운 JSON 문자열로 저장합니다.
+- reason 문자열에 큰따옴표, 개행, 백슬래시가 포함되어도 깨지지 않도록 JSON escape 를 적용합니다.
 
 ---
 
@@ -110,6 +108,8 @@ class AppointmentEventLogger {
 ```bash
 ./gradlew :appointment-event:test
 ```
+
+2026-03-28 기준 모듈 테스트 7건 통과.
 
 ---
 

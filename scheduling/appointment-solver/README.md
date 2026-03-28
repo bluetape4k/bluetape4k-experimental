@@ -59,7 +59,7 @@ if (result.isFeasible) {
 ## 테스트
 
 ```bash
-# 전체 테스트 (27개)
+# 전체 테스트
 ./gradlew :appointment-solver:test
 
 # ConstraintVerifier 단위 테스트 (20개)
@@ -71,6 +71,8 @@ if (result.isFeasible) {
 # Benchmark 성능 테스트 (3개, "benchmark" 태그)
 ./gradlew :appointment-solver:test --tests "*.BenchmarkTest"
 ```
+
+2026-03-28 기준 모듈 테스트 27건 통과.
 
 ### Benchmark 규모
 

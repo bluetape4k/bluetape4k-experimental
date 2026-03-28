@@ -13,6 +13,7 @@
 - **발송 이력**: `NotificationHistoryTable`에 모든 알림 발송 이력 저장
 - **HA 리더 선출**: `LettuceLeaderGroupElection`으로 분산 환경에서 스케줄러 1개 인스턴스만 실행
 - **장애 격리**: Resilience4j CircuitBreaker + Retry + Bulkhead로 외부 알림 서비스 장애 격리
+- **중복 방지**: 성공 이력이 있는 리마인더는 재발송하지 않음
 
 ## 아키텍처
 
@@ -33,6 +34,12 @@ AppointmentReminderScheduler
     ├── LettuceLeaderGroupElection (HA 리더 선출)
     └── ResilientNotificationChannel → NotificationChannel
 ```
+
+## 리마인더 동작
+
+- `AppointmentReminderScheduler` 는 매시간 실행되어 대상 날짜의 `CONFIRMED` 예약을 조회합니다.
+- 리마인더 대상 조회는 특정 클리닉에 고정하지 않고, 해당 날짜의 전체 예약을 기준으로 수행합니다.
+- `NotificationHistoryRepository.existsByAppointmentAndEventType(...)` 로 성공 이력을 확인해 중복 발송을 막습니다.
 
 ## 설정
 
@@ -132,9 +139,13 @@ class FeignNotificationChannel(
 - `NotificationEventListenerTest` — 이벤트 수신 → 알림 호출 검증 (8개)
 - `NotificationHistoryRepositoryTest` — 이력 CRUD + 중복 체크 검증 (6개)
 - `ResilientNotificationChannelTest` — CircuitBreaker + Retry + Bulkhead 검증 (8개)
+- `AppointmentReminderSchedulerTest` — 날짜 기준 조회 + 중복 발송 방지 검증 (2개)
+
+2026-03-28 기준 모듈 테스트 41건 통과.
 
 ## 의존성
 
-```kotlin
-implementation(project(":appointment-notification"))
-```
+- `appointment-core` — 예약/클리닉/의사/진료유형 조회
+- `appointment-event` — 도메인 이벤트 구독
+- Resilience4j (`CircuitBreaker`, `Retry`, `Bulkhead`)
+- Lettuce / leader election — 다중 인스턴스 스케줄러 조율

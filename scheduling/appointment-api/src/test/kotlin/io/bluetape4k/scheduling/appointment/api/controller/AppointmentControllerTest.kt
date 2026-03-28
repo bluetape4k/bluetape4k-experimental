@@ -21,7 +21,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -37,7 +37,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.DayOfWeek
 
@@ -58,14 +60,14 @@ class AppointmentControllerTest {
     @BeforeEach
     fun setup() {
         transaction {
-            MigrationUtils.statementsRequiredForDatabaseMigration(
+            SchemaUtils.createMissingTablesAndColumns(
                 Clinics, OperatingHoursTable, ClinicDefaultBreakTimes, BreakTimes, ClinicClosures,
                 Doctors, DoctorSchedules, DoctorAbsences,
                 TreatmentTypes, Equipments, TreatmentEquipments,
                 ConsultationTopics, Holidays,
                 Appointments, AppointmentNotes,
                 RescheduleCandidates, AppointmentEventLogs,
-            ).forEach { exec(it) }
+            )
 
             // Clean up in reverse FK order
             AppointmentEventLogs.deleteAll()
@@ -181,11 +183,15 @@ class AppointmentControllerTest {
 
         val body = """{"status": "CONFIRMED"}"""
 
-        mockMvc.perform(
+        val result = mockMvc.perform(
             patch("/api/appointments/$appointmentId/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
         )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(result))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.status").value("CONFIRMED"))
@@ -198,11 +204,15 @@ class AppointmentControllerTest {
         // REQUESTED -> COMPLETED is not a valid transition
         val body = """{"status": "COMPLETED"}"""
 
-        mockMvc.perform(
+        val result = mockMvc.perform(
             patch("/api/appointments/$appointmentId/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)
         )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(result))
             .andExpect(status().isConflict)
             .andExpect(jsonPath("$.success").value(false))
     }
@@ -211,7 +221,11 @@ class AppointmentControllerTest {
     fun `DELETE - cancel appointment`() {
         val appointmentId = createTestAppointment()
 
-        mockMvc.perform(delete("/api/appointments/$appointmentId"))
+        val result = mockMvc.perform(delete("/api/appointments/$appointmentId"))
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(result))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.status").value("CANCELLED"))

@@ -14,7 +14,6 @@ import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
 import io.bluetape4k.scheduling.appointment.statemachine.AppointmentEvent
 import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.statemachine.AppointmentStateMachine
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
@@ -86,7 +85,7 @@ class AppointmentController(
     }
 
     @PatchMapping("/{id}/status")
-    fun updateStatus(
+    suspend fun updateStatus(
         @PathVariable id: Long,
         @RequestBody request: UpdateStatusRequest,
     ): ResponseEntity<ApiResponse<AppointmentResponse>> {
@@ -97,7 +96,7 @@ class AppointmentController(
         val currentState = parseState(record.status)
         val event = parseEvent(request.status, request.reason)
 
-        val nextState = runBlocking { stateMachine.transition(currentState, event) }
+        val nextState = stateMachine.transition(currentState, event)
 
         transaction { appointmentRepository.updateStatus(id, nextState.name) }
 
@@ -116,7 +115,7 @@ class AppointmentController(
     }
 
     @DeleteMapping("/{id}")
-    fun cancel(@PathVariable id: Long): ResponseEntity<ApiResponse<AppointmentResponse>> {
+    suspend fun cancel(@PathVariable id: Long): ResponseEntity<ApiResponse<AppointmentResponse>> {
         log.debug { "DELETE /api/appointments/$id" }
         val record = transaction { appointmentRepository.findByIdOrNull(id) }
             ?: throw NoSuchElementException("Appointment not found: $id")
@@ -124,7 +123,7 @@ class AppointmentController(
         val currentState = parseState(record.status)
         val cancelEvent = AppointmentEvent.Cancel(reason = "Cancelled by user")
 
-        runBlocking { stateMachine.transition(currentState, cancelEvent) }
+        stateMachine.transition(currentState, cancelEvent)
 
         transaction { appointmentRepository.updateStatus(id, AppointmentStatus.CANCELLED) }
 

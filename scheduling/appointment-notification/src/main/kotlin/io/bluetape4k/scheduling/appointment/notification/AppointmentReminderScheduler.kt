@@ -64,8 +64,7 @@ class AppointmentReminderScheduler(
 
     private fun sendReminders(date: LocalDate, reminderType: ReminderType, eventType: String) {
         val confirmedAppointments = transaction {
-            appointmentRepository.findActiveByClinicAndDate(
-                clinicId = 0L,
+            appointmentRepository.findActiveByDate(
                 date = date,
                 activeStatuses = listOf(AppointmentStatus.CONFIRMED),
             )

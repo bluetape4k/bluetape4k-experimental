@@ -6,8 +6,8 @@ import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.LocalDate
 import java.time.LocalTime
@@ -24,13 +24,13 @@ object NotificationTestSupport {
 
     fun createSchema() {
         transaction {
-            MigrationUtils.statementsRequiredForDatabaseMigration(
+            SchemaUtils.createMissingTablesAndColumns(
                 Clinics,
                 Doctors,
                 TreatmentTypes,
                 Appointments,
                 NotificationHistoryTable,
-            ).forEach { exec(it) }
+            )
         }
     }
 

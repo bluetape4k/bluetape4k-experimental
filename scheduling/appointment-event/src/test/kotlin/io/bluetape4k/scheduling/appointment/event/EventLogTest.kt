@@ -115,6 +115,40 @@ class EventLogTest {
     }
 
     @Test
+    fun `이벤트 reason 문자열은 JSON 이스케이프된다`() {
+        val event =
+            AppointmentDomainEvent.Cancelled(
+                appointmentId = 5L,
+                clinicId = 50L,
+                reason = """환자 "직접" 요청
+다음주 재예약"""
+            )
+
+        logger.onCancelled(event)
+
+        transaction {
+            val payload = AppointmentEventLogs.selectAll().single()[AppointmentEventLogs.payloadJson]
+            payload.contains("""\"직접\"""").shouldBeTrue()
+            payload.contains("""\n""").shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `Rescheduled 이벤트가 DB에 저장된다`() {
+        val event = AppointmentDomainEvent.Rescheduled(originalId = 6L, newId = 7L, clinicId = 60L)
+
+        logger.onRescheduled(event)
+
+        transaction {
+            val row = AppointmentEventLogs.selectAll().single()
+            row[AppointmentEventLogs.eventType] shouldBeEqualTo "Rescheduled"
+            row[AppointmentEventLogs.entityId] shouldBeEqualTo 6L
+            row[AppointmentEventLogs.clinicId] shouldBeEqualTo 60L
+            row[AppointmentEventLogs.payloadJson].contains(""""newId":7""").shouldBeTrue()
+        }
+    }
+
+    @Test
     fun `여러 이벤트가 순차적으로 저장된다`() {
         logger.onCreated(AppointmentDomainEvent.Created(appointmentId = 100L, clinicId = 1L))
         logger.onStatusChanged(
@@ -132,13 +166,15 @@ class EventLogTest {
                 reason = "취소"
             )
         )
+        logger.onRescheduled(AppointmentDomainEvent.Rescheduled(originalId = 100L, newId = 101L, clinicId = 1L))
 
         transaction {
             val rows = AppointmentEventLogs.selectAll().toList()
-            rows shouldHaveSize 3
+            rows shouldHaveSize 4
             rows[0][AppointmentEventLogs.eventType] shouldBeEqualTo "Created"
             rows[1][AppointmentEventLogs.eventType] shouldBeEqualTo "StatusChanged"
             rows[2][AppointmentEventLogs.eventType] shouldBeEqualTo "Cancelled"
+            rows[3][AppointmentEventLogs.eventType] shouldBeEqualTo "Rescheduled"
         }
     }
 }

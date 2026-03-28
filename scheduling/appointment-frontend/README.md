@@ -64,6 +64,12 @@ src/app/
 - **인증**: JWT 기반 역할 관리 (ADMIN, STAFF, DOCTOR, PATIENT)
 - **반응형**: 데스크톱(사이드네비) / 모바일(하단탭)
 
+## 라우팅 메모
+
+- 기본 진입 경로는 `/calendar` 입니다.
+- 캘린더는 `day`, `week`, `month` 라우트로 분기되며 `CalendarStateService` 로 현재 날짜와 뷰 상태를 관리합니다.
+- 권한이 없는 사용자는 `role.guard` 를 통해 `/calendar` 로 리다이렉트됩니다.
+
 ## API 프록시
 
 개발 시 `/api/*` 요청은 `http://localhost:8080`으로 프록시됩니다.
@@ -71,7 +77,5 @@ src/app/
 
 ## 의존성
 
-```kotlin
-// 백엔드 API 모듈
-implementation(project(":appointment-api"))
-```
+- 런타임 백엔드 의존성은 `appointment-api` 모듈입니다.
+- 개발 시 Angular dev server 프록시를 통해 `/api/*` 요청을 `http://localhost:8080` 으로 전달합니다.

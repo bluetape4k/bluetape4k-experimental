@@ -93,6 +93,17 @@ class AppointmentRepository : LongJdbcRepository<AppointmentRecord> {
             it[status] = toStatus
         }
 
+    fun findActiveByDate(
+        date: LocalDate,
+        activeStatuses: List<String> = AppointmentStatus.ACTIVE_STATUSES,
+    ): List<AppointmentRecord> =
+        Appointments
+            .selectAll()
+            .where {
+                (Appointments.appointmentDate eq date) and
+                    (Appointments.status inList activeStatuses)
+            }.map { it.toAppointmentRecord() }
+
     fun save(record: AppointmentRecord): AppointmentRecord {
         val id = Appointments.insertAndGetId {
             it[clinicId] = record.clinicId

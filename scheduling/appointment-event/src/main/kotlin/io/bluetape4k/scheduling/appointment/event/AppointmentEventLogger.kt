@@ -19,7 +19,7 @@ class AppointmentEventLogger {
 
     @EventListener
     fun onStatusChanged(event: AppointmentDomainEvent.StatusChanged) {
-        val reasonPart = event.reason?.let { ""","reason":"$it"""" } ?: ""
+        val reasonPart = event.reason?.let { ""","reason":${jsonString(it)}""" } ?: ""
         saveEventLog(
             eventType = "StatusChanged",
             entityId = event.appointmentId,
@@ -34,7 +34,17 @@ class AppointmentEventLogger {
             eventType = "Cancelled",
             entityId = event.appointmentId,
             clinicId = event.clinicId,
-            payloadJson = """{"appointmentId":${event.appointmentId},"clinicId":${event.clinicId},"reason":"${event.reason}"}"""
+            payloadJson = """{"appointmentId":${event.appointmentId},"clinicId":${event.clinicId},"reason":${jsonString(event.reason)}}"""
+        )
+    }
+
+    @EventListener
+    fun onRescheduled(event: AppointmentDomainEvent.Rescheduled) {
+        saveEventLog(
+            eventType = "Rescheduled",
+            entityId = event.originalId,
+            clinicId = event.clinicId,
+            payloadJson = """{"originalId":${event.originalId},"newId":${event.newId},"clinicId":${event.clinicId}}"""
         )
     }
 
@@ -53,5 +63,22 @@ class AppointmentEventLogger {
                 it[AppointmentEventLogs.payloadJson] = payloadJson
             }
         }
+    }
+
+    private fun jsonString(value: String): String = buildString(value.length + 2) {
+        append('"')
+        value.forEach { ch ->
+            when (ch) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\b' -> append("\\b")
+                '\u000C' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> append(ch)
+            }
+        }
+        append('"')
     }
 }

@@ -144,6 +144,12 @@ fun resolveMaxConcurrent(
 2. Doctor.maxConcurrentPatients (있으면 사용)
 3. Clinic.maxConcurrentPatients (기본값)
 
+## 검증 포인트
+
+- `SlotCalculationService` 는 영업시간, 휴식시간, 부분휴진, 의사 부재, providerType, 장비 수량을 모두 반영해 슬롯을 계산합니다.
+- `ClosureRescheduleService` 는 휴진일 활성 예약을 `PENDING_RESCHEDULE` 로 전환한 뒤 후보 슬롯을 저장합니다.
+- `AppointmentRepository.findActiveByDate(...)` 는 리마인더/배치 작업처럼 클리닉 전체 날짜 기준 조회가 필요한 모듈에서 사용합니다.
+
 ---
 
 ## 상태 머신
@@ -167,7 +173,7 @@ fun resolveMaxConcurrent(
 ## 테스트
 
 ```bash
-# 전체 모듈 테스트 (총 78개)
+# 전체 모듈 테스트
 ./gradlew :appointment-core:test
 
 # SlotCalculationService 테스트 (21개)
@@ -188,6 +194,8 @@ fun resolveMaxConcurrent(
 # 테이블 스키마 테스트
 ./gradlew :appointment-core:test --tests "*.TableSchemaTest"
 ```
+
+2026-03-28 기준 모듈 테스트 86건 통과.
 
 ---
 
