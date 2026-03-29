@@ -1,6 +1,7 @@
 package io.bluetape4k.scheduling.appointment.notification
 
 import io.bluetape4k.scheduling.appointment.model.dto.AppointmentRecord
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
@@ -23,7 +24,7 @@ class NotificationMessageProviderTest {
         appointmentDate = LocalDate.of(2026, 3, 21),
         startTime = LocalTime.of(9, 0),
         endTime = LocalTime.of(9, 30),
-        status = "CONFIRMED",
+        status = AppointmentState.CONFIRMED,
     )
 
     @Test

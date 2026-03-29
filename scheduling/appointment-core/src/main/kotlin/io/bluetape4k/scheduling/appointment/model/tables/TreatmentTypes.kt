@@ -30,4 +30,9 @@ object TreatmentTypes : LongIdTable("scheduling_treatment_types") {
     val consultationMethod = varchar("consultation_method", 30).nullable()
     val requiresEquipment = bool("requires_equipment").default(false)
     val maxConcurrentPatients = integer("max_concurrent_patients").nullable()
+
+    init {
+        // 병원별 치료 유형 목록 조회
+        index("idx_treatment_types_clinic_id", false, clinicId)
+    }
 }

@@ -19,4 +19,9 @@ object RescheduleCandidates : LongIdTable("scheduling_reschedule_candidates") {
     val priority = integer("priority").default(0)
     val selected = bool("selected").default(false)
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+
+    init {
+        // 원본 예약별 후보 조회 (선택 여부, 우선순위 정렬)
+        index("idx_reschedule_candidates_appointment_selected_priority", false, originalAppointmentId, selected, priority)
+    }
 }

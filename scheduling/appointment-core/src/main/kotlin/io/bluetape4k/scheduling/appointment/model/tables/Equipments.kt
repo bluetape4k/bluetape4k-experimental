@@ -8,4 +8,9 @@ object Equipments : LongIdTable("scheduling_equipments") {
     val name = varchar("name", 255)
     val usageDurationMinutes = integer("usage_duration_minutes")
     val quantity = integer("quantity").default(1)
+
+    init {
+        // 병원별 장비 목록 조회
+        index("idx_equipments_clinic_id", false, clinicId)
+    }
 }

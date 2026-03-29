@@ -11,4 +11,9 @@ object DoctorAbsences : LongIdTable("scheduling_doctor_absences") {
     val startTime = time("start_time").nullable()
     val endTime = time("end_time").nullable()
     val reason = varchar("reason", 500).nullable()
+
+    init {
+        // 의사+날짜 조회 (부재 확인, 날짜 범위 조회)
+        index("idx_doctor_absences_doctor_date", false, doctorId, absenceDate)
+    }
 }

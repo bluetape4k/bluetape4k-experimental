@@ -2,7 +2,9 @@ package io.bluetape4k.scheduling.appointment.api.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.scheduling.appointment.event.AppointmentEventLogs
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStateHistory
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicDefaultBreakTimes
@@ -65,12 +67,13 @@ class AppointmentControllerTest {
                 Doctors, DoctorSchedules, DoctorAbsences,
                 TreatmentTypes, Equipments, TreatmentEquipments,
                 ConsultationTopics, Holidays,
-                Appointments, AppointmentNotes,
+                Appointments, AppointmentNotes, AppointmentStateHistory,
                 RescheduleCandidates, AppointmentEventLogs,
             )
 
             // Clean up in reverse FK order
             AppointmentEventLogs.deleteAll()
+            AppointmentStateHistory.deleteAll()
             RescheduleCandidates.deleteAll()
             AppointmentNotes.deleteAll()
             Appointments.deleteAll()
@@ -242,7 +245,7 @@ class AppointmentControllerTest {
                 it[appointmentDate] = java.time.LocalDate.of(2026, 4, 6)
                 it[startTime] = java.time.LocalTime.of(11, 0)
                 it[endTime] = java.time.LocalTime.of(11, 30)
-                it[Appointments.status] = "REQUESTED"
+                it[Appointments.status] = AppointmentState.REQUESTED
             }.value
         }
 }

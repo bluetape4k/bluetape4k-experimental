@@ -29,6 +29,18 @@ class SlotCalculationService(
 
     /**
      * 주어진 조건에 맞는 예약 가능 슬롯 목록을 반환합니다.
+     *
+     * 다음 조건을 모두 확인하여 유효한 슬롯만 반환합니다:
+     * - 병원이 휴무일이 아님 (또는 휴일 운영)
+     * - 병원 휴진(전일/부분)이 아님
+     * - 의사의 운영 시간 범위 내
+     * - 휴시간/특정 의사 휴무 제외
+     * - 의사의 진료 유형과 일치
+     * - 동시 환자 수 제한 미초과
+     * - 필요 장비 가용
+     *
+     * @param query 슬롯 조회 조건 (병원, 의사, 진료 유형, 날짜 등)
+     * @return 예약 가능 슬롯 목록
      */
     fun findAvailableSlots(query: SlotQuery): List<AvailableSlot> =
         transaction {

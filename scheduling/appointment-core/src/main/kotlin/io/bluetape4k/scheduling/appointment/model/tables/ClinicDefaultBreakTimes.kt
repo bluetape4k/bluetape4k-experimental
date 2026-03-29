@@ -15,4 +15,9 @@ object ClinicDefaultBreakTimes : LongIdTable("scheduling_clinic_default_break_ti
     val name = varchar("name", 255)
     val startTime = time("start_time")
     val endTime = time("end_time")
+
+    init {
+        // 병원별 기본 휴식시간 조회
+        index("idx_clinic_default_break_times_clinic_id", false, clinicId)
+    }
 }

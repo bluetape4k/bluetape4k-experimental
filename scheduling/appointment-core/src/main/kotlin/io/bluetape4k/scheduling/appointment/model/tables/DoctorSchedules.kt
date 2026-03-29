@@ -10,4 +10,9 @@ object DoctorSchedules : LongIdTable("scheduling_doctor_schedules") {
     val dayOfWeek = enumerationByName("day_of_week", 10, DayOfWeek::class)
     val startTime = time("start_time")
     val endTime = time("end_time")
+
+    init {
+        // 의사+요일 조회 (스케줄 확인)
+        index("idx_doctor_schedules_doctor_day", false, doctorId, dayOfWeek)
+    }
 }

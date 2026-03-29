@@ -95,11 +95,57 @@ class AppointmentEventLogger {
 
 ## 이벤트 흐름
 
-1. Application에서 예약 상태 변경
-2. `AppointmentStateMachine`이 상태 전이 수행
-3. Domain Event (`StatusChanged` 등) 발행
-4. Spring `ApplicationEventPublisher`가 리스너 호출
-5. `AppointmentEventLogger`가 DB에 이벤트 로그 저장
+```mermaid
+sequenceDiagram
+    participant SVC as AppointmentController\n/ ClosureRescheduleService
+    participant SM as AppointmentStateMachine
+    participant EP as ApplicationEventPublisher
+    participant EL as AppointmentEventLogger
+    participant DB as scheduling_appointment_event_logs
+
+    SVC->>SM: transition(currentState, event)
+    SM-->>SVC: newState
+    SVC->>EP: publish(AppointmentDomainEvent.StatusChanged\n / Created / Cancelled / Rescheduled)
+    EP->>EL: @EventListener 호출
+    EL->>EL: toPayloadJson(event)
+    EL->>DB: INSERT event_log\n(event_type, entity_id, clinic_id, payload_json)
+    DB-->>EL: saved
+```
+
+### 도메인 이벤트 타입
+
+```mermaid
+classDiagram
+    class AppointmentDomainEvent {
+        <<sealed>>
+    }
+    class Created {
+        +Long appointmentId
+        +Long clinicId
+    }
+    class StatusChanged {
+        +Long appointmentId
+        +Long clinicId
+        +String fromState
+        +String toState
+        +String reason
+    }
+    class Cancelled {
+        +Long appointmentId
+        +Long clinicId
+        +String reason
+    }
+    class Rescheduled {
+        +Long originalId
+        +Long newId
+        +Long clinicId
+    }
+
+    AppointmentDomainEvent <|-- Created
+    AppointmentDomainEvent <|-- StatusChanged
+    AppointmentDomainEvent <|-- Cancelled
+    AppointmentDomainEvent <|-- Rescheduled
+```
 
 ---
 

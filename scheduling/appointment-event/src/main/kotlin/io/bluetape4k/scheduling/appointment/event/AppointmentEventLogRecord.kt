@@ -1,5 +1,6 @@
 package io.bluetape4k.scheduling.appointment.event
 
+import java.io.Serializable
 import java.time.Instant
 
 data class AppointmentEventLogRecord(
@@ -10,4 +11,8 @@ data class AppointmentEventLogRecord(
     val clinicId: Long,
     val payloadJson: String,
     val createdAt: Instant? = null,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

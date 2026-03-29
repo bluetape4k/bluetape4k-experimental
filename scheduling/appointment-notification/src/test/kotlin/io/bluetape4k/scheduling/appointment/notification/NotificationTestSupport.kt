@@ -5,6 +5,7 @@ import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -41,7 +42,7 @@ object NotificationTestSupport {
         patientName: String = "홍길동",
         patientPhone: String = "010-1234-5678",
         date: LocalDate = LocalDate.now().plusDays(1),
-        status: String = "CONFIRMED",
+        status: AppointmentState = AppointmentState.CONFIRMED,
     ): AppointmentRecord {
         val id = transaction {
             Appointments.insert {

@@ -9,5 +9,7 @@ object TreatmentEquipments : LongIdTable("scheduling_treatment_equipments") {
 
     init {
         uniqueIndex(treatmentTypeId, equipmentId)
+        // 장비별 역방향 조회 (장비에 연결된 치료 유형 탐색)
+        index("idx_treatment_equipments_equipment_id", false, equipmentId)
     }
 }

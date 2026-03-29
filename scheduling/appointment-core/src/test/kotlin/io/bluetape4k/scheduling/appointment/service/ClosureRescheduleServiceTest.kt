@@ -1,7 +1,8 @@
 package io.bluetape4k.scheduling.appointment.service
 
 import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStateHistory
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
@@ -65,6 +66,7 @@ class ClosureRescheduleServiceTest {
             ConsultationTopics,
             Appointments,
             AppointmentNotes,
+            AppointmentStateHistory,
             RescheduleCandidates
         )
 
@@ -81,6 +83,7 @@ class ClosureRescheduleServiceTest {
     @BeforeEach
     fun cleanUp() {
         transaction {
+            AppointmentStateHistory.deleteAll()
             RescheduleCandidates.deleteAll()
             AppointmentNotes.deleteAll()
             Appointments.deleteAll()
@@ -155,7 +158,7 @@ class ClosureRescheduleServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.CONFIRMED
+                it[status] = AppointmentState.CONFIRMED
             }
 
             Triple(clinicId, doctorId, treatmentTypeId)
@@ -174,7 +177,7 @@ class ClosureRescheduleServiceTest {
                     .toList()
 
             appointments shouldHaveSize 1
-            appointments[0][Appointments.status] shouldBeEqualTo AppointmentStatus.PENDING_RESCHEDULE
+            appointments[0][Appointments.status] shouldBeEqualTo AppointmentState.PENDING_RESCHEDULE
         }
     }
 
@@ -204,7 +207,7 @@ class ClosureRescheduleServiceTest {
             // 원래 예약이 RESCHEDULED
             val originalAppointment =
                 Appointments.selectAll()
-                    .where { Appointments.status eq AppointmentStatus.RESCHEDULED }
+                    .where { Appointments.status eq AppointmentState.RESCHEDULED }
                     .firstOrNull()
             originalAppointment.shouldNotBeNull()
 
@@ -213,7 +216,7 @@ class ClosureRescheduleServiceTest {
                 Appointments.selectAll()
                     .where { Appointments.id eq newAppointmentId }
                     .first()
-            newAppointment[Appointments.status] shouldBeEqualTo AppointmentStatus.CONFIRMED
+            newAppointment[Appointments.status] shouldBeEqualTo AppointmentState.CONFIRMED
             newAppointment[Appointments.appointmentDate] shouldBeEqualTo TUESDAY
             newAppointment[Appointments.patientName] shouldBeEqualTo "홍길동"
             newAppointment[Appointments.rescheduleFromId].shouldNotBeNull()
@@ -299,7 +302,7 @@ class ClosureRescheduleServiceTest {
                     it[appointmentDate] = MONDAY
                     it[startTime] = LocalTime.of(9, 0)
                     it[endTime] = LocalTime.of(9, 30)
-                    it[status] = AppointmentStatus.PENDING_RESCHEDULE
+                    it[status] = AppointmentState.PENDING_RESCHEDULE
                 }[Appointments.id].value
 
             // 후보 없이 autoReschedule 호출

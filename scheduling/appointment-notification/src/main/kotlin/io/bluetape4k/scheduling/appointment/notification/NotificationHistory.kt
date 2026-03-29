@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
+import java.io.Serializable
 import java.time.Instant
 
 /**
@@ -54,4 +55,8 @@ data class NotificationHistoryRecord(
     val status: String = NotificationStatus.SUCCESS,
     val errorMessage: String? = null,
     val createdAt: Instant? = null,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

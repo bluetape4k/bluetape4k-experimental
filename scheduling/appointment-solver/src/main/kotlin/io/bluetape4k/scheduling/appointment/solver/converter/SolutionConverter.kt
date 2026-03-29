@@ -14,7 +14,7 @@ import io.bluetape4k.scheduling.appointment.model.dto.HolidayRecord
 import io.bluetape4k.scheduling.appointment.model.dto.OperatingHoursRecord
 import io.bluetape4k.scheduling.appointment.model.dto.TreatmentEquipmentRecord
 import io.bluetape4k.scheduling.appointment.model.dto.TreatmentTypeRecord
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.solver.domain.AppointmentPlanning
 import io.bluetape4k.scheduling.appointment.solver.domain.ClinicFact
 import io.bluetape4k.scheduling.appointment.solver.domain.DoctorFact
@@ -30,12 +30,7 @@ import java.time.LocalTime
  */
 object SolutionConverter: KLogging() {
 
-    private val PINNED_STATUSES = setOf(
-        AppointmentStatus.CONFIRMED,
-        AppointmentStatus.CHECKED_IN,
-        AppointmentStatus.IN_PROGRESS,
-        AppointmentStatus.COMPLETED,
-    )
+    private val PINNED_STATUSES = AppointmentState.PINNED_STATUSES
 
     /**
      * core Record들을 조합하여 [ScheduleSolution]을 생성합니다.
@@ -138,7 +133,7 @@ object SolutionConverter: KLogging() {
                     appointmentDate = planning.appointmentDate!!,
                     startTime = planning.startTime!!,
                     endTime = planning.endTime!!,
-                    status = original?.status ?: AppointmentStatus.REQUESTED,
+                    status = original?.status ?: AppointmentState.REQUESTED,
                 )
             }
 

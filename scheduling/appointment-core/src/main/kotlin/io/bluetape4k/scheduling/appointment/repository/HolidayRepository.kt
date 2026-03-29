@@ -6,10 +6,10 @@ import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.scheduling.appointment.model.dto.HolidayRecord
 import io.bluetape4k.scheduling.appointment.model.tables.Holidays
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.LocalDate
 
@@ -26,8 +26,7 @@ class HolidayRepository : LongJdbcRepository<HolidayRecord> {
     fun findByDateRange(dateRange: ClosedRange<LocalDate>): List<HolidayRecord> =
         Holidays
             .selectAll()
-            .where {
-                (Holidays.holidayDate greaterEq dateRange.start) and
-                    (Holidays.holidayDate lessEq dateRange.endInclusive)
-            }.map { it.toHolidayRecord() }
+            .where { Holidays.holidayDate greaterEq dateRange.start }
+            .andWhere { Holidays.holidayDate lessEq dateRange.endInclusive }
+            .map { it.toHolidayRecord() }
 }

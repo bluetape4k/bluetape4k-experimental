@@ -2,6 +2,7 @@ package io.bluetape4k.scheduling.appointment.notification
 
 import io.bluetape4k.scheduling.appointment.model.dto.AppointmentRecord
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.model.tables.Clinics
 import io.bluetape4k.scheduling.appointment.model.tables.Doctors
 import io.bluetape4k.scheduling.appointment.model.tables.TreatmentTypes
@@ -116,7 +117,7 @@ class AppointmentReminderSchedulerTest {
                 it[appointmentDate] = date
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = "CONFIRMED"
+                it[status] = AppointmentState.CONFIRMED
             }.value
 
             appointmentRepository.findByIdOrNull(appointmentId)!!

@@ -11,4 +11,9 @@ object AppointmentNotes : LongIdTable("scheduling_appointment_notes") {
     val content = text("content")
     val createdBy = varchar("created_by", 255).nullable()
     val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp)
+
+    init {
+        // 예약별 노트 조회
+        index("idx_appointment_notes_appointment_id", false, appointmentId)
+    }
 }

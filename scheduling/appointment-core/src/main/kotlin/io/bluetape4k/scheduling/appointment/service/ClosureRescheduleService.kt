@@ -3,8 +3,10 @@ package io.bluetape4k.scheduling.appointment.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.scheduling.appointment.model.dto.AppointmentRecord
 import io.bluetape4k.scheduling.appointment.model.dto.RescheduleCandidateRecord
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStateHistoryRecord
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
+import io.bluetape4k.scheduling.appointment.repository.AppointmentStateHistoryRepository
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.repository.RescheduleCandidateRepository
 import io.bluetape4k.scheduling.appointment.service.model.SlotQuery
 import io.bluetape4k.support.requireNotNull
@@ -22,9 +24,10 @@ class ClosureRescheduleService(
     private val slotCalculationService: SlotCalculationService,
     private val appointmentRepository: AppointmentRepository = AppointmentRepository(),
     private val rescheduleCandidateRepository: RescheduleCandidateRepository = RescheduleCandidateRepository(),
+    private val stateHistoryRepository: AppointmentStateHistoryRepository = AppointmentStateHistoryRepository(),
 ) {
     companion object: KLogging() {
-        private val ACTIVE_STATUSES = AppointmentStatus.ACTIVE_STATUSES
+        private val ACTIVE_STATUSES = AppointmentState.ACTIVE_STATUSES
     }
 
     /**
@@ -49,8 +52,19 @@ class ClosureRescheduleService(
                 clinicId,
                 closureDate,
                 ACTIVE_STATUSES,
-                AppointmentStatus.PENDING_RESCHEDULE
+                AppointmentState.PENDING_RESCHEDULE
             )
+
+            for (appointment in affected) {
+                stateHistoryRepository.save(
+                    AppointmentStateHistoryRecord(
+                        appointmentId = appointment.id!!,
+                        fromState = appointment.status,
+                        toState = AppointmentState.PENDING_RESCHEDULE,
+                        reason = "임시휴진으로 인한 재배정",
+                    )
+                )
+            }
 
             val result = mutableMapOf<Long, List<RescheduleCandidateRecord>>()
 
@@ -113,11 +127,19 @@ class ClosureRescheduleService(
                 appointmentDate = candidate.candidateDate,
                 startTime = candidate.startTime,
                 endTime = candidate.endTime,
-                status = AppointmentStatus.CONFIRMED,
+                status = AppointmentState.CONFIRMED,
             )
 
             val newAppointment = appointmentRepository.save(appointmentRecord)
-            appointmentRepository.updateStatus(original.id!!, AppointmentStatus.RESCHEDULED)
+            appointmentRepository.updateStatus(original.id!!, AppointmentState.RESCHEDULED)
+            stateHistoryRepository.save(
+                AppointmentStateHistoryRecord(
+                    appointmentId = original.id!!,
+                    fromState = original.status,
+                    toState = AppointmentState.RESCHEDULED,
+                    reason = "재배정 확정",
+                )
+            )
             rescheduleCandidateRepository.markSelected(candidateId)
 
             newAppointment.id.requireNotNull("newAppointment.id")

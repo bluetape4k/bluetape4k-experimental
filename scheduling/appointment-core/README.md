@@ -96,53 +96,88 @@ io.bluetape4k.scheduling.appointment
 
 ## 서비스
 
-### SlotCalculationService
-예약 가능 슬롯 계산 (운영시간, 휴식, 휴진, 부재, 장비, 동시수용 고려)
+### SlotCalculationService — 슬롯 계산 흐름
 
-```kotlin
-fun findAvailableSlots(query: SlotQuery): List<AvailableSlot>
+```mermaid
+sequenceDiagram
+    actor Client
+    participant SCS as SlotCalculationService
+    participant CR as ClinicRepository
+    participant DR as DoctorRepository
+    participant TTR as TreatmentTypeRepository
+    participant AR as AppointmentRepository
+    participant HR as HolidayRepository
+
+    Client->>SCS: findAvailableSlots(SlotQuery)
+    SCS->>CR: findById(clinicId)
+    CR-->>SCS: ClinicRecord
+    SCS->>HR: existsByDate(date)
+    HR-->>SCS: isHoliday
+    SCS->>CR: findOperatingHours(clinicId, dayOfWeek)
+    CR-->>SCS: OperatingHoursRecord
+    SCS->>CR: findBreakTimes + findDefaultBreakTimes + findClosures
+    CR-->>SCS: 휴시간 / 부분휴진 목록
+    SCS->>DR: findSchedule(doctorId, dayOfWeek)
+    DR-->>SCS: DoctorScheduleRecord
+    SCS->>DR: findAbsences(doctorId, date)
+    DR-->>SCS: 부재 목록
+    SCS->>SCS: 유효 시간대 계산\n(운영시간 ∩ 의사스케줄) - 휴시간 - 부분휴진 - 부재
+    SCS->>TTR: findById(treatmentTypeId)
+    TTR-->>SCS: TreatmentTypeRecord
+    SCS->>SCS: 슬롯 후보 생성 (slotInterval 단위 분할)
+    loop 슬롯 후보마다
+        SCS->>AR: countOverlapping(doctorId, date, start, end)
+        AR-->>SCS: 기존 예약 수
+        SCS->>TTR: findRequiredEquipmentIds + findEquipmentQuantities
+        TTR-->>SCS: 장비 가용 수량
+    end
+    SCS-->>Client: List~AvailableSlot~
 ```
 
-검증 단계:
-1. 병원 존재 여부 확인
-2. 공휴일 및 전체 휴진 확인
-3. 운영시간 조회
-4. 의사/상담사의 providerType 일치 검증
-5. 유효한 시간 범위 계산 (운영시간 - 휴식시간 - 부분휴진)
-6. 슬롯 후보 생성
-7. 동시 수용 인원 확인 (3-Level Cascade 적용)
-8. 장비 가용성 확인 (필요한 경우)
+### ClosureRescheduleService — 휴진 재배정 흐름
 
-### ClosureRescheduleService
-임시휴진 시 기존 예약 재배정
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant CRS as ClosureRescheduleService
+    participant AR as AppointmentRepository
+    participant SCS as SlotCalculationService
+    participant RCR as RescheduleCandidateRepository
+    participant StateMachine
 
-```kotlin
-fun processClosureReschedule(
-    clinicId: Long,
-    closureDate: LocalDate,
-    searchDays: Int = 7
-): List<RescheduleCandidateRecord>
+    Admin->>CRS: processClosureReschedule(clinicId, closureDate, searchDays)
+    CRS->>AR: findActiveByClinicAndDate(clinicId, closureDate)
+    AR-->>CRS: 활성 예약 목록 (REQUESTED/CONFIRMED)
+    CRS->>AR: updateStatusByClinicAndDate(→ PENDING_RESCHEDULE)
+    loop 각 예약마다
+        loop closureDate+1 ~ closureDate+searchDays
+            CRS->>SCS: findAvailableSlots(date, doctorId, treatmentTypeId)
+            SCS-->>CRS: List~AvailableSlot~
+            CRS->>RCR: save(RescheduleCandidateRecord, priority)
+        end
+    end
+    CRS-->>Admin: List~RescheduleCandidateRecord~
 
-fun confirmReschedule(candidateId: Long): AppointmentRecord
-
-fun autoReschedule(originalAppointmentId: Long): AppointmentRecord
+    Admin->>CRS: confirmReschedule(candidateId)
+    CRS->>RCR: findById(candidateId)
+    RCR-->>CRS: RescheduleCandidateRecord
+    CRS->>StateMachine: transition(PENDING_RESCHEDULE → RESCHEDULED)
+    CRS->>AR: save(새 예약) + updateStatus(원본 → RESCHEDULED)
+    CRS-->>Admin: AppointmentRecord
 ```
 
-### ConcurrencyResolver
-3-Level Cascade로 최대 동시 수용 인원 결정
+### ConcurrencyResolver — 3-Level Cascade
 
-```kotlin
-fun resolveMaxConcurrent(
-    clinic: ClinicRecord,
-    doctor: DoctorRecord,
-    treatment: TreatmentTypeRecord
-): Int
+```mermaid
+flowchart LR
+    Q([최대 동시 수용 인원?]) --> T{TreatmentType\n.maxConcurrent?}
+    T -- 있음 --> RT([TreatmentType 값 사용])
+    T -- null --> D{Doctor\n.maxConcurrent?}
+    D -- 있음 --> RD([Doctor 값 사용])
+    D -- null --> C([Clinic 기본값 사용])
 ```
 
-우선순위:
-1. TreatmentType.maxConcurrentPatients (있으면 사용)
-2. Doctor.maxConcurrentPatients (있으면 사용)
-3. Clinic.maxConcurrentPatients (기본값)
+우선순위: `TreatmentType > Doctor > Clinic`
 
 ## 검증 포인트
 
@@ -156,17 +191,41 @@ fun resolveMaxConcurrent(
 
 10개 상태, 13개 이벤트의 예약 상태 전이 관리 (sealed class 기반).
 
-상태:
-- `PENDING` — 초기 상태
-- `REQUESTED` — 예약 요청
-- `CONFIRMED` — 예약 확정
-- `CHECKED_IN` — 체크인
-- `IN_PROGRESS` — 진료 중
-- `COMPLETED` — 완료
-- `PENDING_RESCHEDULE` — 재배정 대기
-- `RESCHEDULED` — 재배정 완료
-- `NO_SHOW` — 노쇼
-- `CANCELLED` — 취소
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : 가예약 생성
+    PENDING --> REQUESTED : Request
+    PENDING --> CANCELLED : Cancel
+    REQUESTED --> CONFIRMED : Confirm
+    REQUESTED --> PENDING_RESCHEDULE : Reschedule
+    REQUESTED --> CANCELLED : Cancel
+    CONFIRMED --> CHECKED_IN : CheckIn
+    CONFIRMED --> NO_SHOW : MarkNoShow
+    CONFIRMED --> PENDING_RESCHEDULE : Reschedule
+    CONFIRMED --> CANCELLED : Cancel
+    CHECKED_IN --> IN_PROGRESS : StartTreatment
+    CHECKED_IN --> CANCELLED : Cancel
+    IN_PROGRESS --> COMPLETED : Complete
+    PENDING_RESCHEDULE --> RESCHEDULED : ConfirmReschedule
+    PENDING_RESCHEDULE --> CANCELLED : Cancel
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+    NO_SHOW --> [*]
+    RESCHEDULED --> [*]
+```
+
+| 상태 | 설명 |
+|------|------|
+| `PENDING` | 초기 상태 (가예약) |
+| `REQUESTED` | 예약 요청됨 |
+| `CONFIRMED` | 예약 확정 |
+| `CHECKED_IN` | 내원 확인 |
+| `IN_PROGRESS` | 진료 중 |
+| `COMPLETED` | 진료 완료 |
+| `PENDING_RESCHEDULE` | 재배정 대기 (휴진 등) |
+| `RESCHEDULED` | 재배정 완료 |
+| `NO_SHOW` | 미내원 |
+| `CANCELLED` | 취소 |
 
 ---
 

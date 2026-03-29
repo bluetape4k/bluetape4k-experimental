@@ -11,4 +11,9 @@ object OperatingHoursTable : LongIdTable("scheduling_operating_hours") {
     val openTime = time("open_time")
     val closeTime = time("close_time")
     val isActive = bool("is_active").default(true)
+
+    init {
+        // 병원+요일 조회 (운영시간 확인, 슬롯 계산)
+        index("idx_operating_hours_clinic_day_active", false, clinicId, dayOfWeek, isActive)
+    }
 }

@@ -25,6 +25,27 @@ package io.bluetape4k.scheduling.appointment.statemachine
 sealed class AppointmentState(
     val name: String,
 ) {
+    companion object {
+        val ACTIVE_STATUSES: List<AppointmentState> by lazy { listOf(REQUESTED, CONFIRMED) }
+        val ACTIVE_STATUS_NAMES: List<String> by lazy { ACTIVE_STATUSES.map { it.name } }
+
+        val PINNED_STATUSES: Set<AppointmentState> by lazy { setOf(CONFIRMED, CHECKED_IN, IN_PROGRESS, COMPLETED) }
+        val PINNED_STATUS_NAMES: Set<String> by lazy { PINNED_STATUSES.map { it.name }.toSet() }
+
+        fun fromName(name: String): AppointmentState = when (name) {
+            "PENDING" -> PENDING
+            "REQUESTED" -> REQUESTED
+            "CONFIRMED" -> CONFIRMED
+            "CHECKED_IN" -> CHECKED_IN
+            "IN_PROGRESS" -> IN_PROGRESS
+            "COMPLETED" -> COMPLETED
+            "CANCELLED" -> CANCELLED
+            "NO_SHOW" -> NO_SHOW
+            "PENDING_RESCHEDULE" -> PENDING_RESCHEDULE
+            "RESCHEDULED" -> RESCHEDULED
+            else -> throw IllegalArgumentException("Unknown appointment status: $name")
+        }
+    }
     /** 가예약/미확정 */
     data object PENDING : AppointmentState("PENDING")
 

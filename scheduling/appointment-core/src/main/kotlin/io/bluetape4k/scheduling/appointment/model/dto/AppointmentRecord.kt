@@ -1,5 +1,7 @@
 package io.bluetape4k.scheduling.appointment.model.dto
 
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
+import java.io.Serializable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -19,7 +21,11 @@ data class AppointmentRecord(
     val appointmentDate: LocalDate,
     val startTime: LocalTime,
     val endTime: LocalTime,
-    val status: String = "REQUESTED",
+    val status: AppointmentState = AppointmentState.REQUESTED,
     val createdAt: Instant? = null,
     val updatedAt: Instant? = null,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

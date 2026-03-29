@@ -1,6 +1,7 @@
 package io.bluetape4k.scheduling.appointment.api.config
 
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
+import io.bluetape4k.scheduling.appointment.repository.AppointmentStateHistoryRepository
 import io.bluetape4k.scheduling.appointment.repository.ClinicRepository
 import io.bluetape4k.scheduling.appointment.repository.DoctorRepository
 import io.bluetape4k.scheduling.appointment.repository.HolidayRepository
@@ -34,6 +35,9 @@ class ServiceConfig {
     fun rescheduleCandidateRepository(): RescheduleCandidateRepository = RescheduleCandidateRepository()
 
     @Bean
+    fun appointmentStateHistoryRepository(): AppointmentStateHistoryRepository = AppointmentStateHistoryRepository()
+
+    @Bean
     fun slotCalculationService(
         clinicRepository: ClinicRepository,
         doctorRepository: DoctorRepository,
@@ -53,10 +57,12 @@ class ServiceConfig {
         slotCalculationService: SlotCalculationService,
         appointmentRepository: AppointmentRepository,
         rescheduleCandidateRepository: RescheduleCandidateRepository,
+        appointmentStateHistoryRepository: AppointmentStateHistoryRepository,
     ): ClosureRescheduleService = ClosureRescheduleService(
         slotCalculationService,
         appointmentRepository,
         rescheduleCandidateRepository,
+        appointmentStateHistoryRepository,
     )
 
     @Bean

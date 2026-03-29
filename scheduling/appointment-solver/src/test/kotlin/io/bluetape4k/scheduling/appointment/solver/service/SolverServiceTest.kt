@@ -2,7 +2,7 @@ package io.bluetape4k.scheduling.appointment.solver.service
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
@@ -181,7 +181,7 @@ class SolverServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.REQUESTED
+                it[status] = AppointmentState.REQUESTED
             }
             Appointments.insert {
                 it[Appointments.clinicId] = clinicId
@@ -191,7 +191,7 @@ class SolverServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 30)
                 it[endTime] = LocalTime.of(10, 0)
-                it[status] = AppointmentStatus.REQUESTED
+                it[status] = AppointmentState.REQUESTED
             }
         }
 
@@ -215,7 +215,7 @@ class SolverServiceTest {
                     it[appointmentDate] = MONDAY
                     it[startTime] = LocalTime.of(9, 0)
                     it[endTime] = LocalTime.of(9, 30)
-                    it[status] = AppointmentStatus.REQUESTED
+                    it[status] = AppointmentState.REQUESTED
                 }
             }
         }
@@ -240,7 +240,7 @@ class SolverServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.PENDING_RESCHEDULE
+                it[status] = AppointmentState.PENDING_RESCHEDULE
             }
         }
 

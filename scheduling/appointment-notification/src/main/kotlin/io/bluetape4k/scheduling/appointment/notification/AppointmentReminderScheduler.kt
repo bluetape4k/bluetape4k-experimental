@@ -5,8 +5,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.lettuce.leader.LettuceLeaderGroupElection
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -66,7 +66,7 @@ class AppointmentReminderScheduler(
         val confirmedAppointments = transaction {
             appointmentRepository.findActiveByDate(
                 date = date,
-                activeStatuses = listOf(AppointmentStatus.CONFIRMED),
+                activeStatuses = listOf(AppointmentState.CONFIRMED),
             )
         }
 

@@ -1,5 +1,6 @@
 package io.bluetape4k.scheduling.appointment.model.dto
 
+import java.io.Serializable
 import java.time.LocalTime
 
 data class ClinicDefaultBreakTimeRecord(
@@ -8,4 +9,8 @@ data class ClinicDefaultBreakTimeRecord(
     val name: String,
     val startTime: LocalTime,
     val endTime: LocalTime,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}

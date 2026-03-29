@@ -23,6 +23,7 @@ class TableSchemaTest {
             ConsultationTopics,
             Appointments,
             AppointmentNotes,
+            AppointmentStateHistory,
             RescheduleCandidates
         )
 

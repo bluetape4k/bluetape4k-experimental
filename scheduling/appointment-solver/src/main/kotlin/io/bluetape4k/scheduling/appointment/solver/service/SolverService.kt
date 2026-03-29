@@ -3,7 +3,6 @@ package io.bluetape4k.scheduling.appointment.solver.service
 import ai.timefold.solver.core.api.solver.SolverFactory
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.scheduling.appointment.model.dto.AppointmentRecord
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
 import io.bluetape4k.scheduling.appointment.repository.AppointmentRepository
 import io.bluetape4k.scheduling.appointment.repository.ClinicRepository
 import io.bluetape4k.scheduling.appointment.repository.DoctorRepository

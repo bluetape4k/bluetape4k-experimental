@@ -12,4 +12,9 @@ object ConsultationTopics : LongIdTable("scheduling_consultation_topics") {
     val name = varchar("name", 255)
     val description = varchar("description", 500).nullable()
     val defaultDurationMinutes = integer("default_duration_minutes").default(30)
+
+    init {
+        // 병원별 상담 주제 목록 조회
+        index("idx_consultation_topics_clinic_id", false, clinicId)
+    }
 }

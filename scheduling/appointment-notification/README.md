@@ -35,6 +35,96 @@ AppointmentReminderScheduler
     └── ResilientNotificationChannel → NotificationChannel
 ```
 
+### 알림 발송 플로우
+
+```mermaid
+sequenceDiagram
+    participant SVC as AppointmentService\n/ ReminderScheduler
+    participant EP as ApplicationEventPublisher
+    participant EL as NotificationEventListener
+    participant RC as ResilientNotificationChannel
+    participant BH as Bulkhead
+    participant RT as Retry
+    participant CB as CircuitBreaker
+    participant CH as NotificationChannel\n(Dummy / Feign)
+    participant HR as NotificationHistoryRepository
+    participant DB as notification_history
+
+    SVC->>EP: publish(AppointmentDomainEvent)
+    EP->>EL: @EventListener 호출
+    EL->>EL: properties.enabled && events.X 확인
+    alt 이벤트 비활성화
+        EL-->>EP: (skip)
+    else 이벤트 활성화
+        EL->>RC: sendCreated / sendConfirmed / ...
+        RC->>BH: 동시 호출 제한 (max 10, wait 1s)
+        BH->>RT: 재시도 래핑 (max 3, 500ms)
+        RT->>CB: 회로 차단기 확인
+        alt CircuitBreaker OPEN
+            CB-->>RC: CallNotPermittedException
+            RC-->>EL: 예외 전파
+        else CircuitBreaker CLOSED / HALF_OPEN
+            CB->>CH: 실제 알림 발송
+            CH-->>CB: 성공 / 실패
+            CB-->>RT: 결과 반환
+            RT-->>BH: 결과 반환
+            BH-->>RC: 결과 반환
+            RC->>HR: save(NotificationHistoryRecord)
+            HR->>DB: INSERT notification_history
+        end
+    end
+```
+
+### Resilience4j 데코레이터 체인
+
+```mermaid
+flowchart LR
+    IN([알림 요청]) --> BH
+
+    subgraph Decorator["ResilientNotificationChannel 데코레이터 체인 (외→내)"]
+        BH["Bulkhead\n동시 10건 / 대기 1s\n초과 시 BulkheadFullException"]
+        RT["Retry\n최대 3회 / 500ms 간격\nIOException 등 재시도"]
+        CB["CircuitBreaker\n실패율 50% / 슬로우콜 80%\n대기 30s / 슬라이딩 10건"]
+        ACT["delegate.send*()\n실제 알림 채널 호출"]
+    end
+
+    BH --> RT --> CB --> ACT
+    ACT -- 성공 --> CB
+    CB -- 실패 --> RT
+    RT -- 재시도 소진 --> BH
+    BH -- 허용 초과 --> OUT_FAIL([BulkheadFullException])
+    ACT -- 성공 반환 --> OUT_OK([완료])
+```
+
+### CircuitBreaker 상태 전이
+
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED : 초기 상태
+
+    CLOSED --> OPEN : 실패율 ≥ 50%\n또는 슬로우콜 ≥ 80%\n(슬라이딩 윈도우 10건, 최소 5건)
+
+    OPEN --> HALF_OPEN : 대기 30초 경과\n(waitDurationInOpenState)
+
+    HALF_OPEN --> CLOSED : 허용 호출 성공\n(permittedCallsInHalfOpenState)
+    HALF_OPEN --> OPEN : 허용 호출 실패
+
+    note right of CLOSED
+        모든 호출 허용
+        슬라이딩 윈도우로 통계 수집
+    end note
+
+    note right of OPEN
+        모든 호출 즉시 차단
+        CallNotPermittedException 발생
+    end note
+
+    note right of HALF_OPEN
+        제한적 호출 허용
+        회복 여부 판단
+    end note
+```
+
 ## 리마인더 동작
 
 - `AppointmentReminderScheduler` 는 매시간 실행되어 대상 날짜의 `CONFIRMED` 예약을 조회합니다.
@@ -100,6 +190,68 @@ fun notificationLeaderElection(connection: StatefulRedisConnection<String, Strin
 ```
 
 Redis가 없으면 리더 선출 없이 모든 인스턴스에서 실행됩니다 (단일 인스턴스 환경).
+
+### LeaderGroupElection — 분산 리더 선출 흐름
+
+```mermaid
+sequenceDiagram
+    participant I1 as 인스턴스 1\n(AppointmentReminderScheduler)
+    participant I2 as 인스턴스 2\n(AppointmentReminderScheduler)
+    participant I3 as 인스턴스 3\n(AppointmentReminderScheduler)
+    participant LGE as LettuceLeaderGroupElection
+    participant Redis as Redis\n(SET NX PX lockKey)
+
+    Note over I1,I3: @Scheduled(fixedRate=3600000) 동시 트리거
+
+    par 인스턴스 1
+        I1->>LGE: runIfLeader("scheduling:reminder-scheduler")
+        LGE->>Redis: SET reminder-scheduler:lock I1 NX PX ttl
+        Redis-->>LGE: OK (락 획득)
+        LGE->>I1: 블록 실행
+        I1->>I1: doCheckReminders()
+    and 인스턴스 2
+        I2->>LGE: runIfLeader("scheduling:reminder-scheduler")
+        LGE->>Redis: SET reminder-scheduler:lock I2 NX PX ttl
+        Redis-->>LGE: nil (락 실패)
+        LGE-->>I2: (skip — 리더 아님)
+    and 인스턴스 3
+        I3->>LGE: runIfLeader("scheduling:reminder-scheduler")
+        LGE->>Redis: SET reminder-scheduler:lock I3 NX PX ttl
+        Redis-->>LGE: nil (락 실패)
+        LGE-->>I3: (skip — 리더 아님)
+    end
+
+    Note over I1: 리마인더 처리 완료 후 락 해제
+```
+
+### 리마인더 스케줄러 처리 흐름
+
+```mermaid
+flowchart TD
+    TRIGGER([매시간 @Scheduled 트리거]) --> LEADER{LettuceLeaderGroupElection\n리더 여부}
+    LEADER -- 리더 아님 --> SKIP([skip])
+    LEADER -- 리더 --> DB_QUERY
+
+    subgraph sg_db["내일 리마인더 (DAY_BEFORE)"]
+        DB_QUERY[내일 날짜 CONFIRMED 예약 조회] --> DB_CHECK{성공 이력 있음?\nREMINDER_DAY_BEFORE}
+        DB_CHECK -- 있음 --> DB_SKIP[발송 skip]
+        DB_CHECK -- 없음 --> DB_SEND[sendReminder\nDAY_BEFORE]
+        DB_SEND --> DB_HIST[이력 저장\nNotificationHistory]
+    end
+
+    DB_HIST --> SD_QUERY
+    DB_SKIP --> SD_QUERY
+
+    subgraph sg_sd["당일 리마인더 (SAME_DAY)"]
+        SD_QUERY[오늘 날짜 CONFIRMED 예약 조회\nsameDayHoursBefore 이전] --> SD_CHECK{성공 이력 있음?\nREMINDER_SAME_DAY}
+        SD_CHECK -- 있음 --> SD_SKIP[발송 skip]
+        SD_CHECK -- 없음 --> SD_SEND[sendReminder\nSAME_DAY]
+        SD_SEND --> SD_HIST[이력 저장\nNotificationHistory]
+    end
+
+    SD_HIST --> DONE([완료])
+    SD_SKIP --> DONE
+```
 
 ## 장애 격리
 

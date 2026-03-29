@@ -1,7 +1,7 @@
 package io.bluetape4k.scheduling.appointment.service
 
 import io.bluetape4k.scheduling.appointment.model.tables.AppointmentNotes
-import io.bluetape4k.scheduling.appointment.model.tables.AppointmentStatus
+import io.bluetape4k.scheduling.appointment.statemachine.AppointmentState
 import io.bluetape4k.scheduling.appointment.model.tables.Appointments
 import io.bluetape4k.scheduling.appointment.model.tables.BreakTimes
 import io.bluetape4k.scheduling.appointment.model.tables.ClinicClosures
@@ -336,7 +336,7 @@ class SlotCalculationServiceTest {
                     it[appointmentDate] = MONDAY
                     it[startTime] = LocalTime.of(9, 0)
                     it[endTime] = LocalTime.of(9, 30)
-                    it[status] = AppointmentStatus.CONFIRMED
+                    it[status] = AppointmentState.CONFIRMED
                 }
             }
         }
@@ -371,7 +371,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.CONFIRMED
+                it[status] = AppointmentState.CONFIRMED
             }
         }
 
@@ -424,7 +424,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.CONFIRMED
+                it[status] = AppointmentState.CONFIRMED
             }
         }
 
@@ -478,7 +478,7 @@ class SlotCalculationServiceTest {
                 it[appointmentDate] = MONDAY
                 it[startTime] = LocalTime.of(9, 0)
                 it[endTime] = LocalTime.of(9, 30)
-                it[status] = AppointmentStatus.CONFIRMED
+                it[status] = AppointmentState.CONFIRMED
             }
         }
 
