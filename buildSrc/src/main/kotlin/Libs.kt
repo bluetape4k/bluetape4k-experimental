@@ -65,7 +65,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.3 이상에서 사용하세요
-    const val bluetape4k = "1.5.0-SNAPSHOT"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+    const val bluetape4k = "1.5.0-Beta3"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
     const val kotlin = "2.3.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -87,19 +87,19 @@ object Versions {
     const val chaos_monkey = "4.0.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.14.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
 
-    const val vertx = "5.0.8"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
+    const val vertx = "5.0.10"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
     const val swagger = "2.2.37"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
     const val springdoc_openapi = "3.0.0"    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
 
-    const val bucket4j = "8.16.1"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
-    const val resilience4j = "2.3.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.2.10.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val bucket4j = "8.17.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
+    const val resilience4j = "2.4.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
+    const val netty = "4.2.12.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
-    const val aws2 = "2.42.4"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
-    const val aws2_crt = "0.43.4"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-    const val aws_kotlin = "1.6.27"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
-    const val aws_smithy_kotlin = "1.6.5" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
+    const val aws2 = "2.42.23"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
+    const val aws2_crt = "0.44.0"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
+    const val aws_kotlin = "1.6.46"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
+    const val aws_smithy_kotlin = "1.6.7" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "4.0.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
@@ -110,7 +110,7 @@ object Versions {
     const val avro = "1.12.1"       // https://mvnrepository.com/artifact/org.apache.avro/avro
     const val avrok = "2.10.0"      // https://mvnrepository.com/artifact/com.github.avro-kotlin.avro4k/avro4k-core
 
-    const val feign = "13.6"         // https://mvnrepository.com/artifact/io.github.openfeign/feign-core
+    const val feign = "13.11"         // https://mvnrepository.com/artifact/io.github.openfeign/feign-core
     const val httpclient5 = "5.6"  // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
     const val httpcore5 = "5.4"    // https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
     const val retrofit2 = "3.0.0"   // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
@@ -119,8 +119,8 @@ object Versions {
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
     const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
-    const val jackson = "2.21.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-    const val jackson3 = "3.1.0" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
+    const val jackson = "2.21.2" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
+    const val jackson3 = "3.1.1" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
     const val fastjson2 = "2.0.61" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.13.0"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
@@ -136,7 +136,6 @@ object Versions {
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
     const val hibernate = "7.2.7.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
-    const val hibernate_h6 = "6.6.44.Final"       // Hibernate 6.6.x (Jakarta EE, H6 지원)
     const val hibernate_reactive = "4.2.5.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
     const val hibernate_validator = "9.1.0.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
@@ -321,6 +320,9 @@ object Libs {
     // Spring Boot 3
     val bluetape4k_spring_boot3_cassandra = bluetape4k("spring-boot3-cassandra")
     val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
+    val bluetape4k_spring_boot3_exposed_jdbc = bluetape4k("spring-boot3-exposed-jdbc")
+    val bluetape4k_spring_boot3_exposed_r2dbc = bluetape4k("spring-boot3-exposed-r2dbc")
+    val bluetape4k_spring_boot3_hibernate_lettuce = bluetape4k("spring-boot3-hibernate-lettuce")
     val bluetape4k_spring_boot3_mongodb = bluetape4k("spring-boot3-mongodb")
     val bluetape4k_spring_boot3_r2dbc = bluetape4k("spring-boot3-r2dbc")
     val bluetape4k_spring_boot3_redis = bluetape4k("spring-boot3-redis")
@@ -328,6 +330,9 @@ object Libs {
     // Spring Boot 4
     val bluetape4k_spring_boot4_cassandra = bluetape4k("spring-boot4-cassandra")
     val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
+    val bluetape4k_spring_boot4_exposed_jdbc = bluetape4k("spring-boot4-exposed-jdbc")
+    val bluetape4k_spring_boot4_exposed_r2dbc = bluetape4k("spring-boot4-exposed-r2dbc")
+    val bluetape4k_spring_boot4_hibernate_lettuce = bluetape4k("spring-boot4-hibernate-lettuce")
     val bluetape4k_spring_boot4_mongodb = bluetape4k("spring-boot4-mongodb")
     val bluetape4k_spring_boot4_r2dbc = bluetape4k("spring-boot4-r2dbc")
     val bluetape4k_spring_boot4_redis = bluetape4k("spring-boot4-redis")
@@ -447,7 +452,6 @@ object Libs {
     const val commons_compress = "org.apache.commons:commons-compress:1.27.1"     // https://mvnrepository.com/artifact/org.apache.commons/commons-compress
     const val commons_codec = "commons-codec:commons-codec:1.18.0"                // https://mvnrepository.com/artifact/commons-codec/commons-codec
     const val commons_collections4 = "org.apache.commons:commons-collections4:4.5.0"  // https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-    const val commons_cryto = "org.apache.commons:commons-crypto:1.2.0"             // https://mvnrepository.com/artifact/org.apache.commons/commons-crypto
     const val commons_csv = "org.apache.commons:commons-csv:1.14.0"                 // https://mvnrepository.com/artifact/org.apache.commons/commons-csv
     const val commons_digest3 = "org.apache.commons:commons-digester3:3.2"          // https://mvnrepository.com/artifact/org.apache.commons/commons-digester3
     const val commons_exec = "org.apache.commons:commons-exec:1.5.0"                // https://mvnrepository.com/artifact/org.apache.commons/commons-exec
@@ -1255,10 +1259,6 @@ object Libs {
     val hibernate_jpamodelgen = hibernate("jpamodelgen")
     val hibernate_hikaricp = hibernate("hikaricp")
     val hibernate_spatial = hibernate("spatial")
-
-    fun hibernateH6(module: String) = "org.hibernate.orm:hibernate-$module:${Versions.hibernate_h6}"
-    val hibernate_h6_core = hibernateH6("core")
-    val hibernate_h6_testing = hibernateH6("testing")
 
     const val hibernate_reactive_core = "org.hibernate.reactive:hibernate-reactive-core:${Versions.hibernate_reactive}"
     const val javassist = "org.javassist:javassist:3.30.2-GA"  // https://mvnrepository.com/artifact/org.javassist/javassist

@@ -14,27 +14,23 @@ val baseProjectName = "bluetape4k"
 
 rootProject.name = "$baseProjectName-experimental"
 
-val bluetape4kProjectsDir = file("../bluetape4k-projects")
-if (bluetape4kProjectsDir.exists()) {
-    includeBuild(bluetape4kProjectsDir) {
-        dependencySubstitution {
-            substitute(module("io.github.bluetape4k:bluetape4k-cache-lettuce"))
-                .using(project(":bluetape4k-cache-lettuce"))
-        }
-    }
-}
+//val bluetape4kProjectsDir = file("../bluetape4k-projects")
+//if (bluetape4kProjectsDir.exists()) {
+//    includeBuild(bluetape4kProjectsDir) {
+//        dependencySubstitution {
+//            substitute(module("io.github.bluetape4k:bluetape4k-cache-lettuce"))
+//                .using(project(":bluetape4k-cache-lettuce"))
+//        }
+//    }
+//}
 
 include("shared")
 
 includeModules("kotlin", false, false)
-includeModules("spring-boot", false, true)
-includeModules("spring-data", false, false)
 includeModules("coroutines", false, false)
 includeModules("ai", false, false)
 includeModules("data", false, false)
 includeModules("io", false, false)
-includeModules("infra", false, false)
-includeModules("utils", false, false)
 includeModules("examples", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
