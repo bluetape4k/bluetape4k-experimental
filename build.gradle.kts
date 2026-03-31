@@ -117,25 +117,11 @@ subprojects {
 
         test {
             usesService(testMutex)
-
             useJUnitPlatform()
-
-            jvmArgs(
-                "-Xshare:off",
-                "-Xms2G",
-                "-Xmx4G",
-                "-XX:+UseG1GC",
-                "-XX:+UnlockExperimentalVMOptions",
-                "-XX:+EnableDynamicAgentLoading",
-                "--enable-preview",
-                "-Didea.io.use.nio2=true"
-            )
-
             testLogging {
                 showExceptions = true
                 showCauses = true
                 showStackTraces = true
-
                 events("failed")
             }
         }
