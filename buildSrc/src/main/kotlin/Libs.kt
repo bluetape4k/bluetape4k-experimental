@@ -18,8 +18,8 @@ object Plugins {
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot3 = "3.5.11"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val spring_boot4 = "4.0.3"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot3 = "3.5.13"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot4 = "4.0.5"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 
         const val docker_compose = "0.17.20"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
@@ -65,7 +65,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.3 이상에서 사용하세요
-    const val bluetape4k = "1.5.0-Beta3"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+    const val bluetape4k = "1.5.0-RC1"    // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
 
     const val kotlin = "2.3.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -140,7 +140,7 @@ object Versions {
     const val hibernate_validator = "9.1.0.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
-    const val exposed = "1.1.1"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+    const val exposed = "1.2.0"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
     const val r2dbc = "1.0.0.RELEASE"   // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
     const val agroal = "2.8"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
@@ -1353,7 +1353,7 @@ object Libs {
     const val hikaricp = "com.zaxxer:HikariCP:7.0.2"                    // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
     const val tomcat_jdbc = "org.apache.tomcat:tomcat-jdbc:11.0.13"     // https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-jdbc
 
-    // Agroal Data 
+    // Agroal Data
     fun agroal(module: String, version: String = Versions.agroal) = "io.agroal:agroal-$module:$version"
     val agroal_pool = agroal("pool")
     val agroal_narayana = agroal("narayana")
@@ -1467,7 +1467,7 @@ object Libs {
     const val univocity_parsers = "com.univocity:univocity-parsers:2.9.1" // https://mvnrepository.com/artifact/com.univocity/univocity-parsers
 
     const val objenesis = "org.objenesis:objenesis:3.4" // https://mvnrepository.com/artifact/org.objenesis/objenesis
-    
+
     const val ow2_asm = "org.ow2.asm:asm:${Versions.ow2_asm}"
     const val ow2_asm_commons = "org.ow2.asm:asm-commons:${Versions.ow2_asm}"
     const val ow2_asm_util = "org.ow2.asm:asm-util:${Versions.ow2_asm}"
