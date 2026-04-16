@@ -32,10 +32,11 @@ Multi-module Gradle project — Kotlin 2.3 + Java 25 + Spring Boot 4. Experiment
 
 ## Key Files
 
-| Purpose | Path |
-|---------|------|
-| Dependency versions | `buildSrc/src/main/kotlin/Libs.kt` |
-| Plugin versions | `buildSrc/src/main/kotlin/Plugins.kt` |
+| Purpose             | Path                                                                       |
+|---------------------|----------------------------------------------------------------------------|
+| Dependency versions | `buildSrc/src/main/kotlin/Libs.kt`                                         |
+| Plugin versions     | `buildSrc/src/main/kotlin/Plugins.kt`                                      |
+| Build tuning        | `gradle.properties` (cache, parallelism, atomicfu, JVM args)               |
 | Module registration | `settings.gradle.kts` (auto-detected via `includeModules()` — do not edit) |
 
 ## Module Layout
