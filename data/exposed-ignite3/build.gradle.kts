@@ -1,17 +1,18 @@
 dependencies {
-    api(Libs.exposed_core)
-    api(Libs.exposed_dao)
-    api(Libs.exposed_jdbc)
-    api(Libs.exposed_java_time)
-    api(Libs.bluetape4k_exposed_jdbc)
+    api(libs.exposed.core)
+    api(libs.exposed.dao)
+    api(libs.exposed.jdbc)
+    api(libs.exposed.java.time)
+    api(libs.bluetape4k.exposed.jdbc)
 
-    api(Libs.ignite3_client)
-    api(Libs.ignite3_jdbc)
+    api(libs.ignite3.client)
+    api(libs.ignite3.jdbc)
 
-    testImplementation(Libs.bluetape4k_junit5)
-    testImplementation(Libs.bluetape4k_testcontainers)
-    testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
+    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.testcontainers)
 
-    testImplementation(Libs.flyway_core)
-    testImplementation(Libs.hikaricp)
+    testImplementation(libs.bluetape4k.exposed.jdbc.tests)
+
+    testImplementation(libs.flyway.core)
+    testImplementation(libs.hikaricp)
 }

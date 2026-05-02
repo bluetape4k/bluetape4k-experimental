@@ -3,29 +3,29 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_io)
+    implementation(libs.bluetape4k.io)
 
     // Web
-    compileOnly(Libs.springBootStarter("webmvc"))
+    compileOnly("org.springframework.boot:spring-boot-starter-webmvc")
 
     // Webflux
-    compileOnly(Libs.springBootStarter("webflux"))
+    compileOnly("org.springframework.boot:spring-boot-starter-webflux")
 
-    compileOnly(Libs.springBootStarter("test")) {
+    compileOnly("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Coroutines
-    compileOnly(Libs.bluetape4k_coroutines)
-    compileOnly(Libs.kotlinx_coroutines_core)
-    compileOnly(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    compileOnly(libs.bluetape4k.coroutines)
+    compileOnly(libs.kotlinx.coroutines.core)
+    compileOnly(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // Netty
-    testImplementation(Libs.bluetape4k_netty)
+    testImplementation(libs.bluetape4k.netty)
 
-    testImplementation(Libs.bluetape4k_testcontainers)
-    testImplementation(Libs.testcontainers)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.lib)
 }

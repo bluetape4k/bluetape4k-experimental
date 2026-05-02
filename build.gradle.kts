@@ -4,26 +4,28 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     base
-    kotlin("jvm") version Versions.kotlin
+    alias(libs.plugins.kotlin.jvm)
 
     // see: https://kotlinlang.org/docs/reference/compiler-plugins.html
-    kotlin("plugin.spring") version Versions.kotlin apply false
-    kotlin("plugin.allopen") version Versions.kotlin apply false
-    kotlin("plugin.noarg") version Versions.kotlin apply false
-    kotlin("plugin.jpa") version Versions.kotlin apply false
-    kotlin("plugin.serialization") version Versions.kotlin apply false
-    id("org.jetbrains.kotlinx.atomicfu") version Versions.kotlinx_atomicfu
+    alias(libs.plugins.kotlin.spring) apply false
+    alias(libs.plugins.kotlin.allopen) apply false
+    alias(libs.plugins.kotlin.noarg) apply false
+    alias(libs.plugins.kotlin.jpa) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.kotlinx.atomicfu)
 
-    id(Plugins.detekt) version Plugins.Versions.detekt
+    alias(libs.plugins.detekt)
 
-    id(Plugins.dependency_management) version Plugins.Versions.dependency_management
-    id(Plugins.spring_boot) version Plugins.Versions.spring_boot4 apply false
+    alias(libs.plugins.dependency.management)
+    alias(libs.plugins.spring.boot4) apply false
 
-    id(Plugins.dokka) version Plugins.Versions.dokka
-    id(Plugins.testLogger) version Plugins.Versions.testLogger
-    id(Plugins.shadow) version Plugins.Versions.shadow apply false
-    id(Plugins.gatling) version Plugins.Versions.gatling apply false
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.test.logger)
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.gatling) apply false
 }
+
+val rootLibs = libs
 
 allprojects {
     repositories {
@@ -51,10 +53,10 @@ subprojects {
         // Atomicfu
         plugin("org.jetbrains.kotlinx.atomicfu")
 
-        plugin(Plugins.dependency_management)
+        plugin("io.spring.dependency-management")
 
-        plugin(Plugins.dokka)
-        plugin(Plugins.testLogger)
+        plugin("org.jetbrains.dokka")
+        plugin("com.adarshr.test-logger")
     }
 
     java {
@@ -168,122 +170,94 @@ subprojects {
         setApplyMavenExclusions(false)
 
         imports {
-            mavenBom(Libs.bluetape4k_bom)
-            mavenBom(Libs.spring_boot4_dependencies)
+            mavenBom(rootLibs.bluetape4k.bom.get().toString())
+            mavenBom(rootLibs.spring.boot4.dependencies.get().toString())
 
-            mavenBom(Libs.feign_bom)
-            mavenBom(Libs.micrometer_bom)
-            mavenBom(Libs.micrometer_tracing_bom)
-            mavenBom(Libs.opentelemetry_bom)
-            mavenBom(Libs.log4j_bom)
-            mavenBom(Libs.testcontainers_bom)
-            mavenBom(Libs.junit_bom)
-            mavenBom(Libs.okhttp3_bom)
-            mavenBom(Libs.netty_bom)
-            mavenBom(Libs.jackson_bom)
-            mavenBom(Libs.jackson3_bom)
+            mavenBom(rootLibs.feign.bom.get().toString())
+            mavenBom(rootLibs.micrometer.bom.get().toString())
+            mavenBom(rootLibs.micrometer.tracing.bom.get().toString())
+            mavenBom(rootLibs.opentelemetry.bom.get().toString())
+            mavenBom(rootLibs.log4j.bom.get().toString())
+            mavenBom(rootLibs.testcontainers.bom.get().toString())
+            mavenBom(rootLibs.junit.bom.get().toString())
+            mavenBom(rootLibs.okhttp3.bom.get().toString())
+            mavenBom(rootLibs.netty.bom.get().toString())
+            mavenBom(rootLibs.jackson.bom.get().toString())
+            mavenBom(rootLibs.jackson3.bom.get().toString())
 
-            mavenBom(Libs.kotlinx_coroutines_bom)
-            mavenBom(Libs.kotlin_bom)
+            mavenBom(rootLibs.kotlinx.coroutines.bom.get().toString())
+            mavenBom(rootLibs.kotlin.bom.get().toString())
         }
         dependencies {
-            dependency(Libs.jetbrains_annotations)
-
-            dependency(Libs.kotlinx_coroutines_bom)
-            dependency(Libs.kotlinx_coroutines_core)
-            dependency(Libs.kotlinx_coroutines_core_jvm)
-            dependency(Libs.kotlinx_coroutines_reactive)
-            dependency(Libs.kotlinx_coroutines_reactor)
-            dependency(Libs.kotlinx_coroutines_slf4j)
-            dependency(Libs.kotlinx_coroutines_debug)
-            dependency(Libs.kotlinx_coroutines_test)
-            dependency(Libs.kotlinx_coroutines_test_jvm)
+            // Versions pinned explicitly (not managed by any imported BOM)
+            dependency(rootLibs.jetbrains.annotations.get().toString())
 
             // Apache Commons
-            dependency(Libs.commons_beanutils)
-            dependency(Libs.commons_collections4)
-            dependency(Libs.commons_compress)
-            dependency(Libs.commons_codec)
-            dependency(Libs.commons_csv)
-            dependency(Libs.commons_lang3)
-            dependency(Libs.commons_logging)
-            dependency(Libs.commons_math3)
-            dependency(Libs.commons_pool2)
-            dependency(Libs.commons_text)
-            dependency(Libs.commons_exec)
-            dependency(Libs.commons_io)
+            dependency(rootLibs.commons.beanutils.get().toString())
+            dependency(rootLibs.commons.collections4.get().toString())
+            dependency(rootLibs.commons.compress.get().toString())
+            dependency(rootLibs.commons.codec.get().toString())
+            dependency(rootLibs.commons.csv.get().toString())
+            dependency(rootLibs.commons.lang3.get().toString())
+            dependency(rootLibs.commons.logging.get().toString())
+            dependency(rootLibs.commons.math3.get().toString())
+            dependency(rootLibs.commons.pool2.get().toString())
+            dependency(rootLibs.commons.text.get().toString())
+            dependency(rootLibs.commons.exec.get().toString())
+            dependency(rootLibs.commons.io.get().toString())
 
-            dependency(Libs.slf4j_api)
-            dependency(Libs.jcl_over_slf4j)
-            dependency(Libs.jul_to_slf4j)
-            dependency(Libs.log4j_over_slf4j)
-            dependency(Libs.logback)
-            dependency(Libs.logback_core)
+            // Logging
+            dependency(rootLibs.logback.classic.get().toString())
+            dependency(rootLibs.logback.core.get().toString())
 
             // jakarta
-            dependency(Libs.jakarta_activation_api)
-            dependency(Libs.jakarta_annotation_api)
-            dependency(Libs.jakarta_el_api)
-            dependency(Libs.jakarta_inject_api)
-            dependency(Libs.jakarta_interceptor_api)
-            dependency(Libs.jakarta_jms_api)
-            dependency(Libs.jakarta_json_api)
-            dependency(Libs.jakarta_json)
-            dependency(Libs.jakarta_persistence_api)
-            dependency(Libs.jakarta_servlet_api)
-            dependency(Libs.jakarta_transaction_api)
-            dependency(Libs.jakarta_validation_api)
-            dependency(Libs.jakarta_ws_rs_api)
-            dependency(Libs.jakarta_xml_bind)
-
-            // Jackson
-            dependency(Libs.jackson_annotations)
-            dependency(Libs.jackson_core)
-            dependency(Libs.jackson3_core)
+            dependency(rootLibs.jakarta.activation.api.get().toString())
+            dependency(rootLibs.jakarta.annotation.api.get().toString())
+            dependency(rootLibs.jakarta.el.api.get().toString())
+            dependency(rootLibs.jakarta.inject.api.get().toString())
+            dependency(rootLibs.jakarta.interceptor.api.get().toString())
+            dependency(rootLibs.jakarta.jms.api.get().toString())
+            dependency(rootLibs.jakarta.json.api.get().toString())
+            dependency(rootLibs.jakarta.json.glassfish.get().toString())
+            dependency(rootLibs.jakarta.persistence.api.get().toString())
+            dependency(rootLibs.jakarta.servlet.api.get().toString())
+            dependency(rootLibs.jakarta.transaction.api.get().toString())
+            dependency(rootLibs.jakarta.validation.api.get().toString())
+            dependency(rootLibs.jakarta.ws.rs.api.get().toString())
+            dependency(rootLibs.jakarta.xml.bind.get().toString())
 
             // Compressor
-            dependency(Libs.snappy_java)
-            dependency(Libs.lz4_java)
-            dependency(Libs.zstd_jni)
+            dependency(rootLibs.snappy.java.get().toString())
+            dependency(rootLibs.lz4.java.get().toString())
+            dependency(rootLibs.zstd.jni.get().toString())
 
-            dependency(Libs.findbugs)
-            dependency(Libs.guava)
+            dependency(rootLibs.findbugs.get().toString())
+            dependency(rootLibs.guava.get().toString())
 
-            dependency(Libs.kryo5)
-            dependency(Libs.fory_kotlin)
+            dependency(rootLibs.kryo5.get().toString())
+            dependency(rootLibs.fory.kotlin.get().toString())
 
-            dependency(Libs.caffeine)
-            dependency(Libs.caffeine_jcache)
+            dependency(rootLibs.caffeine.lib.get().toString())
+            dependency(rootLibs.caffeine.jcache.get().toString())
 
-            dependency(Libs.objenesis)
-            dependency(Libs.ow2_asm)
+            dependency(rootLibs.objenesis.get().toString())
+            dependency(rootLibs.ow2.asm.get().toString())
 
-            dependency(Libs.reflectasm)
+            dependency(rootLibs.reflectasm.get().toString())
 
-            dependency(Libs.junit_bom)
-            dependency(Libs.junit_jupiter)
-            dependency(Libs.junit_jupiter_api)
-            dependency(Libs.junit_jupiter_engine)
-            dependency(Libs.junit_jupiter_migrationsupport)
-            dependency(Libs.junit_jupiter_params)
-            dependency(Libs.junit_platform_commons)
-            dependency(Libs.junit_platform_engine)
-            dependency(Libs.junit_platform_launcher)
-            dependency(Libs.junit_platform_runner)
+            dependency(rootLibs.kluent.get().toString())
+            dependency(rootLibs.assertj.core.get().toString())
 
-            dependency(Libs.kluent)
-            dependency(Libs.assertj_core)
+            dependency(rootLibs.mockk.get().toString())
+            dependency(rootLibs.datafaker.get().toString())
+            dependency(rootLibs.random.beans.get().toString())
 
-            dependency(Libs.mockk)
-            dependency(Libs.datafaker)
-            dependency(Libs.random_beans)
-
-            dependency(Libs.jsonpath)
-            dependency(Libs.jsonassert)
+            dependency(rootLibs.jsonpath.get().toString())
+            dependency(rootLibs.jsonassert.get().toString())
 
             // Redis
-            dependency(Libs.lettuce_core)
-            dependency(Libs.redisson)
+            dependency(rootLibs.lettuce.core.get().toString())
+            dependency(rootLibs.redisson.get().toString())
         }
     }
 
@@ -297,36 +271,36 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
-        compileOnly(platform(Libs.bluetape4k_bom))
-        compileOnly(platform(Libs.spring_boot4_dependencies))
-        compileOnly(platform(Libs.jackson_bom))
-        compileOnly(platform(Libs.kotlinx_coroutines_bom))
+        compileOnly(platform(rootLibs.bluetape4k.bom))
+        compileOnly(platform(rootLibs.spring.boot4.dependencies))
+        compileOnly(platform(rootLibs.jackson.bom))
+        compileOnly(platform(rootLibs.kotlinx.coroutines.bom))
 
-        implementation(Libs.kotlin_stdlib)
-        implementation(Libs.kotlin_reflect)
-        testImplementation(Libs.kotlin_test)
-        testImplementation(Libs.kotlin_test_junit5)
+        implementation(rootLibs.kotlin.stdlib)
+        implementation(rootLibs.kotlin.reflect)
+        testImplementation(rootLibs.kotlin.test)
+        testImplementation(rootLibs.kotlin.test.junit5)
 
-        implementation(Libs.kotlinx_coroutines_core)
-        implementation(Libs.kotlinx_atomicfu)
+        implementation(rootLibs.kotlinx.coroutines.core)
+        implementation(rootLibs.kotlinx.atomicfu)
 
-        implementation(Libs.slf4j_api)
-        implementation(Libs.bluetape4k_logging)
-        implementation(Libs.logback)
-        testImplementation(Libs.jcl_over_slf4j)
-        testImplementation(Libs.jul_to_slf4j)
-        testImplementation(Libs.log4j_over_slf4j)
+        implementation(rootLibs.slf4j.api)
+        implementation(rootLibs.bluetape4k.logging)
+        implementation(rootLibs.logback.classic)
+        testImplementation(rootLibs.jcl.over.slf4j)
+        testImplementation(rootLibs.jul.to.slf4j)
+        testImplementation(rootLibs.log4j.over.slf4j)
 
         // JUnit 5
-        testImplementation(Libs.bluetape4k_junit5)
-        testImplementation(Libs.junit_jupiter)
-        testRuntimeOnly(Libs.junit_platform_engine)
+        testImplementation(rootLibs.bluetape4k.junit5)
+        testImplementation(rootLibs.junit.jupiter.all)
+        testRuntimeOnly(rootLibs.junit.platform.engine)
 
-        testImplementation(Libs.kluent)
-        testImplementation(Libs.mockk)
-        testImplementation(Libs.awaitility_kotlin)
+        testImplementation(rootLibs.kluent)
+        testImplementation(rootLibs.mockk)
+        testImplementation(rootLibs.awaitility.kotlin)
 
-        testImplementation(Libs.datafaker)
-        testImplementation(Libs.random_beans)
+        testImplementation(rootLibs.datafaker)
+        testImplementation(rootLibs.random.beans)
     }
 }
