@@ -1,38 +1,38 @@
 plugins {
-    kotlin("plugin.spring")
-    kotlin("plugin.jpa")
-    kotlin("plugin.allopen")
-    id(Plugins.spring_boot)
-    id(Plugins.gatling)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kotlin.jpa)
+    alias(libs.plugins.kotlin.allopen)
+    alias(libs.plugins.spring.boot4)
+    alias(libs.plugins.gatling)
 }
 
 dependencies {
     // Exposed
-    implementation(Libs.exposed_spring_boot4_starter)
-    implementation(Libs.exposed_jdbc)
-    implementation(Libs.exposed_dao)
-    implementation(Libs.exposed_java_time)
+    implementation(libs.exposed.spring.boot4.starter)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.java.time)
 
     // JPA
-    implementation(Libs.springBootStarter("data-jpa"))
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // Web
-    implementation(Libs.springBootStarter("web"))
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
     // DB - PostgreSQL (Testcontainers로 자동 시작)
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers)
-    implementation(Libs.testcontainers_postgresql)
-    runtimeOnly(Libs.postgresql_driver)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.lib)
+    implementation(libs.testcontainers.postgresql)
+    runtimeOnly(libs.postgresql.driver)
     // H2 fallback (테스트용)
-    runtimeOnly(Libs.h2_v2)
+    runtimeOnly(libs.h2.v2)
 
     // Test
-    testImplementation(Libs.springBootStarter("test"))
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     // Gatling
-    gatling(Libs.gatling_charts_highcharts)
-    gatling(Libs.gatling_http_java)
+    gatling(libs.gatling.charts.highcharts)
+    gatling(libs.gatling.http.java)
 }
 
 allOpen {

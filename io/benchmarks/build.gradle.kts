@@ -2,33 +2,33 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    kotlin("plugin.allopen")
-    id(Plugins.kotlinx_benchmark) version Plugins.Versions.kotlinx_benchmark
+    alias(libs.plugins.kotlin.allopen)
+    alias(libs.plugins.kotlinx.benchmark)
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_cache_lettuce)
-    implementation(Libs.bluetape4k_spring_boot3_exposed_r2dbc)
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_junit5)
-    implementation(Libs.commons_compress)
-    implementation(Libs.kryo5)
-    implementation(Libs.fory_kotlin)
-    implementation(Libs.lz4_java)
-    implementation(Libs.snappy_java)
-    implementation(Libs.zstd_jni)
-    implementation(Libs.chronicle_wire)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_dataformat_msgpack)
+    implementation(libs.bluetape4k.cache.lettuce)
+    implementation(libs.bluetape4k.spring.boot3.exposed.r2dbc)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.junit5)
+    implementation(libs.commons.compress)
+    implementation(libs.kryo5)
+    implementation(libs.fory.kotlin)
+    implementation(libs.lz4.java)
+    implementation(libs.snappy.java)
+    implementation(libs.zstd.jni)
+    implementation(libs.chronicle.wire)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.jackson.dataformat.msgpack)
 
-    implementation(Libs.kotlinx_benchmark_runtime)
-    implementation(Libs.kotlinx_benchmark_runtime_jvm)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.exposed_migration_r2dbc)
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers)
-    implementation(Libs.h2_v2)
-    implementation(Libs.r2dbc_h2)
+    implementation(libs.kotlinx.benchmark.runtime)
+    implementation(libs.kotlinx.benchmark.runtimejvm)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.exposed.migration.r2dbc)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.lib)
+    implementation(libs.h2.v2)
+    implementation(libs.r2dbc.h2)
 
     testImplementation(kotlin("test"))
 }
