@@ -14,6 +14,7 @@ jobs:
   validate-wrapper:
     name: Validate Gradle Wrapper
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: gradle/actions/wrapper-validation@v4
@@ -21,6 +22,7 @@ jobs:
   build:
     name: Build (compile only)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: validate-wrapper
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +41,7 @@ jobs:
   test:
     name: Test (Testcontainers)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +70,7 @@ jobs:
   nightly-status:
     name: Nightly Status
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - build
       - test
