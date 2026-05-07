@@ -1,5 +1,10 @@
 # bluetape4k-experimental
 
+[![CI](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml/badge.svg)](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk)](https://openjdk.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Kotlin/Gradle 기반의 실험적 기능 프로토타이핑 프로젝트입니다.
 새로운 아이디어나 기술을 검증하고 bluetape4k 메인 라이브러리에 편입하기 전에 탐색하는 공간입니다.
 
