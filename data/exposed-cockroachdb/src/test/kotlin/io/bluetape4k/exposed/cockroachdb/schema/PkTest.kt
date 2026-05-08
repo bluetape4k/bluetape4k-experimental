@@ -3,9 +3,9 @@ package io.bluetape4k.exposed.cockroachdb.schema
 import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.exposed.cockroachdb.domain.UserUUIDs
 import io.bluetape4k.exposed.cockroachdb.domain.Users
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.junit.jupiter.api.Test

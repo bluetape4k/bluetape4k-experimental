@@ -3,9 +3,9 @@ package io.bluetape4k.exposed.cockroachdb.window
 import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.exposed.cockroachdb.domain.Orders
 import io.bluetape4k.logging.KLogging
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.lag

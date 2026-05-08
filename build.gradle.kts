@@ -246,7 +246,6 @@ subprojects {
 
             dependency(rootLibs.reflectasm.get().toString())
 
-            dependency(rootLibs.kluent.get().toString())
             dependency(rootLibs.assertj.core.get().toString())
 
             dependency(rootLibs.mockk.get().toString())
@@ -297,7 +296,7 @@ subprojects {
         testImplementation(rootLibs.junit.jupiter.all)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 
-        testImplementation(rootLibs.kluent)
+        testImplementation(rootLibs.bluetape4k.assertions)
         testImplementation(rootLibs.mockk)
         testImplementation(rootLibs.awaitility.kotlin)
 

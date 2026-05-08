@@ -3,9 +3,9 @@ package io.bluetape4k.exposed.ignite3
 import io.bluetape4k.exposed.ignite3.dialect.IgniteDataTypeProvider
 import io.bluetape4k.exposed.ignite3.dialect.IgniteDialect
 import io.bluetape4k.exposed.ignite3.dialect.IgniteFunctionProvider
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.util.UUID
 

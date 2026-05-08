@@ -4,7 +4,7 @@ import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.exposed.cockroachdb.domain.Users
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import org.amshove.kluent.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeFalse
 import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.junit.jupiter.api.Test
 

@@ -4,8 +4,8 @@ import io.bluetape4k.exposed.cockroachdb.AbstractCockroachDBTest
 import io.bluetape4k.logging.KLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.Transaction

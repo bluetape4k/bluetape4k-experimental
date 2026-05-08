@@ -3,8 +3,8 @@ package io.bluetape4k.examples.benchmark
 import io.bluetape4k.examples.benchmark.dto.BookDto
 import io.bluetape4k.examples.benchmark.dto.CreateAuthorRequest
 import io.bluetape4k.examples.benchmark.dto.AuthorDto
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Value
