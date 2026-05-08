@@ -1,7 +1,7 @@
 package io.bluetape4k.benchmark.report
 
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldBeTrue
 import java.nio.file.Files
 import kotlin.io.path.readText
 import kotlin.test.Test

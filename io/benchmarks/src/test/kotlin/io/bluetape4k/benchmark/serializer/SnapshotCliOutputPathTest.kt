@@ -1,7 +1,7 @@
 package io.bluetape4k.benchmark.serializer
 
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test

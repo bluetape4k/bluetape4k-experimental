@@ -44,7 +44,6 @@ caffeine = "3.2.3"
 chronicle-wire = "2.27ea8"
 msgpack = "0.9.11"
 
-kluent = "1.73"
 mockk = "1.14.9"
 awaitility = "4.3.0"
 datafaker = "2.5.4"
@@ -262,7 +261,7 @@ junit-platform-engine = { module = "org.junit.platform:junit-platform-engine", v
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-jupiter" }
 junit-platform-runner = { module = "org.junit.platform:junit-platform-runner", version.ref = "junit-jupiter" }
 
-kluent = { module = "org.amshove.kluent:kluent", version.ref = "kluent" }
+bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
