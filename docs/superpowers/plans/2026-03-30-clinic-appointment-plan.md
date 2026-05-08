@@ -151,7 +151,7 @@ kotlinx.atomicfu.jvm.variant=VH
 kotlinx.atomicfu.jvm.languageLevel=21
 
 # project version
-projectGroup=io.bluetape4k.clinic
+projectGroup=io.github.bluetape4k.clinic
 baseVersion=0.1.0
 snapshotVersion=
 ```
