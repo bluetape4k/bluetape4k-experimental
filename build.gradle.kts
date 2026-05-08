@@ -29,7 +29,6 @@ val rootLibs = libs
 
 allprojects {
     repositories {
-        mavenLocal()
         mavenCentral()
         google()
 
