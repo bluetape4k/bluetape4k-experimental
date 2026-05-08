@@ -29,6 +29,7 @@ val rootLibs = libs
 
 allprojects {
     repositories {
+        mavenLocal()
         mavenCentral()
         google()
 
@@ -171,6 +172,7 @@ subprojects {
 
         imports {
             mavenBom(rootLibs.bluetape4k.bom.get().toString())
+            mavenBom(rootLibs.bluetape4k.dependencies.get().toString())
             mavenBom(rootLibs.spring.boot4.dependencies.get().toString())
 
             mavenBom(rootLibs.feign.bom.get().toString())
