@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     implementation(libs.bluetape4k.cache.lettuce)
-    implementation(libs.bluetape4k.spring.boot3.exposed.r2dbc)
+    implementation(libs.bluetape4k.spring.boot.exposed.r2dbc)
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.junit5)
     implementation(libs.commons.compress)

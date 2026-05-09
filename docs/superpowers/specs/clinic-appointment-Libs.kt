@@ -64,7 +64,7 @@ object Versions {
 
     const val junit_jupiter = "6.0.3"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     const val junit_platform = "6.0.3"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
-    const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
+    const val bluetape4k_assertions = "1.8.0-SNAPSHOT"     // https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-assertions
     const val mockk = "1.14.9"              // https://mvnrepository.com/artifact/io.mockk/mockk
     const val testcontainers = "2.0.3"      // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
     const val jna = "5.18.1"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
@@ -395,7 +395,7 @@ object Libs {
     val junit_platform_suite_api = junitPlatform("suite-api")
     val junit_platform_suite_engine = junitPlatform("suite-engine")
 
-    const val kluent = "org.amshove.kluent:kluent:${Versions.kluent}"
+    const val bluetape4k_assertions = "io.github.bluetape4k:bluetape4k-assertions:${Versions.bluetape4k_assertions}"
 
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
 

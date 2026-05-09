@@ -85,7 +85,7 @@ dependencies {
 - 미국 번호 `+1-650-253-0000` 파싱 → `+16502530000` 저장 검증
 - 잘못된 번호 입력 시 `IllegalArgumentException` 발생 (`assertFailsWith<IllegalArgumentException>`)
 - `phoneNumberString` 컬럼: E.164 정규화 후 저장, 동일 값 조회
-- Kluent assertions 사용 (`shouldBeEqualTo`, `shouldBeNull`, `shouldNotBeNull`)
+- bluetape4k-assertions assertions 사용 (`shouldBeEqualTo`, `shouldBeNull`, `shouldNotBeNull`)
 
 빌드 검증:
 ```bash
@@ -427,6 +427,6 @@ Task 8 (low)    → 모듈별 커밋
 - [ ] Value Object: `Serializable` + `serialVersionUID = 1L`
 - [ ] 예외 래핑: 외부 라이브러리 예외 → `IllegalArgumentException`/`IllegalStateException`
 - [ ] Dialect Gating: PostgreSQL 전용 함수는 `check(currentDialect is PostgreSQLDialect)` 적용
-- [ ] 테스트 Assertion: Kluent 우선 (`shouldBeEqualTo`, `shouldBeNull`, `assertFailsWith`)
+- [ ] 테스트 Assertion: bluetape4k-assertions 우선 (`shouldBeEqualTo`, `shouldBeNull`, `assertFailsWith`)
 - [ ] test/resources: `junit-platform.properties`, `logback-test.xml` 복사 확인
 - [ ] README.md: 각 모듈에 작성

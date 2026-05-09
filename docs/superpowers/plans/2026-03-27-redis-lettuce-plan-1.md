@@ -6,7 +6,7 @@
 
 **Architecture:** Lua 스크립트로 Redis 원자성 보장, Sync 버전(Virtual Thread)과 Suspend 버전(Coroutine) 쌍으로 제공. FairLock은 Hash(재진입 카운터)+List(FIFO 큐)+ZSet(타임아웃)+Pub/Sub(알림) 구조. RateLimiter는 Token Bucket + ZSet(permit 만료 추적) 구조.
 
-**Tech Stack:** Kotlin 2.x, Lettuce 7.x, kotlinx-coroutines, atomicfu, JUnit 5 + Kotest + Kluent, Testcontainers Redis
+**Tech Stack:** Kotlin 2.x, Lettuce 7.x, kotlinx-coroutines, atomicfu, JUnit 5 + Kotest + bluetape4k-assertions, Testcontainers Redis
 
 **스펙 참조:** `docs/superpowers/specs/2026-03-27-redis-lettuce-design.md`
 
@@ -257,9 +257,9 @@ git commit -m "feat: FairLockOptions, BackOffPolicy 추가"
 package io.bluetape4k.redis.lettuce.lock
 
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -559,9 +559,9 @@ import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -932,9 +932,9 @@ git commit -m "feat: RateType, RateLimiterConfig 추가"
 package io.bluetape4k.redis.lettuce.rate
 
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
@@ -1130,9 +1130,9 @@ import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -1350,7 +1350,7 @@ package io.bluetape4k.redis.lettuce
 
 import io.bluetape4k.redis.lettuce.rate.RateLimiterConfig
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
