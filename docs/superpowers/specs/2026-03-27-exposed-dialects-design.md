@@ -161,7 +161,7 @@ fun Column<InetAddress>.isContainedBy(cidr: Expression<String>): Op<Boolean> {
 | 패키지 | `io.bluetape4k.exposed.{module}` |
 | 기반 클래스 | `bluetape4k-exposed-core`의 `ColumnWithTransform`, `ColumnTransformer` |
 | KDoc | 한국어, 모든 public class/interface/function 필수 |
-| 테스트 | JUnit 5 + Kluent assertions |
+| 테스트 | JUnit 5 + bluetape4k-assertions assertions |
 | 비동기 | 필요 시 Coroutines (`suspend`, `Flow`) |
 | 커밋 | 한국어, prefix (feat/fix/test/chore) |
 | 모듈 등록 | `settings.gradle.kts` `includeModules("data", ...)` 로 자동 포함 |

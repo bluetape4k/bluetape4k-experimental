@@ -66,9 +66,9 @@ package io.bluetape4k.redis.lettuce.hll
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.bluetape4k.redis.lettuce.codec.LettuceBinaryCodecs
 import io.lettuce.core.codec.StringCodec
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -240,8 +240,8 @@ package io.bluetape4k.redis.lettuce.hll
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -344,8 +344,8 @@ package io.bluetape4k.redis.lettuce.filter
 
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.lettuce.core.codec.StringCodec
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -557,8 +557,8 @@ package io.bluetape4k.redis.lettuce.filter
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -753,8 +753,8 @@ package io.bluetape4k.redis.lettuce.filter
 
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.lettuce.core.codec.StringCodec
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -1074,8 +1074,8 @@ package io.bluetape4k.redis.lettuce.filter
 import io.bluetape4k.redis.lettuce.AbstractRedisLettuceTest
 import io.lettuce.core.codec.StringCodec
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -235,7 +235,7 @@ dependencies {
 
     testImplementation(Libs.timefold_solver_test)
     testImplementation(Libs.bluetape4k_junit5)
-    testImplementation(Libs.kluent)
+    testImplementation(Libs.bluetape4kAssertions)
     testImplementation(Libs.h2_v2)
 }
 ```

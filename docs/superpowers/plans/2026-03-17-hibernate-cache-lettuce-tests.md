@@ -11,10 +11,10 @@
 
 - Part A: 기존 `:hibernate-cache-lettuce` 모듈에 7개 신규 테스트 클래스 + 2개 엔티티 파일 추가 (Hibernate 7.x)
 - Part B: `infra/hibernate-cache-lettuce-h6/` 신규 모듈 생성 — Hibernate 6.8.x API에 맞춘 RegionFactory + 동일 테스트 패턴
-- 모든 테스트: TDD 스타일, Kluent assertions, JUnit 5, Testcontainers Redis 싱글턴
+- 모든 테스트: TDD 스타일, bluetape4k-assertions assertions, JUnit 5, Testcontainers Redis 싱글턴
 
 **Tech Stack:
-** Kotlin 2.3, Hibernate 7.2.6.Final / 6.8.x, H2 2.x, Testcontainers Redis, Lettuce, Caffeine, JUnit 5, Kluent, MockK
+** Kotlin 2.3, Hibernate 7.2.6.Final / 6.8.x, H2 2.x, Testcontainers Redis, Lettuce, Caffeine, JUnit 5, bluetape4k-assertions, MockK
 
 ---
 
@@ -234,9 +234,9 @@ package io.bluetape4k.hibernate.cache.lettuce
 import io.bluetape4k.hibernate.cache.lettuce.model.Department
 import io.bluetape4k.hibernate.cache.lettuce.model.Employee
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -430,9 +430,9 @@ package io.bluetape4k.hibernate.cache.lettuce
 import io.bluetape4k.hibernate.cache.lettuce.model.Department
 import io.bluetape4k.hibernate.cache.lettuce.model.Employee
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -605,9 +605,9 @@ import io.bluetape4k.hibernate.cache.lettuce.model.VersionedItem
 import io.bluetape4k.hibernate.cache.lettuce.model.VersionedCategory
 import io.bluetape4k.hibernate.cache.lettuce.model.VersionedCategoryItem
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.hibernate.StaleObjectStateException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -809,10 +809,10 @@ package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
 import io.bluetape4k.hibernate.cache.lettuce.model.VersionedItem
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -998,10 +998,10 @@ git commit -m "test(hibernate-cache-lettuce): add HibernateTransactionRollbackTe
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Article
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -1201,8 +1201,8 @@ git commit -m "test(hibernate-cache-lettuce): add HibernateElementCollectionCach
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -1456,10 +1456,10 @@ git commit -m "test(hibernate-cache-lettuce): add HibernateQueryCacheAdvancedTes
 package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeNull
-import org.amshove.kluent.shouldNotBeSameInstanceAs
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotBeSameInstanceAs
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -1648,8 +1648,8 @@ package io.bluetape4k.hibernate.cache.lettuce
 
 import io.bluetape4k.hibernate.cache.lettuce.model.Person
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger

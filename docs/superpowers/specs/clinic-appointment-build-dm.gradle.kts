@@ -48,7 +48,6 @@ dependencyManagement {
         dependency(rootLibs.jetbrains.annotations.get().toString())
 
         // 테스트 유틸리티 (Spring Boot BOM 미포함)
-        dependency(rootLibs.kluent.get().toString())
         dependency(rootLibs.assertj.core.get().toString())
         dependency(rootLibs.mockk.get().toString())
         dependency(rootLibs.datafaker.get().toString())
@@ -95,7 +94,7 @@ dependencyManagement {
 //  - slf4j-api, bluetape4k-logging, logback-classic: 로깅 인프라 필수
 //  - jcl-over-slf4j, jul-to-slf4j, log4j-over-slf4j: SLF4J bridge (test)
 //  - bluetape4k-junit5, junit-jupiter-all, junit-platform-engine: 테스트 필수
-//  - kluent, mockk, datafaker, random-beans: 테스트 유틸리티
+//  - bluetape4k-assertions, mockk, datafaker, random-beans: 테스트 유틸리티
 // ============================================================
 
 subprojects {
@@ -133,7 +132,6 @@ subprojects {
         testImplementation(rootLibs.junit.jupiter.all)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 
-        testImplementation(rootLibs.kluent)
         testImplementation(rootLibs.mockk)
         // awaitility-kotlin 제거 — scheduling 모듈 미사용
 

@@ -21,10 +21,9 @@ library line.
 - Migrated `buildSrc` dependency declarations to `gradle/libs.versions.toml` and upgraded the Gradle wrapper to 9.5.0 ([PR #10](https://github.com/bluetape4k/bluetape4k-experimental/pull/10), [PR #11](https://github.com/bluetape4k/bluetape4k-experimental/pull/11)).
 - Migrated graph modules out to the standalone `bluetape4k-graph` project ([PR #6](https://github.com/bluetape4k/bluetape4k-experimental/pull/6)).
 - Switched Exposed dependencies to the `bluetape4k-exposed` group and integrated the `bluetape4k-dependencies` BOM ([PR #14](https://github.com/bluetape4k/bluetape4k-experimental/pull/14)).
-- Test code migrated from Kluent to `bluetape4k-assertions` ([PR #16](https://github.com/bluetape4k/bluetape4k-experimental/pull/16)).
+- Test code migrated from Kluent to `bluetape4k-assertions` via `bluetape4k-junit5` ([PR #16](https://github.com/bluetape4k/bluetape4k-experimental/pull/16)).
 
 ### Fixed
 
 - IDE diagnostics and code quality findings from early experimental modules ([PR #2](https://github.com/bluetape4k/bluetape4k-experimental/pull/2)).
 - Removed `mavenLocal()` from build configuration ([PR #15](https://github.com/bluetape4k/bluetape4k-experimental/pull/15)).
-

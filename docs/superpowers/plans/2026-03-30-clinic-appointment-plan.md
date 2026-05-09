@@ -491,7 +491,7 @@ subprojects {
             dependency(Libs.junit_platform_engine)
             dependency(Libs.junit_platform_launcher)
 
-            dependency(Libs.kluent)
+            dependency(Libs.bluetape4kAssertions)
             dependency(Libs.mockk)
             dependency(Libs.lettuce_core)
         }
@@ -526,7 +526,7 @@ subprojects {
         testImplementation(Libs.junit_jupiter)
         testRuntimeOnly(Libs.junit_platform_engine)
 
-        testImplementation(Libs.kluent)
+        testImplementation(Libs.bluetape4kAssertions)
         testImplementation(Libs.mockk)
     }
 }

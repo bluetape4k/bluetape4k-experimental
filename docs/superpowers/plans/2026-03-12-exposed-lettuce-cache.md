@@ -294,9 +294,9 @@ import io.bluetape4k.exposed.lettuce.AbstractExposedLettuceTest
 import io.bluetape4k.exposed.lettuce.map.LettuceCacheConfig
 import io.bluetape4k.exposed.lettuce.map.LettuceLoadedMap
 import io.bluetape4k.exposed.lettuce.map.MapLoader
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -590,9 +590,9 @@ import io.bluetape4k.exposed.lettuce.map.LettuceCacheConfig
 import io.bluetape4k.exposed.lettuce.map.LettuceLoadedMap
 import io.bluetape4k.exposed.lettuce.map.MapWriter
 import io.bluetape4k.exposed.lettuce.map.WriteMode
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldContainKey
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContainKey
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -671,9 +671,9 @@ import io.bluetape4k.exposed.lettuce.map.LettuceCacheConfig
 import io.bluetape4k.exposed.lettuce.map.LettuceLoadedMap
 import io.bluetape4k.exposed.lettuce.map.MapWriter
 import io.bluetape4k.exposed.lettuce.map.WriteMode
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContainKey
-import org.amshove.kluent.shouldNotContainKey
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContainKey
+import io.bluetape4k.assertions.shouldNotContainKey
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -766,9 +766,9 @@ package io.bluetape4k.exposed.lettuce.map
 
 import io.bluetape4k.exposed.lettuce.AbstractExposedLettuceTest
 import io.bluetape4k.exposed.lettuce.map.ExposedEntityMapLoader
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldContainSame
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContainSame
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -933,7 +933,7 @@ package io.bluetape4k.exposed.lettuce.map
 import io.bluetape4k.exposed.lettuce.AbstractExposedLettuceTest
 import io.bluetape4k.exposed.lettuce.map.ExposedEntityMapWriter
 import io.bluetape4k.exposed.lettuce.map.WriteMode
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -1189,9 +1189,9 @@ package io.bluetape4k.exposed.lettuce.repository
 
 import io.bluetape4k.exposed.lettuce.AbstractExposedLettuceTest
 import io.bluetape4k.exposed.lettuce.map.LettuceCacheConfig
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach

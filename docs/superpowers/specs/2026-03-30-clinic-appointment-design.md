@@ -329,7 +329,7 @@ object Libs {
     // resilience4j 함수 + 사용 모듈만
     // timefold 함수 + 사용 모듈만
     // jjwt, flyway, springdoc, lettuce
-    // test deps: junit, kluent, mockk, h2, r2dbc-h2, awaitility, datafaker
+    // test deps: junit, bluetape4k-assertions, mockk, h2, r2dbc-h2, awaitility, datafaker
 }
 ```
 
@@ -479,7 +479,7 @@ allprojects {
 subprojects {
     // bluetape4k-experimental과 동일한 subprojects 블록
     // Java 25, Kotlin 2.3, atomicfu, dependencyManagement, dokka, testLogger
-    // 공통 dependencies (kotlin-stdlib, coroutines, slf4j, logging, junit5, kluent, mockk)
+    // 공통 dependencies (kotlin-stdlib, coroutines, slf4j, logging, junit5, bluetape4k-assertions, mockk)
 }
 ```
 
