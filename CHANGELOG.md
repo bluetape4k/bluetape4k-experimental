@@ -10,6 +10,8 @@ library line.
 
 ### Added
 
+- Root README hero image, Korean README, project-purpose, feature, and architecture documentation.
+- `WIP.md` snapshot showing no currently assigned open issues.
 - Lettuce-based read-through, write-through, and write-behind cache strategy experiments ([PR #1](https://github.com/bluetape4k/bluetape4k-experimental/pull/1)).
 - Hospital appointment scheduling system experiment ([PR #3](https://github.com/bluetape4k/bluetape4k-experimental/pull/3)).
 - Graph repository sync/suspend dual API experiment before graph extraction ([PR #5](https://github.com/bluetape4k/bluetape4k-experimental/pull/5)).
@@ -18,6 +20,8 @@ library line.
 
 ### Changed
 
+- Root README language policy aligned: English in `README.md`, Korean in `README.ko.md`.
+- Dependency governance, compatibility guard, Kover policy, and Dependabot maintenance landed through PR #18 through PR #27.
 - Migrated `buildSrc` dependency declarations to `gradle/libs.versions.toml` and upgraded the Gradle wrapper to 9.5.0 ([PR #10](https://github.com/bluetape4k/bluetape4k-experimental/pull/10), [PR #11](https://github.com/bluetape4k/bluetape4k-experimental/pull/11)).
 - Migrated graph modules out to the standalone `bluetape4k-graph` project ([PR #6](https://github.com/bluetape4k/bluetape4k-experimental/pull/6)).
 - Switched Exposed dependencies to the `bluetape4k-exposed` group and integrated the `bluetape4k-dependencies` BOM ([PR #14](https://github.com/bluetape4k/bluetape4k-experimental/pull/14)).
