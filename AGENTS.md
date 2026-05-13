@@ -42,6 +42,9 @@ examples/
 Module names drop the base directory prefix. Example:
 `infra/cache-lettuce-near/` becomes `:cache-lettuce-near`.
 
+Root README visual assets live under `docs/assets/` and should be shared by
+`README.md` and `README.ko.md` through the same relative path.
+
 ## Module Gotchas
 
 ### infra
