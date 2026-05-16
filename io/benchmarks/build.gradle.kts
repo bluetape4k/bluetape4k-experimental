@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
     implementation(libs.bluetape4k.cache.lettuce)
-    implementation(libs.bluetape4k.spring.boot.exposed.r2dbc)
+    implementation(libs.exposed.spring.boot.r2dbc)
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.junit5)
     implementation(libs.commons.compress)
@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.kotlinx.benchmark.runtime)
     implementation(libs.kotlinx.benchmark.runtimejvm)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.exposed.migration.r2dbc)
+    implementation(libs.jetbrains.exposed.migration.r2dbc)
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
     implementation(libs.h2.v2)
