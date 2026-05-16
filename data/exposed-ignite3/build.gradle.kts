@@ -1,9 +1,9 @@
 dependencies {
-    api(libs.exposed.core)
-    api(libs.exposed.dao)
+    api(libs.jetbrains.exposed.core)
+    api(libs.jetbrains.exposed.dao)
+    api(libs.jetbrains.exposed.jdbc)
+    api(libs.jetbrains.exposed.java.time)
     api(libs.exposed.jdbc)
-    api(libs.exposed.java.time)
-    api(libs.bluetape4k.exposed.jdbc)
 
     api(libs.ignite3.client)
     api(libs.ignite3.jdbc)
@@ -11,7 +11,7 @@ dependencies {
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.testcontainers)
 
-    testImplementation(libs.bluetape4k.exposed.jdbc.tests)
+    testImplementation(libs.exposed.jdbc.tests)
 
     testImplementation(libs.flyway.core)
     testImplementation(libs.hikaricp)

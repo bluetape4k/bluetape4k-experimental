@@ -8,10 +8,10 @@ plugins {
 
 dependencies {
     // Exposed
-    implementation(libs.exposed.spring.boot4.starter)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.java.time)
+    implementation(libs.jetbrains.exposed.spring.boot4.starter)
+    implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.java.time)
 
     // JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
