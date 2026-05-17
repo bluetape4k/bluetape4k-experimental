@@ -247,7 +247,7 @@ guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }  # https:/
 objenesis = { module = "org.objenesis:objenesis", version = "3.5" }  # https://mvnrepository.com/artifact/org.objenesis/objenesis
 ow2-asm = { module = "org.ow2.asm:asm", version = "9.9.1" }  # https://mvnrepository.com/artifact/org.ow2.asm/asm
 reflectasm = { module = "com.esotericsoftware:reflectasm", version = "1.11.9" }  # https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
-flyway-core = { module = "org.flywaydb:flyway-core", version = "12.6.0" }  # https://mvnrepository.com/artifact/org.flywaydb/flyway-core
+flyway-core = { module = "org.flywaydb:flyway-core", version = "12.6.1" }  # https://mvnrepository.com/artifact/org.flywaydb/flyway-core
 h2-v2 = { module = "com.h2database:h2", version.ref = "h2-v2" }
 
 # JSON utilities
