@@ -3,7 +3,7 @@
 
 [versions]
 bluetape4k = "1.8.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-dependencies = "1.0.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
+bluetape4k-dependencies = "1.0.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
 
 kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
@@ -169,9 +169,9 @@ commons-text = { module = "org.apache.commons:commons-text", version = "1.15.0" 
 spring-boot4-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot4" }
 
 # Exposed
-exposed-jdbc = { module = "io.github.bluetape4k.exposed:exposed-jdbc" }
-exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:exposed-jdbc-tests" }
-exposed-spring-boot-r2dbc = { module = "io.github.bluetape4k.exposed:exposed-spring-boot-r2dbc" }
+exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" }
+exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
+exposed-spring-boot-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-boot-r2dbc" }
 
 # JetBrains Exposed
 jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
