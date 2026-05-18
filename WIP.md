@@ -1,8 +1,8 @@
 # WIP - bluetape4k-experimental
 
-Snapshot: 2026-05-13 KST
+Snapshot: 2026-05-18 KST
 Scope: open GitHub issues assigned to `debop`, created on or after 2026-01-01.
-Open count: 0 issues.
+Open count: 1 issue.
 
 ## Recently Completed
 
@@ -11,23 +11,28 @@ Open count: 0 issues.
 - Exposed CockroachDB experiments and dependency/BOM alignment are merged.
 - Kluent tests were migrated to `bluetape4k-assertions`.
 - Dependency governance, compatibility guards, Kover policy, and Dependabot maintenance are merged through PR #18 through PR #27.
+- Shared-version drift and central dependency governance updates are merged on
+  2026-05-18.
+- `exposed` artifactId rename tracking (#31) is closed.
 
 ## Current Direction
 
-There is no assigned open issue at this snapshot. Keep future work issue-driven,
-module-scoped, and clearly marked as experimental before promoting anything to a
-stable bluetape4k repository.
+Java 25 workflow contract alignment.
+
+This repository is the Kotlin 2.3 / Java 25 / Spring Boot 4 proving ground.
+CI and Nightly should either run on JDK 25 or explicitly include a Java 25
+verification lane before other experimental work is promoted.
 
 ## Priority Queue
 
 | Priority | Issue | Difficulty | Notes |
 |---|---|---:|---|
-| P1 | none | - | Create or assign a focused issue before implementation. |
+| P1 | [#45](https://github.com/bluetape4k/bluetape4k-experimental/issues/45) CI and Nightly run on JDK 21 while the repo contract is Java 25 | S | Workflow runtime should validate Java 25 or clearly split runtime/toolchain coverage. |
 
 ## WIP Limits
 
 | Lane | Limit | Current next |
 |---|---:|---|
-| Experimental feature | 1 | Wait for an assigned issue. |
-| Build/CI maintenance | 1 | Handle only concrete failures from CI/Nightly. |
+| Build/CI maintenance | 1 | `#45` |
+| Experimental feature | 1 | Wait for an assigned issue after the Java 25 workflow contract is clear. |
 | Promotion work | 1 | Promote only after behavior and migration path are documented. |
