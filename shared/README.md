@@ -6,17 +6,7 @@
 
 ## 모듈 위치
 
-```mermaid
-graph LR
-    shared["shared\n공통 유틸리티"]
-
-    cache-lettuce --> shared
-    hibernate-cache-lettuce --> shared
-    exposed-jdbc-spring-data["exposed-jdbc-spring-data"] --> shared
-    exposed-r2dbc-spring-data["exposed-r2dbc-spring-data"] --> shared
-    exposed-lettuce --> shared
-    hibernate-lettuce["hibernate-lettuce\nauto-config"] --> shared
-```
+![shared Architecture diagram](../docs/images/readme-diagrams/shared-architecture-01.png)
 
 ## 의존성
 
