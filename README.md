@@ -34,28 +34,7 @@ build behavior, and migration paths before promotion.
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    IDEAS["New library idea"]
-    EXP["bluetape4k-experimental"]
-    PROMOTE["Promotion candidate"]
-
-    subgraph Areas["Experiment areas"]
-        SHARED["shared"]
-        KOTLIN["kotlin"]
-        CORO["coroutines"]
-        AI["ai"]
-        DATA["data\nExposed / CockroachDB / Ignite"]
-        IO["io\nbenchmarks"]
-        INFRA["infra"]
-        EXAMPLES["examples"]
-    end
-
-    STABLE["Stable bluetape4k repos\nprojects / exposed / graph / image / text"]
-
-    IDEAS --> EXP --> Areas
-    Areas --> PROMOTE --> STABLE
-```
+![Architecture diagram](docs/assets/readme-diagrams/bluetape4k-experimental-architecture-01.png)
 
 ## Module Groups
 
