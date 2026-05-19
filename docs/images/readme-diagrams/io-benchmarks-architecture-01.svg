@@ -33,7 +33,7 @@
 <rect class="canvas" width="1600" height="1050"/>
 <rect class="frame" x="46" y="34" width="1508" height="982" rx="32"/>
 <text class="title" x="86" y="98">Execution Diagram</text>
-<text class="subtitle" x="90" y="132">Pastel architecture infographic generated from README Mermaid</text>
+  <text class="subtitle" x="90" y="132">JMH execution paths from current Gradle tasks and benchmark scripts</text>
 <rect class="chip" x="1010" y="64" width="130" height="36" fill="#e8f3ff" stroke="#5b8def"/>
 <text class="chipText" x="1075" y="88" text-anchor="middle">layer</text>
 <rect class="chip" x="1158" y="64" width="130" height="36" fill="#eaf7ef" stroke="#58a978"/>
@@ -42,48 +42,48 @@
 <text class="chipText" x="1371" y="88" text-anchor="middle">flow</text>
 <g transform="translate(130,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">&quot;Execution &quot;</text>
-  <text class="small" x="150" y="84" text-anchor="middle">entry</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">Gradle entrypoints</text>
+  <text class="small" x="150" y="84" text-anchor="middle">benchmark tasks</text>
 </g>
 <g transform="translate(464,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkQuick /</text>
-  <text class="small" x="150" y="84" text-anchor="middle">core</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkQuick</text>
+  <text class="small" x="150" y="84" text-anchor="middle">short regression run</text>
 </g>
-<path class="line" d="M438 309 L448 309"/>
+<path class="line" d="M430 309 L464 309"/>
 <g transform="translate(798,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkCustom / Execu.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">integration</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkCustom</text>
+  <text class="small" x="150" y="84" text-anchor="middle">filtered class execution</text>
 </g>
-<path class="line" d="M772 309 L782 309"/>
+<path class="line" d="M764 309 L798 309"/>
 <g transform="translate(1132,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkSuite /</text>
-  <text class="small" x="150" y="84" text-anchor="middle">storage</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkCustomReport</text>
+  <text class="small" x="150" y="84" text-anchor="middle">JSON to Markdown</text>
 </g>
-<path class="line" d="M1106 309 L1116 309"/>
+<path class="line" d="M1098 309 L1132 309"/>
 <g transform="translate(130,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e9f7f6" stroke="#45a7a1"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">jmhJson / comboJmhJson /</text>
-  <text class="small" x="150" y="84" text-anchor="middle">runtime</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">jmhJson + comboJmhJson</text>
+  <text class="small" x="150" y="84" text-anchor="middle">machine-readable output</text>
 </g>
 <g transform="translate(464,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#f1ecff" stroke="#8a72d6"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkMarkdown / Res.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">support</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarkMarkdown</text>
+  <text class="small" x="150" y="84" text-anchor="middle">README-ready report</text>
 </g>
-<path class="line" d="M438 515 L448 515"/>
+<path class="line" d="M430 515 L464 515"/>
 <g transform="translate(798,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">/ &quot;benchmark-results /.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">example</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmark-results</text>
+  <text class="small" x="150" y="84" text-anchor="middle">generated artifacts</text>
 </g>
 <path class="line" d="M772 515 L782 515"/>
 <g transform="translate(180,860)">
   <rect class="card" x="0" y="0" width="1240" height="92" rx="18" fill="#f7fbff" stroke="#d8e0ea"/>
   <text class="smallLabel" x="28" y="42">Reading rule</text>
-  <text class="mono" x="260" y="39">Pastel cards summarize the Mermaid graph as grouped README architecture blocks.</text>
-  <text class="small" x="260" y="66">Detailed Mermaid source remains represented by the generated SVG asset next to this PNG.</text>
+  <text class="mono" x="260" y="39">Labels use real Gradle task names from io/benchmarks/build.gradle.kts.</text>
+  <text class="small" x="260" y="66">Long command examples stay in README text instead of crowding the diagram.</text>
 </g>
 </svg>

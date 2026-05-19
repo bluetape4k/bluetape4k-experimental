@@ -33,7 +33,7 @@
 <rect class="canvas" width="1600" height="1050"/>
 <rect class="frame" x="46" y="34" width="1508" height="982" rx="32"/>
 <text class="title" x="86" y="98">Architecture Diagram</text>
-<text class="subtitle" x="90" y="132">Pastel architecture infographic generated from README Mermaid</text>
+  <text class="subtitle" x="90" y="132">Current experimental modules grouped by source tree</text>
 <rect class="chip" x="1010" y="64" width="130" height="36" fill="#e8f3ff" stroke="#5b8def"/>
 <text class="chipText" x="1075" y="88" text-anchor="middle">layer</text>
 <rect class="chip" x="1158" y="64" width="130" height="36" fill="#eaf7ef" stroke="#58a978"/>
@@ -42,65 +42,65 @@
 <text class="chipText" x="1371" y="88" text-anchor="middle">flow</text>
 <g transform="translate(130,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">New library idea</text>
-  <text class="small" x="150" y="84" text-anchor="middle">entry</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">root Gradle build</text>
+  <text class="small" x="150" y="84" text-anchor="middle">module registration</text>
 </g>
 <g transform="translate(464,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">bluetape4k-experimental</text>
-  <text class="small" x="150" y="84" text-anchor="middle">core</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">buildSrc</text>
+  <text class="small" x="150" y="84" text-anchor="middle">versions and plugins</text>
 </g>
-<path class="line" d="M438 309 L448 309"/>
+<path class="line" d="M430 309 L464 309"/>
 <g transform="translate(798,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">Promotion candidate</text>
-  <text class="small" x="150" y="84" text-anchor="middle">integration</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">data / exposed-ignite3</text>
+  <text class="small" x="150" y="84" text-anchor="middle">Ignite 3 integration</text>
 </g>
-<path class="line" d="M772 309 L782 309"/>
+<path class="line" d="M764 309 L798 309"/>
 <g transform="translate(1132,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">Experiment areas</text>
-  <text class="small" x="150" y="84" text-anchor="middle">storage</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">data / exposed-cockroachdb</text>
+  <text class="small" x="150" y="84" text-anchor="middle">CockroachDB support</text>
 </g>
 <path class="line" d="M1106 309 L1116 309"/>
 <g transform="translate(130,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e9f7f6" stroke="#45a7a1"/>
   <text class="smallLabel" x="150" y="54" text-anchor="middle">shared</text>
-  <text class="small" x="150" y="84" text-anchor="middle">runtime</text>
+  <text class="small" x="150" y="84" text-anchor="middle">common runtime</text>
 </g>
 <g transform="translate(464,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#f1ecff" stroke="#8a72d6"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">kotlin</text>
-  <text class="small" x="150" y="84" text-anchor="middle">support</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">io / benchmarks</text>
+  <text class="small" x="150" y="84" text-anchor="middle">JMH suites</text>
 </g>
-<path class="line" d="M438 515 L448 515"/>
+<path class="line" d="M430 515 L464 515"/>
 <g transform="translate(798,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">coroutines</text>
-  <text class="small" x="150" y="84" text-anchor="middle">example</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">examples / exposed-jpa</text>
+  <text class="small" x="150" y="84" text-anchor="middle">benchmark app</text>
 </g>
-<path class="line" d="M772 515 L782 515"/>
+<path class="line" d="M764 515 L798 515"/>
 <g transform="translate(1132,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">ai</text>
-  <text class="small" x="150" y="84" text-anchor="middle">tooling</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">README diagram assets</text>
+  <text class="small" x="150" y="84" text-anchor="middle">docs assets</text>
 </g>
-<path class="line" d="M1106 515 L1116 515"/>
+<path class="line" d="M1098 515 L1132 515"/>
 <g transform="translate(130,662)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">data / Exposed / Cockro.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">extension</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">source audit lessons</text>
+  <text class="small" x="150" y="84" text-anchor="middle">docs / lessons</text>
 </g>
 <g transform="translate(464,662)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">io / benchmarks</text>
-  <text class="small" x="150" y="84" text-anchor="middle">test</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">benchmarks + examples</text>
+  <text class="small" x="150" y="84" text-anchor="middle">validation lanes</text>
 </g>
-<path class="line" d="M438 721 L448 721"/>
+<path class="line" d="M430 721 L464 721"/>
 <g transform="translate(180,860)">
   <rect class="card" x="0" y="0" width="1240" height="92" rx="18" fill="#f7fbff" stroke="#d8e0ea"/>
   <text class="smallLabel" x="28" y="42">Reading rule</text>
-  <text class="mono" x="260" y="39">Pastel cards summarize the Mermaid graph as grouped README architecture blocks.</text>
-  <text class="small" x="260" y="66">Detailed Mermaid source remains represented by the generated SVG asset next to this PNG.</text>
+  <text class="mono" x="260" y="39">Every card maps to a current source directory or documentation asset in this repo.</text>
+  <text class="small" x="260" y="66">Deprecated placeholders and generated filler labels are intentionally omitted.</text>
 </g>
 </svg>

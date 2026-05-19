@@ -33,7 +33,7 @@
 <rect class="canvas" width="1600" height="1050"/>
 <rect class="frame" x="46" y="34" width="1508" height="982" rx="32"/>
 <text class="title" x="86" y="98">Architecture Diagram</text>
-<text class="subtitle" x="90" y="132">Pastel architecture infographic generated from README Mermaid</text>
+  <text class="subtitle" x="90" y="132">Exposed and JPA benchmark layers from current source packages</text>
 <rect class="chip" x="1010" y="64" width="130" height="36" fill="#e8f3ff" stroke="#5b8def"/>
 <text class="chipText" x="1075" y="88" text-anchor="middle">layer</text>
 <rect class="chip" x="1158" y="64" width="130" height="36" fill="#eaf7ef" stroke="#58a978"/>
@@ -42,27 +42,27 @@
 <text class="chipText" x="1371" y="88" text-anchor="middle">flow</text>
 <g transform="translate(130,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">(&quot;PostgreSQL / Testcont.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">entry</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">PostgreSQL Testcontainer</text>
+  <text class="small" x="150" y="84" text-anchor="middle">shared database</text>
 </g>
 <g transform="translate(464,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">Exposed Layer — / api /.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">core</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">Exposed repositories</text>
+  <text class="small" x="150" y="84" text-anchor="middle">api / exposed</text>
 </g>
-<path class="line" d="M438 309 L448 309"/>
+<path class="line" d="M430 309 L464 309"/>
 <g transform="translate(798,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">Authors / Books / LongI.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">integration</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">Authors + Books tables</text>
+  <text class="small" x="150" y="84" text-anchor="middle">LongIdTable schema</text>
 </g>
-<path class="line" d="M772 309 L782 309"/>
+<path class="line" d="M764 309 L798 309"/>
 <g transform="translate(1132,250)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">AuthorEntity / BookEnti.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">storage</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">AuthorEntity + BookEntity</text>
+  <text class="small" x="150" y="84" text-anchor="middle">DAO model</text>
 </g>
-<path class="line" d="M1106 309 L1116 309"/>
+<path class="line" d="M1098 309 L1132 309"/>
 <g transform="translate(130,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#e9f7f6" stroke="#45a7a1"/>
   <text class="smallLabel" x="150" y="54" text-anchor="middle">AuthorExposedRepository</text>
@@ -82,14 +82,14 @@
 <path class="line" d="M772 515 L782 515"/>
 <g transform="translate(1132,456)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">JPA Layer — / api / jpa.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">tooling</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">JPA repositories</text>
+  <text class="small" x="150" y="84" text-anchor="middle">api / jpa</text>
 </g>
-<path class="line" d="M1106 515 L1116 515"/>
+<path class="line" d="M1098 515 L1132 515"/>
 <g transform="translate(130,662)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="150" y="54" text-anchor="middle">authors_jpa / books_jpa.</text>
-  <text class="small" x="150" y="84" text-anchor="middle">extension</text>
+  <text class="smallLabel" x="150" y="54" text-anchor="middle">authors_jpa + books_jpa</text>
+  <text class="small" x="150" y="84" text-anchor="middle">JPA tables</text>
 </g>
 <g transform="translate(464,662)">
   <rect class="card" x="0" y="0" width="300" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
