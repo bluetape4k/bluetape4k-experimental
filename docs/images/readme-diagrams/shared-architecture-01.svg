@@ -32,8 +32,8 @@
 </defs>
 <rect class="canvas" width="1600" height="1050"/>
 <rect class="frame" x="46" y="34" width="1508" height="982" rx="32"/>
-<text class="title" x="86" y="98">Module Diagram</text>
-<text class="subtitle" x="90" y="132">Pastel architecture infographic generated from README Mermaid</text>
+<text class="title" x="86" y="98">Shared Module Diagram</text>
+<text class="subtitle" x="90" y="132">Current shared/build.gradle.kts dependencies and reusable test support</text>
 <rect class="chip" x="1010" y="64" width="130" height="36" fill="#e8f3ff" stroke="#5b8def"/>
 <text class="chipText" x="1075" y="88" text-anchor="middle">layer</text>
 <rect class="chip" x="1158" y="64" width="130" height="36" fill="#eaf7ef" stroke="#58a978"/>
@@ -42,30 +42,30 @@
 <text class="chipText" x="1371" y="88" text-anchor="middle">flow</text>
 <g transform="translate(160,250)">
   <rect class="card" x="0" y="0" width="380" height="118" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
-  <text class="smallLabel" x="190" y="54" text-anchor="middle">shared / Shared</text>
-  <text class="small" x="190" y="84" text-anchor="middle">entry</text>
+  <text class="smallLabel" x="190" y="54" text-anchor="middle">shared module</text>
+  <text class="small" x="190" y="84" text-anchor="middle">common utilities</text>
 </g>
 <g transform="translate(610,250)">
   <rect class="card" x="0" y="0" width="380" height="118" rx="14" fill="#eaf7ef" stroke="#58a978"/>
-  <text class="smallLabel" x="190" y="54" text-anchor="middle">exposed-jdbc-spring-data</text>
-  <text class="small" x="190" y="84" text-anchor="middle">core</text>
+  <text class="smallLabel" x="190" y="54" text-anchor="middle">bluetape4k.io</text>
+  <text class="small" x="190" y="84" text-anchor="middle">implementation</text>
 </g>
 <path class="line" d="M548 309 L594 309"/>
 <g transform="translate(1060,250)">
   <rect class="card" x="0" y="0" width="380" height="118" rx="14" fill="#fff3d9" stroke="#d6a441"/>
-  <text class="smallLabel" x="190" y="54" text-anchor="middle">exposed-r2dbc-spring-data</text>
-  <text class="small" x="190" y="84" text-anchor="middle">integration</text>
+  <text class="smallLabel" x="190" y="54" text-anchor="middle">Spring Web / WebFlux</text>
+  <text class="small" x="190" y="84" text-anchor="middle">compileOnly</text>
 </g>
 <path class="line" d="M998 309 L1044 309"/>
 <g transform="translate(160,456)">
   <rect class="card" x="0" y="0" width="380" height="118" rx="14" fill="#fdecef" stroke="#dc6b82"/>
-  <text class="smallLabel" x="190" y="54" text-anchor="middle">hibernate-lettuce / auto-conf.</text>
-  <text class="small" x="190" y="84" text-anchor="middle">storage</text>
+  <text class="smallLabel" x="190" y="54" text-anchor="middle">Coroutines + Reactor</text>
+  <text class="small" x="190" y="84" text-anchor="middle">compileOnly</text>
 </g>
 <g transform="translate(180,860)">
   <rect class="card" x="0" y="0" width="1240" height="92" rx="18" fill="#f7fbff" stroke="#d8e0ea"/>
   <text class="smallLabel" x="28" y="42">Reading rule</text>
-  <text class="mono" x="260" y="39">Pastel cards summarize the Mermaid graph as grouped README architecture blocks.</text>
-  <text class="small" x="260" y="66">Detailed Mermaid source remains represented by the generated SVG asset next to this PNG.</text>
+  <text class="mono" x="260" y="39">The shared module keeps optional framework APIs as compileOnly dependencies.</text>
+  <text class="small" x="260" y="66">Tests add Netty, bluetape4k-testcontainers, and kotlinx-coroutines-test.</text>
 </g>
 </svg>
