@@ -80,30 +80,7 @@ build/reports/gatling/comparisonsimulation-<timestamp>/index.html
 
 ## 아키텍처
 
-```mermaid
-graph LR
-    PG[("PostgreSQL\nTestcontainers")]
-
-    subgraph Exposed["Exposed Layer — /api/exposed/**"]
-        ET["Authors / Books\nLongIdTable"]
-        EE["AuthorEntity / BookEntity\nDAO"]
-        ER["AuthorExposedRepository"]
-        ES["ExposedAuthorService"]
-        EC["ExposedController"]
-        ET --> EE --> ER --> ES --> EC
-    end
-
-    subgraph JPA["JPA Layer — /api/jpa/**"]
-        JT["authors_jpa / books_jpa\n@Entity"]
-        JR["AuthorJpaRepository\nSpring Data JPA"]
-        JS["JpaAuthorService"]
-        JC["JpaController"]
-        JT --> JR --> JS --> JC
-    end
-
-    Exposed --> PG
-    JPA --> PG
-```
+![Architecture 1](../../docs/images/readme-diagrams/examples-exposed-jpa-benchmark-diagram-01.svg)
 
 ### ExposedAutoConfiguration 제외 이유
 
