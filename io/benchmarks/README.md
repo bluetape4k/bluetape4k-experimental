@@ -4,7 +4,7 @@
 
 ## 벤치마크 실행 파이프라인
 
-![Component Component Component 1](../../docs/images/readme-diagrams/io-benchmarks-diagram-01.svg)
+![Component Component Component 1](../../docs/images/readme-diagrams/io-benchmarks-diagram-01.png)
 
 ## 기본 실행
 

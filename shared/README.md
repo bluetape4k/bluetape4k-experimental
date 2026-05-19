@@ -6,7 +6,7 @@
 
 ## 모듈 위치
 
-![Component Component 1](../docs/images/readme-diagrams/shared-diagram-01.svg)
+![Component Component 1](../docs/images/readme-diagrams/shared-diagram-01.png)
 
 ## 의존성
 
