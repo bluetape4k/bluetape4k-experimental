@@ -27,6 +27,8 @@ Compared serializers:
 - Custom `MessagePackBinarySerializer`
 - Custom `ChronicleWireBinarySerializer`
 
+![Binary serializer round-trip latency chart](../../docs/images/readme-charts/binary-serializer-roundtrip-chart-01.png)
+
 ## Small Payload
 
 Payload shape:

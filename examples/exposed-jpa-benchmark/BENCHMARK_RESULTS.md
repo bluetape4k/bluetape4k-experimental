@@ -62,6 +62,8 @@
 | DELETE (삭제) | 13 | 21 | +8 | **Exposed ▲** |
 | GET List (목록) | 11 | 12 | +1 | **Exposed** |
 
+![Exposed vs JPA p99 latency chart](../../docs/images/readme-charts/exposed-jpa-p99-latency-chart-01.png)
+
 ### 분석
 
 - **전반적 성능**: 두 ORM 모두 p99 기준 25ms 이하로 실용적 수준에서 동등
