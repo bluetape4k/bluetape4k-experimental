@@ -23,3 +23,5 @@ Measured on 2026-03-14.
 | `putIfAbsentNewKey`        | `ttlEnabled=true`  | `513.265 us/op` |
 | `replaceWithExpectedValue` | `ttlEnabled=false` | `477.654 us/op` |
 | `replaceWithExpectedValue` | `ttlEnabled=true`  | `465.992 us/op` |
+
+![Near suspend TTL latency chart](../../../docs/images/readme-charts/near-suspend-ttl-latency-chart-01.png)

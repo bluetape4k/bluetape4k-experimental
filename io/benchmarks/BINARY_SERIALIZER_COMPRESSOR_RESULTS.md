@@ -26,6 +26,8 @@ Commands used:
 
 Use `Fory` without compression as the default.
 
+![Serializer compressor round-trip latency chart](../../docs/images/readme-charts/binary-compressor-roundtrip-chart-01.png)
+
 - Fastest round-trip on all payload sizes
 - Lowest allocation burden on all payload sizes
 - Compression wrappers reduce size, but none of them beat plain `Fory` on overall latency
