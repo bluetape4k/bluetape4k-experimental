@@ -6,7 +6,7 @@
 
 ## 모듈 위치
 
-![Module diagram](../docs/images/readme-diagrams/shared-architecture-01.png)
+![shared Architecture diagram](../docs/images/readme-diagrams/shared-architecture-01.png)
 
 ## 의존성
 

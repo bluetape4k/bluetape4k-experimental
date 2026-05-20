@@ -80,7 +80,7 @@ build/reports/gatling/comparisonsimulation-<timestamp>/index.html
 
 ## 아키텍처
 
-![Architecture diagram](../../docs/images/readme-diagrams/examples-exposed-jpa-benchmark-architecture-01.png)
+![exposed jpa benchmark Architecture diagram](../../docs/images/readme-diagrams/examples-exposed-jpa-benchmark-architecture-01.png)
 
 ### ExposedAutoConfiguration 제외 이유
 

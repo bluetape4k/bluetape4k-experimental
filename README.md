@@ -34,7 +34,7 @@ build behavior, and migration paths before promotion.
 
 ## Architecture
 
-![Architecture diagram](docs/assets/readme-diagrams/bluetape4k-experimental-architecture-01.png)
+![experimental Architecture diagram](docs/assets/readme-diagrams/bluetape4k-experimental-architecture-01.png)
 
 ## Module Groups
 
