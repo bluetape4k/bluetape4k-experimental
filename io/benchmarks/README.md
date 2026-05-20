@@ -4,7 +4,7 @@
 
 ## 벤치마크 실행 파이프라인
 
-![Execution diagram](../../docs/images/readme-diagrams/io-benchmarks-architecture-01.png)
+![benchmarks Architecture diagram](../../docs/images/readme-diagrams/io-benchmarks-architecture-01.png)
 
 ## 기본 실행
 
