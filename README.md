@@ -32,6 +32,16 @@ build behavior, and migration paths before promotion.
 - **Promotion staging** — a safe place to prove behavior before moving code into
   `bluetape4k-projects` or standalone bluetape4k repositories.
 
+<!-- README_VISUAL_OVERVIEW:START -->
+## Overview Diagram
+
+![Bluetape4k Experimental overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+
+## Module Composition Chart
+
+![Bluetape4k Experimental module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+<!-- README_VISUAL_OVERVIEW:END -->
+
 ## Architecture
 
 ![experimental Architecture diagram](docs/assets/readme-diagrams/bluetape4k-experimental-architecture-01.png)

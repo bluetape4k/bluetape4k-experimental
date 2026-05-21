@@ -29,6 +29,16 @@ artifact로 배포하지 않으며, 계약·빌드 동작·마이그레이션 �
 
 ![experimental Architecture diagram](docs/assets/readme-diagrams/bluetape4k-experimental-architecture-01.png)
 
+<!-- README_VISUAL_OVERVIEW:START -->
+## Overview Diagram
+
+![Bluetape4k Experimental overview diagram](docs/assets/readme-diagrams/root-readme-overview-01.png)
+
+## Module Composition Chart
+
+![Bluetape4k Experimental module composition chart](docs/assets/readme-charts/root-readme-module-chart-01.png)
+<!-- README_VISUAL_OVERVIEW:END -->
+
 ## 모듈 그룹
 
 | 디렉토리 | 목적 |
