@@ -26,6 +26,16 @@ plugins {
 }
 
 val rootLibs = libs
+val rootBt4k = bt4k
+
+val bt4kCatalog = extensions.getByType<org.gradle.api.artifacts.VersionCatalogsExtension>().named("bt4k")
+fun bt4kVersion(alias: String): String {
+    val version = bt4kCatalog.findVersion(alias).get()
+    return version.requiredVersion
+        .ifBlank { version.preferredVersion }
+        .ifBlank { version.strictVersion }
+}
+
 
 allprojects {
     repositories {
@@ -190,6 +200,21 @@ subprojects {
             mavenBom(rootLibs.kotlin.bom.get().toString())
         }
         dependencies {
+            dependency("commons-codec:commons-codec:${bt4kVersion("commons-codec")}")
+            dependency("org.apache.commons:commons-csv:${bt4kVersion("commons-csv")}")
+            dependency("org.apache.commons:commons-exec:${bt4kVersion("commons-exec")}")
+            dependency("commons-io:commons-io:${bt4kVersion("commons-io")}")
+            dependency("commons-logging:commons-logging:${bt4kVersion("commons-logging")}")
+            dependency("org.apache.commons:commons-pool2:${bt4kVersion("commons-pool2")}")
+            dependency("org.apache.fory:fory-kotlin:${bt4kVersion("fory-kotlin")}")
+            dependency("com.google.guava:guava:${bt4kVersion("guava")}")
+            dependency("jakarta.xml.bind:jakarta.xml.bind-api:${bt4kVersion("jakarta-xml-bind")}")
+            dependency("org.ow2.asm:asm:${bt4kVersion("ow2-asm")}")
+            dependency("org.postgresql:postgresql:${bt4kVersion("postgresql")}")
+            dependency("io.r2dbc:r2dbc-h2:${bt4kVersion("r2dbc-h2")}")
+            dependency("org.redisson:redisson:${bt4kVersion("redisson")}")
+            dependency("org.slf4j:slf4j-api:${bt4kVersion("slf4j")}")
+            dependency("com.github.luben:zstd-jni:${bt4kVersion("zstd-jni")}")
             // Versions pinned explicitly (not managed by any imported BOM)
             dependency(rootLibs.jetbrains.annotations.get().toString())
 
@@ -197,15 +222,15 @@ subprojects {
             dependency(rootLibs.commons.beanutils.get().toString())
             dependency(rootLibs.commons.collections4.get().toString())
             dependency(rootLibs.commons.compress.get().toString())
-            dependency(rootLibs.commons.codec.get().toString())
-            dependency(rootLibs.commons.csv.get().toString())
+            dependency("commons-codec:commons-codec:${bt4kVersion("commons-codec")}")
+            dependency("org.apache.commons:commons-csv:${bt4kVersion("commons-csv")}")
             dependency(rootLibs.commons.lang3.get().toString())
-            dependency(rootLibs.commons.logging.get().toString())
+            dependency("commons-logging:commons-logging:${bt4kVersion("commons-logging")}")
             dependency(rootLibs.commons.math3.get().toString())
-            dependency(rootLibs.commons.pool2.get().toString())
+            dependency("org.apache.commons:commons-pool2:${bt4kVersion("commons-pool2")}")
             dependency(rootLibs.commons.text.get().toString())
-            dependency(rootLibs.commons.exec.get().toString())
-            dependency(rootLibs.commons.io.get().toString())
+            dependency("org.apache.commons:commons-exec:${bt4kVersion("commons-exec")}")
+            dependency("commons-io:commons-io:${bt4kVersion("commons-io")}")
 
             // Logging
             dependency(rootLibs.logback.classic.get().toString())
@@ -225,24 +250,24 @@ subprojects {
             dependency(rootLibs.jakarta.transaction.api.get().toString())
             dependency(rootLibs.jakarta.validation.api.get().toString())
             dependency(rootLibs.jakarta.ws.rs.api.get().toString())
-            dependency(rootLibs.jakarta.xml.bind.get().toString())
+            dependency("jakarta.xml.bind:jakarta.xml.bind-api:${bt4kVersion("jakarta-xml-bind")}")
 
             // Compressor
             dependency(rootLibs.snappy.java.get().toString())
             dependency(rootLibs.lz4.java.get().toString())
-            dependency(rootLibs.zstd.jni.get().toString())
+            dependency("com.github.luben:zstd-jni:${bt4kVersion("zstd-jni")}")
 
             dependency(rootLibs.findbugs.get().toString())
-            dependency(rootLibs.guava.get().toString())
+            dependency("com.google.guava:guava:${bt4kVersion("guava")}")
 
             dependency(rootLibs.kryo5.get().toString())
-            dependency(rootLibs.fory.kotlin.get().toString())
+            dependency("org.apache.fory:fory-kotlin:${bt4kVersion("fory-kotlin")}")
 
             dependency(rootLibs.caffeine.lib.get().toString())
             dependency(rootLibs.caffeine.jcache.get().toString())
 
             dependency(rootLibs.objenesis.get().toString())
-            dependency(rootLibs.ow2.asm.get().toString())
+            dependency("org.ow2.asm:asm:${bt4kVersion("ow2-asm")}")
 
             dependency(rootLibs.reflectasm.get().toString())
 
@@ -257,7 +282,7 @@ subprojects {
 
             // Redis
             dependency(rootLibs.lettuce.core.get().toString())
-            dependency(rootLibs.redisson.get().toString())
+            dependency("org.redisson:redisson:${bt4kVersion("redisson")}")
         }
     }
 

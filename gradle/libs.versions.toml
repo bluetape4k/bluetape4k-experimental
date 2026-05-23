@@ -28,7 +28,6 @@ jackson3 = "3.1.3"  # https://mvnrepository.com/artifact/tools.jackson/jackson-b
 timefold-solver = "2.1.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
 
 lettuce = "6.8.2.RELEASE"  # https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-redisson = "4.4.0"  # https://mvnrepository.com/artifact/org.redisson/redisson
 
 exposed = "1.3.0"  # https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-bom
 
@@ -38,8 +37,6 @@ slf4j = "2.0.18"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 
 hikaricp = "7.0.2"  # https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-postgresql = "42.7.11"  # https://mvnrepository.com/artifact/org.postgresql/postgresql
-r2dbc-h2 = "1.1.0.RELEASE"  # https://mvnrepository.com/artifact/io.r2dbc/r2dbc-h2
 h2-v2 = "2.4.240"  # https://mvnrepository.com/artifact/com.h2database/h2
 
 caffeine = "3.2.4"  # https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
@@ -53,11 +50,9 @@ datafaker = "2.5.4"  # https://mvnrepository.com/artifact/net.datafaker/datafake
 random-beans = "3.9.0"  # https://mvnrepository.com/artifact/io.github.benas/random-beans
 
 kryo5 = "5.6.2"  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
-fory = "0.17.0"  # https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
 
 lz4 = "1.11.0"  # https://mvnrepository.com/artifact/at.yawk.lz4/lz4-java
 snappy = "1.1.10.8"  # https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
-zstd = "1.5.7-8"  # https://mvnrepository.com/artifact/com.github.luben/zstd-jni
 
 assertj = "3.27.7"  # https://mvnrepository.com/artifact/org.assertj/assertj-core
 
@@ -127,7 +122,7 @@ kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-
 kotlinx-benchmark-runtimejvm = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime-jvm", version.ref = "kotlinx-benchmark" }
 
 # Logging
-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-api = { module = "org.slf4j:slf4j-api" }  # version from bt4k catalog
 jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
 log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
@@ -149,20 +144,20 @@ jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version 
 jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version = "2.0.1" }  # https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version = "3.1.1" }  # https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
 jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version = "4.0.0" }  # https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
-jakarta-xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "4.0.5" }  # https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
+jakarta-xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api" }  # version from bt4k catalog
 
 # Apache Commons
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version = "1.11.0" }  # https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
 commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-compress
-commons-codec = { module = "commons-codec:commons-codec", version = "1.22.0" }  # https://mvnrepository.com/artifact/commons-codec/commons-codec
+commons-codec = { module = "commons-codec:commons-codec" }  # version from bt4k catalog
 commons-collections4 = { module = "org.apache.commons:commons-collections4", version = "4.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-csv
-commons-exec = { module = "org.apache.commons:commons-exec", version = "1.6.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-exec
-commons-io = { module = "commons-io:commons-io", version = "2.22.0" }  # https://mvnrepository.com/artifact/commons-io/commons-io
+commons-csv = { module = "org.apache.commons:commons-csv" }  # version from bt4k catalog
+commons-exec = { module = "org.apache.commons:commons-exec" }  # version from bt4k catalog
+commons-io = { module = "commons-io:commons-io" }  # version from bt4k catalog
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.20.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-logging = { module = "commons-logging:commons-logging", version = "1.3.6" }  # https://mvnrepository.com/artifact/commons-logging/commons-logging
+commons-logging = { module = "commons-logging:commons-logging" }  # version from bt4k catalog
 commons-math3 = { module = "org.apache.commons:commons-math3", version = "3.6.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-math3
-commons-pool2 = { module = "org.apache.commons:commons-pool2", version = "2.13.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-pool2
+commons-pool2 = { module = "org.apache.commons:commons-pool2" }  # version from bt4k catalog
 commons-text = { module = "org.apache.commons:commons-text", version = "1.15.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-text
 
 # Spring Boot
@@ -190,10 +185,10 @@ ignite3-jdbc = { module = "org.apache.ignite:ignite-jdbc", version.ref = "ignite
 
 # JDBC / Connection Pool
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
-postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+postgresql-driver = { module = "org.postgresql:postgresql" }  # version from bt4k catalog
 
 # R2DBC
-r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2", version.ref = "r2dbc-h2" }
+r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2" }  # version from bt4k catalog
 
 # Feign
 feign-bom = { module = "io.github.openfeign:feign-bom", version.ref = "feign" }
@@ -227,7 +222,7 @@ timefold-solver-bom = { module = "ai.timefold.solver:timefold-solver-bom", versi
 
 # Redis
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
-redisson = { module = "org.redisson:redisson", version.ref = "redisson" }
+redisson = { module = "org.redisson:redisson" }  # version from bt4k catalog
 
 # Caffeine
 caffeine-lib = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
@@ -235,17 +230,17 @@ caffeine-jcache = { module = "com.github.ben-manes.caffeine:jcache", version.ref
 
 # Serialization libs
 kryo5 = { module = "com.esotericsoftware:kryo", version.ref = "kryo5" }
-fory-kotlin = { module = "org.apache.fory:fory-kotlin", version.ref = "fory" }
+fory-kotlin = { module = "org.apache.fory:fory-kotlin" }  # version from bt4k catalog
 chronicle-wire = { module = "net.openhft:chronicle-wire", version.ref = "chronicle-wire" }
 lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4" }
 snappy-java = { module = "org.xerial.snappy:snappy-java", version.ref = "snappy" }
-zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
+zstd-jni = { module = "com.github.luben:zstd-jni" }  # version from bt4k catalog
 
 # Misc
 findbugs = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }  # https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }  # https://mvnrepository.com/artifact/com.google.guava/guava
+guava = { module = "com.google.guava:guava" }  # version from bt4k catalog
 objenesis = { module = "org.objenesis:objenesis", version = "3.5" }  # https://mvnrepository.com/artifact/org.objenesis/objenesis
-ow2-asm = { module = "org.ow2.asm:asm", version = "9.10" }  # https://mvnrepository.com/artifact/org.ow2.asm/asm
+ow2-asm = { module = "org.ow2.asm:asm" }  # version from bt4k catalog
 reflectasm = { module = "com.esotericsoftware:reflectasm", version = "1.11.9" }  # https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
 flyway-core = { module = "org.flywaydb:flyway-core", version = "12.6.0" }  # https://mvnrepository.com/artifact/org.flywaydb/flyway-core
 h2-v2 = { module = "com.h2database:h2", version.ref = "h2-v2" }
