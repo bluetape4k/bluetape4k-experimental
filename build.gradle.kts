@@ -26,8 +26,6 @@ plugins {
 }
 
 val rootLibs = libs
-val rootBt4k = bt4k
-
 val bt4kCatalog = extensions.getByType<org.gradle.api.artifacts.VersionCatalogsExtension>().named("bt4k")
 fun bt4kVersion(alias: String): String {
     val version = bt4kCatalog.findVersion(alias).get()
@@ -200,21 +198,9 @@ subprojects {
             mavenBom(rootLibs.kotlin.bom.get().toString())
         }
         dependencies {
-            dependency("commons-codec:commons-codec:${bt4kVersion("commons-codec")}")
-            dependency("org.apache.commons:commons-csv:${bt4kVersion("commons-csv")}")
-            dependency("org.apache.commons:commons-exec:${bt4kVersion("commons-exec")}")
-            dependency("commons-io:commons-io:${bt4kVersion("commons-io")}")
-            dependency("commons-logging:commons-logging:${bt4kVersion("commons-logging")}")
-            dependency("org.apache.commons:commons-pool2:${bt4kVersion("commons-pool2")}")
-            dependency("org.apache.fory:fory-kotlin:${bt4kVersion("fory-kotlin")}")
-            dependency("com.google.guava:guava:${bt4kVersion("guava")}")
-            dependency("jakarta.xml.bind:jakarta.xml.bind-api:${bt4kVersion("jakarta-xml-bind")}")
-            dependency("org.ow2.asm:asm:${bt4kVersion("ow2-asm")}")
             dependency("org.postgresql:postgresql:${bt4kVersion("postgresql")}")
             dependency("io.r2dbc:r2dbc-h2:${bt4kVersion("r2dbc-h2")}")
-            dependency("org.redisson:redisson:${bt4kVersion("redisson")}")
             dependency("org.slf4j:slf4j-api:${bt4kVersion("slf4j")}")
-            dependency("com.github.luben:zstd-jni:${bt4kVersion("zstd-jni")}")
             // Versions pinned explicitly (not managed by any imported BOM)
             dependency(rootLibs.jetbrains.annotations.get().toString())
 
