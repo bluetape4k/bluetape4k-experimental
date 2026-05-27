@@ -78,3 +78,13 @@ Root README visual assets live under `docs/assets/` and should be shared by
   established in this repo.
 - For R2DBC `selectAll()`, collect the Flow explicitly; do not accidentally call
   stdlib `Iterable.toList()`.
+
+## Cross-Repo Lesson Guards
+
+- Before issue, PR, workflow, or module-registration work, query GNO for this
+  repo in both `bluetape4k-github` and `bluetape4k-docs`.
+- When adding, moving, renaming, or removing a module, update README locale
+  sets, repo-local module lists, CI/Nightly or examples coverage, coverage
+  artifacts, and generated catalog/check scripts where applicable.
+- Keep Java 25, Spring Boot 4, Testcontainers, and native/FFM checks scoped to
+  affected modules and run container-backed verification sequentially.
