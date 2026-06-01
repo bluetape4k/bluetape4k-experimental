@@ -20,6 +20,8 @@ library line.
 
 ### Changed
 
+- Aligned the shared `bluetape4k-dependencies` catalog line with the published
+  `1.2.0` BOM.
 - Root README language policy aligned: English in `README.md`, Korean in `README.ko.md`.
 - Dependency governance, compatibility guard, Kover policy, and Dependabot maintenance landed through PR #18 through PR #27.
 - Migrated `buildSrc` dependency declarations to `gradle/libs.versions.toml` and upgraded the Gradle wrapper to 9.5.0 ([PR #10](https://github.com/bluetape4k/bluetape4k-experimental/pull/10), [PR #11](https://github.com/bluetape4k/bluetape4k-experimental/pull/11)).
