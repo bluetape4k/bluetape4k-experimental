@@ -201,7 +201,7 @@ netty-bom = { module = "io.netty:netty-bom", version.ref = "netty" }
 
 # Jackson
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
-jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.21" }  # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }  # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
 jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 jackson-dataformat-msgpack = { module = "org.msgpack:jackson-dataformat-msgpack", version.ref = "msgpack" }
