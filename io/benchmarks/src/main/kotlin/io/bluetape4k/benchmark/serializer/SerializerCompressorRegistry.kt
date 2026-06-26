@@ -24,7 +24,6 @@ object SerializerCompressorRegistry {
     )
 
     private val baseSerializers = listOf(
-        BaseSerializer("Jdk", BinarySerializers.Jdk),
         BaseSerializer("Kryo", BinarySerializers.Kryo),
         BaseSerializer("Fory", BinarySerializers.Fory),
     )

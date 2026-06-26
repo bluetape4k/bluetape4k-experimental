@@ -1,6 +1,5 @@
 package io.bluetape4k.benchmark.exposed.r2dbc
 
-import io.bluetape4k.exposed.core.HasIdentifier
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.spring.data.exposed.r2dbc.repository.support.SimpleExposedR2dbcRepository
 import kotlinx.benchmark.Benchmark
@@ -22,7 +21,8 @@ import org.jetbrains.exposed.v1.r2dbc.insertAndGetId
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import java.util.*
+import java.io.Serializable
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -39,11 +39,15 @@ object BenchmarkUsers: LongIdTable("benchmark_users") {
 }
 
 data class BenchmarkUser(
-    override val id: Long? = null,
+    val id: Long? = null,
     val name: String,
     val email: String,
     val age: Int,
-): HasIdentifier<Long>
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 private fun benchmarkUserFrom(row: ResultRow): BenchmarkUser =
     BenchmarkUser(

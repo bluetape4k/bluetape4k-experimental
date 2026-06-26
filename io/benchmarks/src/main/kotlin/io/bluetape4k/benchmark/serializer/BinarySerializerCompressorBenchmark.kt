@@ -17,13 +17,6 @@ import java.util.concurrent.TimeUnit
 open class BinarySerializerCompressorBenchmark {
 
     @Param(
-        "Jdk",
-        "Jdk+BZip2",
-        "Jdk+Deflate",
-        "Jdk+GZip",
-        "Jdk+LZ4",
-        "Jdk+Snappy",
-        "Jdk+Zstd",
         "Kryo",
         "Kryo+BZip2",
         "Kryo+Deflate",
