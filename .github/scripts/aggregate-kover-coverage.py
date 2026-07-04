@@ -68,15 +68,39 @@ def module_from_path(root_dir: str, path: str) -> str:
     return os.path.basename(os.path.dirname(path))
 
 
+def artifact_dir_from_path(root_dir: str, path: str) -> str:
+    rel_path = os.path.relpath(path, root_dir)
+    return rel_path.split(os.sep, maxsplit=1)[0]
+
+
+def is_artifact_root_report(root_dir: str, path: str) -> bool:
+    parts = os.path.relpath(path, root_dir).split(os.sep)
+    return len(parts) >= 5 and parts[1:4] == ["build", "reports", "kover"]
+
+
 def collect(root_dir: str) -> list[ModuleCoverage]:
-    reports_by_module: dict[str, list[str]] = {}
+    all_reports: list[str] = []
     for pattern in (
         os.path.join(root_dir, "**", "report.xml"),
         os.path.join(root_dir, "**", "reportJvm.xml"),
     ):
         for xml_path in sorted(glob.glob(pattern, recursive=True)):
-            module = module_from_path(root_dir, xml_path)
-            reports_by_module.setdefault(module, []).append(xml_path)
+            all_reports.append(xml_path)
+
+    nested_artifacts = {
+        artifact_dir_from_path(root_dir, xml_path)
+        for xml_path in all_reports
+        if not is_artifact_root_report(root_dir, xml_path)
+    }
+
+    reports_by_module: dict[str, list[str]] = {}
+    for xml_path in all_reports:
+        artifact_dir = artifact_dir_from_path(root_dir, xml_path)
+        if artifact_dir in nested_artifacts and is_artifact_root_report(root_dir, xml_path):
+            continue
+
+        module = module_from_path(root_dir, xml_path)
+        reports_by_module.setdefault(module, []).append(xml_path)
 
     rows: list[ModuleCoverage] = []
     for module in sorted(reports_by_module):
