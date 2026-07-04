@@ -93,12 +93,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Download all coverage artifacts
+      - name: Download coverage artifact
         uses: actions/download-artifact@v8
         with:
-          pattern: coverage-*
-          path: coverage-artifacts
-          merge-multiple: false
+          name: coverage-all-modules
+          path: coverage-artifacts/coverage-all-modules
         continue-on-error: true
 
       - name: Validate expected coverage artifacts
