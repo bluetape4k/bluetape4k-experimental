@@ -13,6 +13,7 @@ plugins {
     alias(libs.plugins.kotlin.jpa) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlinx.atomicfu)
+    alias(libs.plugins.kover)
 
     alias(libs.plugins.detekt)
 
@@ -60,6 +61,7 @@ subprojects {
 
         // Atomicfu
         plugin("org.jetbrains.kotlinx.atomicfu")
+        plugin("org.jetbrains.kotlinx.kover")
 
         plugin("io.spring.dependency-management")
 
@@ -313,4 +315,13 @@ subprojects {
         testImplementation(rootLibs.datafaker)
         testImplementation(rootLibs.random.beans)
     }
+}
+
+
+dependencies {
+    subprojects
+        .filter { it.plugins.hasPlugin("org.jetbrains.kotlin.jvm") }
+        .forEach { sub ->
+            kover(dependencies.project(mapOf("path" to sub.path)))
+        }
 }
