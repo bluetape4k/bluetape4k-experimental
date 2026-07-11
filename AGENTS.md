@@ -17,7 +17,7 @@ and Kotlin 2.3+ ideas before they are stabilized in the main bluetape4k line.
 - Do not finish implementation-only work without tests or equivalent validation
   evidence.
 - For Kotlin implementation or review, load the workspace-selected
-  `bluetape4k-workflow` lane and relevant Kotlin/domain skills before editing.
+  `bluetape-workflow` lane and relevant Kotlin/domain skills before editing.
 
 ## Build And Layout
 
