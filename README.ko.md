@@ -69,6 +69,23 @@ artifact로 배포하지 않으며, 계약·빌드 동작·마이그레이션 �
 ./gradlew :<module>:check
 ```
 
+## 개발자 로컬 Testcontainers 재사용
+
+`io/benchmarks`의 Redis benchmark와 PostgreSQL 기반
+`examples/exposed-jpa-benchmark` 애플리케이션은 기본적으로 컨테이너를 재사용하지
+않습니다. 개발자가 로컬 애플리케이션 또는 benchmark 실행에서만 재사용하려면
+`~/.testcontainers.properties`에서 reusable container를 활성화하고 다음 system
+property 하나를 전달합니다.
+
+```bash
+JAVA_TOOL_OPTIONS='-Dbluetape4k.testcontainers.reuse=true' \
+  ./gradlew :benchmarks:benchmarkCustom
+```
+
+`CI` 또는 `GITHUB_ACTIONS`가 존재하면 이 opt-in은 무시됩니다. 일반 module test는
+계속 test JVM마다 재사용하지 않는 `Launcher` 컨테이너 하나를 사용합니다. 이 정책은
+root test 동시성이나 workflow worker 제한을 변경하지 않습니다.
+
 ## 주요 실험
 
 - `io/benchmarks`: serializer/compressor 성능과 크기 비교
