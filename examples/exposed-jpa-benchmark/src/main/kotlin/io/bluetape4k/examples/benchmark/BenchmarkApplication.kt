@@ -24,9 +24,12 @@ fun main(args: Array<String>) {
 
 internal object BenchmarkPostgreSQL {
     val server: PostgreSQLServer by lazy {
-        PostgreSQLServer(reuse = BenchmarkContainerReuse.isEnabled()).apply {
+        val reuse = BenchmarkContainerReuse.isEnabled()
+        PostgreSQLServer(reuse = reuse).apply {
             start()
-            ShutdownQueue.register(this)
+            if (!reuse) {
+                ShutdownQueue.register(this)
+            }
         }
     }
 }
