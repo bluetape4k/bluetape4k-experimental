@@ -37,6 +37,10 @@ allOpen {
     annotation("kotlinx.benchmark.State")
 }
 
+tasks.withType<Test>().configureEach {
+    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+}
+
 benchmark {
     targets {
         register("main")
