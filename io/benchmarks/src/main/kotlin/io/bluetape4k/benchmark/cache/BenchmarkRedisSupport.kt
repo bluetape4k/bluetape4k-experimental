@@ -18,9 +18,12 @@ import io.lettuce.core.protocol.ProtocolVersion
 object BenchmarkRedisSupport {
 
     val redis: RedisServer by lazy {
-        RedisServer(reuse = BenchmarkContainerReuse.isEnabled()).apply {
+        val reuse = BenchmarkContainerReuse.isEnabled()
+        RedisServer(reuse = reuse).apply {
             start()
-            ShutdownQueue.register(this)
+            if (!reuse) {
+                ShutdownQueue.register(this)
+            }
         }
     }
 
