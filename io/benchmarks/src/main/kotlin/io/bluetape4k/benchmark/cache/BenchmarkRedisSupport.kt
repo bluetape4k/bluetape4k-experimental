@@ -17,7 +17,12 @@ import io.lettuce.core.protocol.ProtocolVersion
  */
 object BenchmarkRedisSupport {
 
-    val redis: RedisServer by lazy { RedisServer.Launcher.redis }
+    val redis: RedisServer by lazy {
+        RedisServer(reuse = BenchmarkContainerReuse.isEnabled()).apply {
+            start()
+            ShutdownQueue.register(this)
+        }
+    }
 
     private val clientRESP3Protocol: ClientOptions = ClientOptions.builder()
         .protocolVersion(ProtocolVersion.RESP3)
@@ -33,12 +38,24 @@ object BenchmarkRedisSupport {
         }
 
     fun newDirectConnection(): StatefulRedisConnection<String, String> =
-        RedisServer.Launcher.LettuceLib.getRedisClient().connect(StringCodec.UTF8)
+        newResp3Client().connect(StringCodec.UTF8)
             .apply {
                 ShutdownQueue.register(this)
             }
 
     fun flushDb(commands: RedisCommands<String, String>) {
         commands.flushdb()
+    }
+}
+
+internal object BenchmarkContainerReuse {
+    const val PROPERTY_NAME: String = "bluetape4k.testcontainers.reuse"
+
+    fun isEnabled(
+        propertyValue: String? = System.getProperty(PROPERTY_NAME),
+        environment: Map<String, String> = System.getenv(),
+    ): Boolean {
+        val isCi = environment.containsKey("CI") || environment.containsKey("GITHUB_ACTIONS")
+        return !isCi && propertyValue?.toBooleanStrictOrNull() == true
     }
 }

@@ -76,6 +76,24 @@ Do not run a full root build by default. Validate only the affected module.
 ./gradlew :<module>:check
 ```
 
+## Developer-local Testcontainers reuse
+
+The Redis benchmark in `io/benchmarks` and the PostgreSQL-backed
+`examples/exposed-jpa-benchmark` application use non-reusable containers by
+default. A developer may opt into reuse for these local application or
+benchmark runs by enabling reusable containers in
+`~/.testcontainers.properties` and passing one system property:
+
+```bash
+JAVA_TOOL_OPTIONS='-Dbluetape4k.testcontainers.reuse=true' \
+  ./gradlew :benchmarks:benchmarkCustom
+```
+
+The opt-in is ignored whenever `CI` or `GITHUB_ACTIONS` is present. Standard
+module tests continue to use one non-reusable `Launcher` container per test
+JVM; this policy does not change root test concurrency or workflow worker
+limits.
+
 ## Notable Experiments
 
 - `io/benchmarks`: serializer and compressor performance / size evidence.
