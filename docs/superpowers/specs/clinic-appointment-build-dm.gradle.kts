@@ -17,19 +17,19 @@ dependencyManagement {
 
     imports {
         // 필수 BOM — 항상 유지
-        mavenBom(rootLibs.bluetape4k.bom.get().toString())
-        mavenBom(rootLibs.spring.boot4.dependencies.get().toString())
+        mavenBom(bt4kLibrary("bluetape4k-bom").get().toString())
+        mavenBom("org.springframework.boot:spring-boot-dependencies:${bt4k.versions.spring.boot4.get()}")
 
         // 테스트 인프라 BOM
-        mavenBom(rootLibs.testcontainers.bom.get().toString())
+        mavenBom("org.testcontainers:testcontainers-bom:${bt4k.versions.testcontainers.get()}")
         mavenBom(rootLibs.junit.bom.get().toString())
 
         // Kotlin/Coroutines BOM
-        mavenBom(rootLibs.kotlinx.coroutines.bom.get().toString())
-        mavenBom(rootLibs.kotlin.bom.get().toString())
+        mavenBom("org.jetbrains.kotlinx:kotlinx-coroutines-bom:${bt4k.versions.kotlinx.coroutines.get()}")
+        mavenBom("org.jetbrains.kotlin:kotlin-bom:${bt4k.versions.kotlin.get()}")
 
         // Timefold Solver BOM (appointment-solver 모듈에서 사용)
-        // mavenBom(rootLibs.timefold.solver.bom.get().toString())  // libs.versions.toml에 추가 필요
+        // mavenBom(bt4kLibrary("timefold-solver-bom").get().toString())  // libs.versions.toml에 추가 필요
 
         // ── 삭제된 BOM ──────────────────────────────────────────────
         // feign_bom          → scheduling 모듈 미사용
@@ -51,11 +51,11 @@ dependencyManagement {
         dependency(rootLibs.assertj.core.get().toString())
         dependency(rootLibs.mockk.get().toString())
         dependency(rootLibs.datafaker.get().toString())
-        dependency(rootLibs.random.beans.get().toString())
+        dependency("io.github.benas:random-beans:${bt4k.versions.random.beans.get()}")
 
         // Redis — appointment-notification에서 lettuce_core 직접 사용
         // (Spring Boot BOM은 lettuce-core를 관리하지만 version override 필요시 유지)
-        dependency(rootLibs.lettuce.core.get().toString())
+        dependency("io.lettuce:lettuce-core:${bt4k.versions.lettuce.get()}")
 
         // ── 삭제된 dependency() 항목 ────────────────────────────────
         // kotlinx-coroutines-* → BOM으로 import했으므로 dependency 핀 불필요
@@ -108,7 +108,7 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
-        compileOnly(platform(rootLibs.bluetape4k.bom))
+        compileOnly(platform(bt4kLibrary("bluetape4k-bom")))
         compileOnly(platform(rootLibs.spring.boot4.dependencies))
         compileOnly(platform(rootLibs.kotlinx.coroutines.bom))
 
@@ -120,15 +120,15 @@ subprojects {
         implementation(rootLibs.kotlinx.coroutines.core)
         // kotlinx-atomicfu 제거 — scheduling 모듈 미사용
 
-        implementation(rootLibs.slf4j.api)
-        implementation(rootLibs.bluetape4k.logging)
+        implementation(bt4kLibrary("slf4j-api"))
+        implementation(bt4kLibrary("bluetape4k-logging"))
         implementation(rootLibs.logback.classic)
         testImplementation(rootLibs.jcl.over.slf4j)
         testImplementation(rootLibs.jul.to.slf4j)
         testImplementation(rootLibs.log4j.over.slf4j)
 
         // JUnit 5
-        testImplementation(rootLibs.bluetape4k.junit5)
+        testImplementation(bt4kLibrary("bluetape4k-junit5"))
         testImplementation(rootLibs.junit.jupiter.all)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 

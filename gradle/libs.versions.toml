@@ -3,40 +3,24 @@
 
 [versions]
 bluetape4k = "1.11.1-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-dependencies = "1.4.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
 
-kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
-kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 kotlinx-benchmark = "0.4.17"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
-kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
 
-spring-boot4 = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 
 feign = "13.12"  # https://mvnrepository.com/artifact/io.github.openfeign/feign-bom
 micrometer = "1.16.5"  # https://mvnrepository.com/artifact/io.micrometer/micrometer-bom
 micrometer-tracing = "1.6.5"  # https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing-bom
-opentelemetry = "1.63.0"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
-log4j = "2.26.0"  # https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-bom
-testcontainers = "2.0.5"  # https://mvnrepository.com/artifact/org.testcontainers/testcontainers-bom
 junit-jupiter = "6.0.3"  # https://mvnrepository.com/artifact/org.junit/junit-bom
 junit-platform = "1.14.4"  # https://mvnrepository.com/artifact/org.junit.platform/junit-platform-runner
 okhttp3 = "5.3.2"  # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom
-netty = "4.2.15.Final"  # https://mvnrepository.com/artifact/io.netty/netty-bom
-jackson = "2.22.0"  # https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-jackson3 = "3.2.0"  # https://mvnrepository.com/artifact/tools.jackson/jackson-bom
-timefold-solver = "2.2.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
+jackson2-compat = "2.22.0"  # Compatibility pin; central Jackson 2 line is newer.
 
-lettuce = "7.6.0.RELEASE"  # https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 
-exposed = "1.3.0"  # https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-bom
 
-ignite3 = "3.1.0"  # https://mvnrepository.com/artifact/org.apache.ignite/ignite-client
 
-slf4j = "2.0.18"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 
-hikaricp = "7.0.2"  # https://mvnrepository.com/artifact/com.zaxxer/HikariCP
 h2-v2 = "2.4.240"  # https://mvnrepository.com/artifact/com.h2database/h2
 
 caffeine = "3.2.4"  # https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
@@ -45,9 +29,7 @@ chronicle-wire = "2026.5"  # https://mvnrepository.com/artifact/net.openhft/chro
 msgpack = "0.9.12"  # https://mvnrepository.com/artifact/org.msgpack/jackson-dataformat-msgpack
 
 mockk = "1.14.9"  # https://mvnrepository.com/artifact/io.mockk/mockk
-awaitility = "4.3.0"  # https://mvnrepository.com/artifact/org.awaitility/awaitility-kotlin
 datafaker = "2.5.4"  # https://mvnrepository.com/artifact/net.datafaker/datafaker
-random-beans = "3.9.0"  # https://mvnrepository.com/artifact/io.github.benas/random-beans
 
 kryo5 = "5.6.2"  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
 
@@ -56,52 +38,25 @@ snappy = "1.1.10.8"  # https://mvnrepository.com/artifact/org.xerial.snappy/snap
 
 assertj = "3.27.7"  # https://mvnrepository.com/artifact/org.assertj/assertj-core
 
-gatling = "3.15.1"  # https://mvnrepository.com/artifact/io.gatling.highcharts/gatling-charts-highcharts
 
 # Plugin versions
 detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
-dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
-dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
-kover = "0.9.8"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kover-gradle-plugin
-shadow = "9.4.2"  # https://mvnrepository.com/artifact/com.gradleup.shadow/shadow-gradle-plugin
 
 [plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
-kotlin-noarg = { id = "org.jetbrains.kotlin.plugin.noarg", version.ref = "kotlin" }
-kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-dependency-management = { id = "io.spring.dependency-management", version.ref = "dependency-management" }
-spring-boot4 = { id = "org.springframework.boot", version.ref = "spring-boot4" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
-shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
-gatling = { id = "io.gatling.gradle", version.ref = "gatling" }
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 # bluetape4k
-bluetape4k-bom         = { module = "io.github.bluetape4k:bluetape4k-bom",         version.ref = "bluetape4k" }
-bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies" }
-bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
-bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
-bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
-bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
-bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
-bluetape4k-netty = { module = "io.github.bluetape4k:bluetape4k-netty" }
-bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" }
-bluetape4k-cache-lettuce = { module = "io.github.bluetape4k:bluetape4k-cache-lettuce" }
 
 # Kotlin
-kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
@@ -109,7 +64,7 @@ kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
 
 # Kotlinx Coroutines
 # Note: keys with ambiguous prefix/leaf are renamed to avoid accessor conflicts
-kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
 kotlinx-coroutines-corejvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive" }
@@ -119,21 +74,17 @@ kotlinx-coroutines-debug = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
 kotlinx-coroutines-testjvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm" }
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 kotlinx-benchmark-runtimejvm = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime-jvm", version.ref = "kotlinx-benchmark" }
 
 # Logging
-slf4j-api = { module = "org.slf4j:slf4j-api" }  # version from bt4k catalog
-jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
-jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
-log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j", version.ref = "slf4j" }
+jcl-over-slf4j = { module = "org.slf4j:jcl-over-slf4j" }
+jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j" }
+log4j-over-slf4j = { module = "org.slf4j:log4j-over-slf4j" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
-log4j-bom = { module = "org.apache.logging.log4j:log4j-bom", version.ref = "log4j" }
 
 # Jakarta
-jakarta-activation-api = { module = "jakarta.activation:jakarta.activation-api", version = "2.1.4" }  # https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api
 jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api", version = "3.0.0" }  # https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
 jakarta-el-api = { module = "jakarta.el:jakarta.el-api", version = "6.0.1" }  # https://mvnrepository.com/artifact/jakarta.el/jakarta.el-api
 jakarta-inject-api = { module = "jakarta.inject:jakarta.inject-api", version = "2.0.1.MR" }  # https://mvnrepository.com/artifact/jakarta.inject/jakarta.inject-api
@@ -146,51 +97,27 @@ jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version 
 jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version = "2.0.1" }  # https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version = "3.1.1" }  # https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
 jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version = "4.0.0" }  # https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
-jakarta-xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api" }  # version from bt4k catalog
 
 # Apache Commons
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version = "1.11.0" }  # https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
-commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-compress
-commons-codec = { module = "commons-codec:commons-codec" }  # version from bt4k catalog
 commons-collections4 = { module = "org.apache.commons:commons-collections4", version = "4.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-commons-csv = { module = "org.apache.commons:commons-csv" }  # version from bt4k catalog
-commons-exec = { module = "org.apache.commons:commons-exec" }  # version from bt4k catalog
-commons-io = { module = "commons-io:commons-io" }  # version from bt4k catalog
-commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.20.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-logging = { module = "commons-logging:commons-logging" }  # version from bt4k catalog
 commons-math3 = { module = "org.apache.commons:commons-math3", version = "3.6.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-math3
-commons-pool2 = { module = "org.apache.commons:commons-pool2" }  # version from bt4k catalog
 commons-text = { module = "org.apache.commons:commons-text", version = "1.15.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-text
 
 # Spring Boot
-spring-boot4-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot4" }
+spring-boot4-dependencies = { module = "org.springframework.boot:spring-boot-dependencies" }
 
 # Exposed
-exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" }
-exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
-exposed-spring-boot-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-boot-r2dbc" }
 
 # JetBrains Exposed
-jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
-jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
-jetbrains-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
-jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-jetbrains-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
-jetbrains-exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
-jetbrains-exposed-migration-r2dbc = { module = "org.jetbrains.exposed:exposed-migration-r2dbc", version.ref = "exposed" }
-jetbrains-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter", version.ref = "exposed" }
 
 # Apache Ignite 3
-ignite3-client = { module = "org.apache.ignite:ignite-client", version.ref = "ignite3" }
-ignite3-jdbc = { module = "org.apache.ignite:ignite-jdbc", version.ref = "ignite3" }
+ignite3-client = { module = "org.apache.ignite:ignite-client" }
+ignite3-jdbc = { module = "org.apache.ignite:ignite-jdbc" }
 
 # JDBC / Connection Pool
-hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
-postgresql-driver = { module = "org.postgresql:postgresql" }  # version from bt4k catalog
 
 # R2DBC
-r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2" }  # version from bt4k catalog
 
 # Feign
 feign-bom = { module = "io.github.openfeign:feign-bom", version.ref = "feign" }
@@ -199,32 +126,28 @@ feign-bom = { module = "io.github.openfeign:feign-bom", version.ref = "feign" }
 okhttp3-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp3" }
 
 # Netty
-netty-bom = { module = "io.netty:netty-bom", version.ref = "netty" }
 
 # Jackson
-jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson" }
+jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version.ref = "jackson2-compat" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.22" }  # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
-jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson2-compat" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson2-compat" }
 jackson-dataformat-msgpack = { module = "org.msgpack:jackson-dataformat-msgpack", version.ref = "msgpack" }
 
 # Jackson 3
-jackson3-bom = { module = "tools.jackson:jackson-bom", version.ref = "jackson3" }
-jackson3-core = { module = "tools.jackson.core:jackson-core", version.ref = "jackson3" }
+jackson3-bom = { module = "tools.jackson:jackson-bom" }
+jackson3-core = { module = "tools.jackson.core:jackson-core" }
 
 # Micrometer
 micrometer-bom = { module = "io.micrometer:micrometer-bom", version.ref = "micrometer" }
 micrometer-tracing-bom = { module = "io.micrometer:micrometer-tracing-bom", version.ref = "micrometer-tracing" }
 
 # OpenTelemetry
-opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 
 # Timefold Solver
-timefold-solver-bom = { module = "ai.timefold.solver:timefold-solver-bom", version.ref = "timefold-solver" }
 
 # Redis
-lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
-redisson = { module = "org.redisson:redisson" }  # version from bt4k catalog
+lettuce-core = { module = "io.lettuce:lettuce-core" }
 
 # Caffeine
 caffeine-lib = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
@@ -232,19 +155,14 @@ caffeine-jcache = { module = "com.github.ben-manes.caffeine:jcache", version.ref
 
 # Serialization libs
 kryo5 = { module = "com.esotericsoftware:kryo", version.ref = "kryo5" }
-fory-kotlin = { module = "org.apache.fory:fory-kotlin" }  # version from bt4k catalog
 chronicle-wire = { module = "net.openhft:chronicle-wire", version.ref = "chronicle-wire" }
 lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4" }
 snappy-java = { module = "org.xerial.snappy:snappy-java", version.ref = "snappy" }
-zstd-jni = { module = "com.github.luben:zstd-jni" }  # version from bt4k catalog
 
 # Misc
 findbugs = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }  # https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-guava = { module = "com.google.guava:guava" }  # version from bt4k catalog
 objenesis = { module = "org.objenesis:objenesis", version = "3.5" }  # https://mvnrepository.com/artifact/org.objenesis/objenesis
-ow2-asm = { module = "org.ow2.asm:asm" }  # version from bt4k catalog
 reflectasm = { module = "com.esotericsoftware:reflectasm", version = "1.11.9" }  # https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
-flyway-core = { module = "org.flywaydb:flyway-core", version = "12.6.0" }  # https://mvnrepository.com/artifact/org.flywaydb/flyway-core
 h2-v2 = { module = "com.h2database:h2", version.ref = "h2-v2" }
 
 # JSON utilities
@@ -265,15 +183,15 @@ junit-platform-runner = { module = "org.junit.platform:junit-platform-runner", v
 
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
+awaitility-kotlin = { module = "org.awaitility:awaitility-kotlin" }
 datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }
-random-beans = { module = "io.github.benas:random-beans", version.ref = "random-beans" }
+random-beans = { module = "io.github.benas:random-beans" }
 
-testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
-testcontainers-lib = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-testcontainers-cockroachdb = { module = "org.testcontainers:testcontainers-cockroachdb", version.ref = "testcontainers" }
-testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom" }
+testcontainers-lib = { module = "org.testcontainers:testcontainers" }
+testcontainers-cockroachdb = { module = "org.testcontainers:testcontainers-cockroachdb" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 
 # Gatling
-gatling-charts-highcharts = { module = "io.gatling.highcharts:gatling-charts-highcharts", version.ref = "gatling" }
-gatling-http-java = { module = "io.gatling:gatling-http-java", version.ref = "gatling" }
+gatling-charts-highcharts = { module = "io.gatling.highcharts:gatling-charts-highcharts" }
+gatling-http-java = { module = "io.gatling:gatling-http-java" }

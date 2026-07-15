@@ -1,17 +1,17 @@
 plugins {
-    alias(libs.plugins.kotlin.spring)
-    alias(libs.plugins.kotlin.jpa)
-    alias(libs.plugins.kotlin.allopen)
-    alias(libs.plugins.spring.boot4)
-    alias(libs.plugins.gatling)
+    alias(bt4k.plugins.kotlin.spring)
+    alias(bt4k.plugins.kotlin.jpa)
+    alias(bt4k.plugins.kotlin.allopen)
+    alias(bt4k.plugins.spring.boot4)
+    alias(bt4k.plugins.gatling)
 }
 
 dependencies {
     // Exposed
-    implementation(libs.jetbrains.exposed.spring.boot4.starter)
-    implementation(libs.jetbrains.exposed.jdbc)
-    implementation(libs.jetbrains.exposed.dao)
-    implementation(libs.jetbrains.exposed.java.time)
+    implementation(bt4k.exposed.spring.boot4.starter)
+    implementation(bt4k.exposed.jdbc)
+    implementation(bt4k.exposed.dao)
+    implementation(bt4k.exposed.java.time)
 
     // JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -20,10 +20,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 
     // DB - PostgreSQL (Testcontainers로 자동 시작)
-    implementation(libs.bluetape4k.testcontainers)
+    implementation(bt4k.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
     implementation(libs.testcontainers.postgresql)
-    runtimeOnly(libs.postgresql.driver)
+    runtimeOnly(bt4k.postgresql)
     // H2 fallback (테스트용)
     runtimeOnly(libs.h2.v2)
 
