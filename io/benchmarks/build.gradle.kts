@@ -2,21 +2,21 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    alias(libs.plugins.kotlin.allopen)
+    alias(bt4k.plugins.kotlin.allopen)
     alias(libs.plugins.kotlinx.benchmark)
 }
 
 dependencies {
-    implementation(libs.bluetape4k.cache.lettuce)
-    implementation(libs.exposed.spring.boot.r2dbc)
-    implementation(libs.bluetape4k.io)
-    implementation(libs.bluetape4k.junit5)
-    implementation(libs.commons.compress)
+    implementation(bt4k.bluetape4k.cache.lettuce)
+    implementation(bt4k.bluetape4k.exposed.spring.boot.r2dbc)
+    implementation(bt4k.bluetape4k.io)
+    implementation(bt4k.bluetape4k.junit5)
+    implementation(bt4k.commons.compress)
     implementation(libs.kryo5)
-    implementation(libs.fory.kotlin)
+    implementation(bt4k.fory.kotlin)
     implementation(libs.lz4.java)
     implementation(libs.snappy.java)
-    implementation(libs.zstd.jni)
+    implementation(bt4k.zstd.jni)
     implementation(libs.chronicle.wire)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.jackson.dataformat.msgpack)
@@ -25,10 +25,10 @@ dependencies {
     implementation(libs.kotlinx.benchmark.runtimejvm)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.jetbrains.exposed.migration.r2dbc)
-    implementation(libs.bluetape4k.testcontainers)
+    implementation(bt4k.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
     implementation(libs.h2.v2)
-    implementation(libs.r2dbc.h2)
+    implementation(bt4k.r2dbc.h2)
 
     testImplementation(kotlin("test"))
 }

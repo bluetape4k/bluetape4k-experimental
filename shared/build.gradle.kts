@@ -3,7 +3,7 @@ configurations {
 }
 
 dependencies {
-    implementation(libs.bluetape4k.io)
+    implementation(bt4k.bluetape4k.io)
 
     // Web
     compileOnly("org.springframework.boot:spring-boot-starter-webmvc")
@@ -18,14 +18,14 @@ dependencies {
     }
 
     // Coroutines
-    compileOnly(libs.bluetape4k.coroutines)
+    compileOnly(bt4k.bluetape4k.coroutines)
     compileOnly(libs.kotlinx.coroutines.core)
     compileOnly(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test)
 
     // Netty
-    testImplementation(libs.bluetape4k.netty)
+    testImplementation(bt4k.bluetape4k.netty)
 
-    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(bt4k.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.lib)
 }
