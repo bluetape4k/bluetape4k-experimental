@@ -1,6 +1,6 @@
 dependencies {
     api(bt4k.exposed.core)
-    api(libs.jetbrains.exposed.dao)
+    api(bt4k.exposed.dao)
     api(bt4k.exposed.jdbc)
     api(bt4k.exposed.java.time)
     api(bt4k.bluetape4k.exposed.jdbc)

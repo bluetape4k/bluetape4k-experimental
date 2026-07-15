@@ -184,6 +184,7 @@ subprojects {
             mavenBom(bt4kLibrary("bluetape4k-bom").get().toString())
             mavenBom(bt4kLibrary("bluetape4k-dependencies").get().toString())
             mavenBom("org.springframework.boot:spring-boot-dependencies:${bt4kVersion("spring-boot4")}")
+            mavenBom(bt4kLibrary("exposed-bom").get().toString())
 
             mavenBom(rootLibs.feign.bom.get().toString())
             mavenBom(rootLibs.micrometer.bom.get().toString())

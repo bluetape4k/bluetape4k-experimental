@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.kotlinx.benchmark.runtime)
     implementation(libs.kotlinx.benchmark.runtimejvm)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.jetbrains.exposed.migration.r2dbc)
+    implementation(bt4k.exposed.migration.r2dbc)
     implementation(bt4k.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
     implementation(libs.h2.v2)

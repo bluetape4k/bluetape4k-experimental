@@ -10,7 +10,7 @@ dependencies {
     // Exposed
     implementation(bt4k.exposed.spring.boot4.starter)
     implementation(bt4k.exposed.jdbc)
-    implementation(libs.jetbrains.exposed.dao)
+    implementation(bt4k.exposed.dao)
     implementation(bt4k.exposed.java.time)
 
     // JPA

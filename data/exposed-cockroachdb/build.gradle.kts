@@ -4,10 +4,10 @@ plugins {
 
 dependencies {
     api(bt4k.exposed.core)
-    api(libs.jetbrains.exposed.dao)
+    api(bt4k.exposed.dao)
     api(bt4k.exposed.jdbc)
     api(bt4k.exposed.java.time)
-    api(libs.jetbrains.exposed.json)
+    api(bt4k.exposed.json)
 
     // CockroachDB는 PostgreSQL JDBC 드라이버 사용
     compileOnly(bt4k.postgresql)
