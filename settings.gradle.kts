@@ -14,8 +14,12 @@ val baseProjectName = "bluetape4k"
 
 val bluetape4kDependenciesCatalogRef = providers.gradleProperty("bluetape4kDependenciesCatalogRef")
     .orElse(providers.environmentVariable("BLUETAPE4K_DEPENDENCIES_CATALOG_REF"))
-    .orElse("644f4f3a2cbc6e5cb396bbb3f88b6a23aab7e383")
+    .orElse("2646d2cd2d4ecc09654c2ac6ef11cfd6679f1086")
     .get()
+require(bluetape4kDependenciesCatalogRef.matches(Regex("[0-9a-f]{40}|[0-9a-f]{64}"))) {
+    "bluetape4k-dependencies catalog ref must be an immutable Git commit SHA: " +
+        bluetape4kDependenciesCatalogRef
+}
 val bluetape4kDependenciesCatalogCacheKey = bluetape4kDependenciesCatalogRef.replace(Regex("[^A-Za-z0-9._-]"), "_")
 
 fun catalogSha256(file: File): String {
@@ -43,11 +47,47 @@ fun expectedCatalogSha256(checksumFile: File): String? =
         ?.takeIf { it.matches(Regex("[0-9a-f]{64}")) }
 
 fun catalogChecksumMatches(catalogFile: File, checksumFile: File): Boolean =
-    catalogFile.isFile && expectedCatalogSha256(checksumFile)?.let { it == catalogSha256(catalogFile) } == true
+    catalogFile.isFile &&
+        !java.nio.file.Files.isSymbolicLink(catalogFile.toPath()) &&
+        expectedCatalogSha256(checksumFile)?.let { it == catalogSha256(catalogFile) } == true
 
-fun downloadCatalogFile(url: String, target: File) {
-    uri(url).toURL().openStream().use { input ->
-        target.outputStream().use { output -> input.copyTo(output) }
+val catalogConnectTimeoutMillis = 10_000
+val catalogReadTimeoutMillis = 30_000
+val catalogMaxBytes = 2L * 1024 * 1024
+val catalogChecksumMaxBytes = 1024L
+
+fun downloadCatalogFile(url: String, target: File, maxBytes: Long) {
+    val connection = uri(url).toURL().openConnection()
+    connection.connectTimeout = catalogConnectTimeoutMillis
+    connection.readTimeout = catalogReadTimeoutMillis
+    require(connection.contentLengthLong < 0 || connection.contentLengthLong <= maxBytes) {
+        "Catalog download exceeds allowed size: $url"
+    }
+    connection.getInputStream().buffered().use { input ->
+        target.outputStream().buffered().use { output ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            var copied = 0L
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                copied += count
+                require(copied <= maxBytes) { "Catalog download exceeds allowed size: $url" }
+                output.write(buffer, 0, count)
+            }
+        }
+    }
+}
+
+fun validateCatalogStructure(catalogFile: File) {
+    val catalogText = catalogFile.readText()
+    val requiredMarkers = listOf(
+        "# <shared-version-source-of-truth by scripts/sync-shared-versions.py>",
+        "# </shared-version-source-of-truth>",
+        "[versions]",
+        "[libraries]",
+    )
+    require(requiredMarkers.all(catalogText::contains)) {
+        "Invalid bluetape4k-dependencies catalog structure: $catalogFile"
     }
 }
 
@@ -60,6 +100,7 @@ fun resolveBluetape4kDependenciesCatalogFile(): File {
             require(catalogFile.isFile && !java.nio.file.Files.isSymbolicLink(catalogFile.toPath())) {
                 "Explicit bluetape4k-dependencies catalog must be a regular non-symlink file: $catalogFile"
             }
+            validateCatalogStructure(catalogFile)
             return catalogFile
         }
 
@@ -75,14 +116,19 @@ fun resolveBluetape4kDependenciesCatalogFile(): File {
         val catalogTempFile = File.createTempFile("libs.versions-", ".toml.tmp", catalogFile.parentFile)
         val checksumTempFile = File.createTempFile("libs.versions-", ".sha256.tmp", catalogFile.parentFile)
         try {
-            downloadCatalogFile("$catalogBaseUrl/libs.versions.toml", catalogTempFile)
-            downloadCatalogFile("$catalogBaseUrl/libs.versions.toml.sha256", checksumTempFile)
+            downloadCatalogFile("$catalogBaseUrl/libs.versions.toml", catalogTempFile, catalogMaxBytes)
+            downloadCatalogFile(
+                "$catalogBaseUrl/libs.versions.toml.sha256",
+                checksumTempFile,
+                catalogChecksumMaxBytes,
+            )
             val expectedChecksum = requireNotNull(expectedCatalogSha256(checksumTempFile)) {
                 "Invalid bluetape4k-dependencies catalog checksum: $checksumTempFile"
             }
             require(catalogSha256(catalogTempFile) == expectedChecksum) {
                 "bluetape4k-dependencies catalog checksum mismatch for ref $bluetape4kDependenciesCatalogRef"
             }
+            validateCatalogStructure(catalogTempFile)
             java.nio.file.Files.move(
                 checksumTempFile.toPath(),
                 checksumFile.toPath(),
@@ -100,6 +146,7 @@ fun resolveBluetape4kDependenciesCatalogFile(): File {
             checksumTempFile.delete()
         }
     }
+    validateCatalogStructure(catalogFile)
     return catalogFile
 }
 
