@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.testcontainers.postgresql)
     runtimeOnly(bt4k.postgresql)
     // H2 fallback (테스트용)
-    runtimeOnly(libs.h2.v2)
+    runtimeOnly(bt4k.h2.v2)
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 
 plugins {
     alias(bt4k.plugins.kotlin.allopen)
-    alias(libs.plugins.kotlinx.benchmark)
+    alias(bt4k.plugins.kotlinx.benchmark)
 }
 
 dependencies {
@@ -12,22 +12,22 @@ dependencies {
     implementation(bt4k.bluetape4k.io)
     implementation(bt4k.bluetape4k.junit5)
     implementation(bt4k.commons.compress)
-    implementation(libs.kryo5)
+    implementation(bt4k.kryo5)
     implementation(bt4k.fory.kotlin)
-    implementation(libs.lz4.java)
-    implementation(libs.snappy.java)
+    implementation(bt4k.at.yawk.lz4.java)
+    implementation(bt4k.snappy.java)
     implementation(bt4k.zstd.jni)
-    implementation(libs.chronicle.wire)
-    implementation(libs.jackson.module.kotlin)
-    implementation(libs.jackson.dataformat.msgpack)
+    implementation(bt4k.chronicle.wire)
+    implementation(bt4k.jackson.module.kotlin)
+    implementation(bt4k.jackson.dataformat.msgpack)
 
-    implementation(libs.kotlinx.benchmark.runtime)
-    implementation(libs.kotlinx.benchmark.runtimejvm)
+    implementation(bt4k.kotlinx.benchmark.runtime)
+    implementation(bt4k.kotlinx.benchmark.runtimejvm)
     implementation(libs.kotlinx.coroutines.core)
     implementation(bt4k.exposed.migration.r2dbc)
     implementation(bt4k.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
-    implementation(libs.h2.v2)
+    implementation(bt4k.h2.v2)
     implementation(bt4k.r2dbc.h2)
 
     testImplementation(kotlin("test"))
