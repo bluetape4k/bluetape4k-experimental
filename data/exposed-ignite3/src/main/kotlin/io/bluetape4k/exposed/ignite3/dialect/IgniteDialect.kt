@@ -31,8 +31,10 @@ class IgniteDialect : VendorDialect(
     functionProvider = IgniteFunctionProvider,
 ) {
     companion object : DialectNameProvider("Ignite") {
-        const val JDBC_DRIVER = "org.apache.ignite.jdbc.IgniteJdbcDriver"
-        const val JDBC_URL_PREFIX = "jdbc:ignite:thin"
+        // Keep these as runtime properties so ordinary connection setup initializes
+        // this companion and registers the driver, dialect, and metadata factories.
+        val JDBC_DRIVER = "org.apache.ignite.jdbc.IgniteJdbcDriver"
+        val JDBC_URL_PREFIX = "jdbc:ignite:thin"
 
         init {
             Database.registerJdbcDriver(JDBC_URL_PREFIX, JDBC_DRIVER, dialectName)
