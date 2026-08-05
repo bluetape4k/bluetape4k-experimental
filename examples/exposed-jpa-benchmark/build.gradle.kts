@@ -7,6 +7,8 @@ plugins {
 }
 
 dependencies {
+    implementation(platform(bt4k.spring.boot4.dependencies))
+
     // Exposed
     implementation(bt4k.exposed.spring.boot4.starter)
     implementation(bt4k.exposed.jdbc)

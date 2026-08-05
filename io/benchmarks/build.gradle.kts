@@ -7,6 +7,8 @@ plugins {
 }
 
 dependencies {
+    implementation(platform(bt4k.exposed.bom))
+    implementation(platform(bt4k.spring.boot4.dependencies))
     implementation(bt4k.bluetape4k.cache.lettuce)
     implementation(bt4k.bluetape4k.exposed.spring.boot.r2dbc)
     implementation(bt4k.bluetape4k.io)
