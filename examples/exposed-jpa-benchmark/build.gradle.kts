@@ -7,6 +7,8 @@ plugins {
 }
 
 dependencies {
+    implementation(platform(bt4k.spring.boot4.dependencies))
+
     // Exposed
     implementation(bt4k.exposed.spring.boot4.starter)
     implementation(bt4k.exposed.jdbc)
@@ -25,7 +27,7 @@ dependencies {
     implementation(libs.testcontainers.postgresql)
     runtimeOnly(bt4k.postgresql)
     // H2 fallback (테스트용)
-    runtimeOnly(libs.h2.v2)
+    runtimeOnly(bt4k.h2.v2)
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")

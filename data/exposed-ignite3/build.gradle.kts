@@ -10,6 +10,7 @@ dependencies {
 
     testImplementation(bt4k.bluetape4k.junit5)
     testImplementation(bt4k.bluetape4k.testcontainers)
+    testImplementation(platform("org.testcontainers:testcontainers-bom:${bt4k.versions.testcontainers.get()}"))
 
     testImplementation(bt4k.bluetape4k.exposed.jdbc.tests)
 
