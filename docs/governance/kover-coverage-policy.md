@@ -1,27 +1,27 @@
-# Kover Coverage Policy
+# Kover 커버리지 정책
 
-## Current Status
+## 현재 상태
 
-`bluetape4k-experimental` does not enforce Kover verification bounds.
+`bluetape4k-experimental`은 Kover 검증 기준을 강제하지 않는다.
 
-## Policy
+## 정책
 
-Status: documented exception.
+상태: 문서화된 예외.
 
-This repository is unpublished experimental work on newer Kotlin, Java, and
-Spring Boot baselines. Coverage is not a release gate until a module is promoted
-from experimental to a published library.
+이 저장소는 최신 Kotlin, Java, Spring Boot 기준선을 사용하는 미배포 실험
+코드다. 모듈이 실험 단계에서 배포 라이브러리로 승격되기 전까지 커버리지는
+릴리스 게이트가 아니다.
 
-## Threshold Plan
+## 임계값 계획
 
-- Keep tests compiling and running in CI/Nightly.
-- Before publishing a module, measure Kover line coverage and document the
-  observed baseline.
-- Use coverage reports to identify regressions; do not introduce a failing
-  threshold as the default enforcement mechanism.
+- CI/Nightly에서 테스트가 컴파일되고 실행되는 상태를 유지한다.
+- 모듈을 배포하기 전에 Kover 라인 커버리지를 측정하고 관찰된 기준선을
+  문서화한다.
+- 커버리지 보고서로 회귀를 식별한다. 기본 강제 방식으로 실패 임계값을
+  도입하지 않는다.
 
-## CI/Nightly Contract
+## CI/Nightly 계약
 
-CI/Nightly currently provide build and test signals. Coverage reports may be
-added for visibility, but they must remain informational unless a future issue
-explicitly reintroduces a gate.
+현재 CI/Nightly는 빌드와 테스트 신호를 제공한다. 가시성을 위해 커버리지
+보고서를 추가할 수 있지만, 향후 이슈에서 게이트를 명시적으로 다시 도입하기
+전까지는 정보 제공용으로 유지해야 한다.

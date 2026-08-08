@@ -1,23 +1,23 @@
-# Dependencies 1.2.0 Sync
+# 의존성 1.2.0 동기화
 
-## Context
+## 배경
 
-`bluetape4k-dependencies:1.2.0` was published after the final upstream BOM
-matrix became Maven Central-visible.
+최종 upstream BOM matrix가 Maven Central에서 확인된 뒤
+`bluetape4k-dependencies:1.2.0`이 publish되었다.
 
-## Decision
+## 결정
 
-Move the experimental repo shared catalog from `1.1.4` to `1.2.0`.
+실험 저장소의 공유 카탈로그를 `1.1.4`에서 `1.2.0`으로 이동한다.
 
-## Outcome
+## 결과
 
-Experimental modules now resolve the same dependency-governance baseline as the
-published 1.2.0 ecosystem BOM.
+실험 모듈은 이제 publish된 1.2.0 생태계 BOM과 동일한 의존성 거버넌스
+기준선을 resolve한다.
 
-## Verification
+## 검증
 
-- `sync-shared-versions.py --workspace .. --write --check --summary` updated
-  the catalog line.
-- Maven Central returned HTTP 200 for
-  `io.github.bluetape4k:bluetape4k-dependencies:1.2.0`.
-
+- `sync-shared-versions.py --workspace .. --write --check --summary`가
+  카탈로그 행을 갱신했다.
+- Maven Central이
+  `io.github.bluetape4k:bluetape4k-dependencies:1.2.0`에 HTTP 200을
+  반환했다.

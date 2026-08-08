@@ -1,17 +1,21 @@
-# Source-Verified README Diagrams
+# 소스로 검증한 README 다이어그램
 
-## Context
+## 배경
 
-Experimental README diagrams contained placeholder labels, removed module names, and truncated text recovered from old Mermaid blocks.
+실험 README 다이어그램에는 placeholder 라벨, 삭제된 모듈 이름, 이전 Mermaid
+블록에서 복원한 잘린 텍스트가 포함되어 있었다.
 
-## Decision
+## 결정
 
-Replace generated filler cards with current module, dependency, and task names from the source tree, and lengthen short connector stems so arrows are visible.
+생성한 filler card를 소스 트리의 현재 모듈·의존성·task 이름으로 바꾸고,
+화살표가 보이도록 짧은 connector stem을 늘린다.
 
-## Verification
+## 검증
 
-Check diagram labels against current module directories and Gradle task names, parse the SVG, and rerender PNGs from SVG.
+다이어그램 라벨을 현재 모듈 디렉터리 및 Gradle task 이름과 대조하고, SVG를
+파싱한 뒤 SVG에서 PNG를 다시 렌더링한다.
 
-## Future Guidance
+## 향후 지침
 
-For experimental repos, prefer smaller diagrams with exact active modules over speculative roadmap labels.
+실험 저장소에서는 추측에 기반한 roadmap 라벨보다 현재 활성 모듈을 정확히
+표시하는 작은 다이어그램을 우선한다.
