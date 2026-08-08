@@ -1,38 +1,40 @@
 # WIP - bluetape4k-experimental
 
-Snapshot: 2026-06-02 KST
-Scope: open GitHub issues assigned to `debop`, created on or after 2026-01-01.
-Open count: 1 issue.
+스냅샷: 2026-06-02 KST
+범위: 2026-01-01 이후 생성되고 `debop`에 할당된 열린 GitHub Issue.
+열린 Issue 수: 1개.
 
-## Recently Completed
+## 최근 완료
 
-- CI/Nightly workflows, Gradle 9.5.0 wrapper, version catalog migration, and Spring Boot 4 dependency alignment are merged.
-- Graph modules were migrated to the standalone `bluetape4k-graph` repository.
-- Exposed CockroachDB experiments and dependency/BOM alignment are merged.
-- Kluent tests were migrated to `bluetape4k-assertions`.
-- Dependency governance, compatibility guards, Kover policy, and Dependabot maintenance are merged through PR #18 through PR #27.
-- Shared-version drift and central dependency governance updates are merged on
-  2026-05-18.
-- `exposed` artifactId rename tracking (#31) is closed.
+- CI/Nightly workflow, Gradle 9.5.0 wrapper, version catalog migration,
+  Spring Boot 4 dependency 정렬을 병합했습니다.
+- Graph 모듈을 독립 `bluetape4k-graph` 저장소로 옮겼습니다.
+- Exposed CockroachDB 실험과 dependency/BOM 정렬을 병합했습니다.
+- Kluent test를 `bluetape4k-assertions`로 옮겼습니다.
+- Dependency governance, compatibility guard, Kover 정책, Dependabot 유지보수를
+  PR #18부터 PR #27까지 병합했습니다.
+- Shared-version drift와 중앙 dependency governance 변경을 2026-05-18에
+  병합했습니다.
+- `exposed` artifactId rename tracking (#31)을 닫았습니다.
 
-## Current Direction
+## 현재 방향
 
-Java 25 workflow contract alignment.
+Java 25 workflow 계약 정렬.
 
-This repository is the Kotlin 2.3 / Java 25 / Spring Boot 4 proving ground.
-CI and Nightly should either run on JDK 25 or explicitly include a Java 25
-verification lane before other experimental work is promoted.
+이 저장소는 Kotlin 2.3 / Java 25 / Spring Boot 4 검증용입니다. CI와 Nightly는
+JDK 25에서 실행하거나, 다른 실험 작업을 승격하기 전에 Java 25 검증 lane을
+명시적으로 포함해야 합니다.
 
-## Priority Queue
+## 우선순위 큐
 
-| Priority | Issue | Difficulty | Notes |
+| 우선순위 | Issue | 난이도 | 비고 |
 |---|---|---:|---|
-| P1 | [#45](https://github.com/bluetape4k/bluetape4k-experimental/issues/45) CI and Nightly run on JDK 21 while the repo contract is Java 25 | S | Workflow runtime should validate Java 25 or clearly split runtime/toolchain coverage. |
+| P1 | [#45](https://github.com/bluetape4k/bluetape4k-experimental/issues/45) CI와 Nightly는 repository 계약이 Java 25인데 JDK 21에서 실행 | S | Workflow runtime이 Java 25를 검증하거나 runtime/toolchain 범위를 명확히 분리해야 함 |
 
-## WIP Limits
+## WIP 한도
 
-| Lane | Limit | Current next |
+| 작업 lane | 한도 | 다음 작업 |
 |---|---:|---|
-| Build/CI maintenance | 1 | `#45` |
-| Experimental feature | 1 | Wait for an assigned issue after the Java 25 workflow contract is clear. |
-| Promotion work | 1 | Promote only after behavior and migration path are documented. |
+| Build/CI 유지보수 | 1 | `#45` |
+| 실험 feature | 1 | Java 25 workflow 계약이 명확해진 뒤 할당된 Issue 대기 |
+| 승격 작업 | 1 | 동작과 migration 경로를 문서화한 뒤에만 승격 |
