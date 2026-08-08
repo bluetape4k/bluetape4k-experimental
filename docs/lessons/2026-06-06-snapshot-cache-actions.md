@@ -1,28 +1,29 @@
-# Snapshot Cache Actions
+# Snapshot 캐시 조치
 
-## Context
+## 배경
 
-The root Gradle configuration used a zero-second changing-module cache TTL, which
-forces SNAPSHOT metadata revalidation on every configuration.
+root Gradle 설정은 changing-module cache TTL을 0초로 사용하고 있어 매번
+구성할 때 SNAPSHOT metadata를 다시 검증하도록 강제했다.
 
-## Decision
+## 결정
 
-Change the root changing-module cache TTL from zero seconds to one day.
+root changing-module cache TTL을 0초에서 1일로 변경한다.
 
-## Outcome
+## 결과
 
-Gradle can reuse mutable SNAPSHOT metadata during ordinary builds while still
-refreshing it daily.
+Gradle은 이제 일반 빌드에서 변경 가능한 SNAPSHOT metadata를 재사용하면서도
+매일 갱신할 수 있다.
 
-## Verification
+## 검증
 
 - `actionlint .github/workflows/*.yml`
 - `rg -n -- '--refresh-dependencies|cache-disabled: true' .github/workflows` -> no matches
 - `./gradlew help --no-daemon`
 - `git diff --check`
 
-## Future Guidance
+## 향후 지침
 
-Use explicit dependency refresh only in dedicated post-publish freshness checks.
-Ordinary CI, Nightly, and Examples workflows should rely on cached changing-module
-metadata plus targeted warm-up when a test-only SNAPSHOT dependency needs it.
+명시적인 의존성 갱신은 전용 post-publish freshness check에서만 사용한다.
+일반 CI, Nightly, Examples workflow는 캐시된 changing-module metadata를
+사용하고, 테스트 전용 SNAPSHOT 의존성에 필요할 때만 대상 warm-up을
+수행한다.
