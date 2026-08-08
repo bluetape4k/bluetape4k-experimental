@@ -1,35 +1,51 @@
-# Changelog
+# 변경 기록
 
-All notable changes to `bluetape4k-experimental` are documented here.
+`bluetape4k-experimental`의 모든 주요 변경 사항을 기록합니다.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-This repository contains experimental modules and is not published as a stable
-library line.
+형식은 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)를 따릅니다.
+이 저장소는 실험 모듈을 포함하며 안정적인 라이브러리 계열로 공개하지
+않습니다.
 
 ## [Unreleased]
 
-### Added
+### 추가
 
-- Root README hero image, Korean README, project-purpose, feature, and architecture documentation.
-- `WIP.md` snapshot showing no currently assigned open issues.
-- Lettuce-based read-through, write-through, and write-behind cache strategy experiments ([PR #1](https://github.com/bluetape4k/bluetape4k-experimental/pull/1)).
-- Hospital appointment scheduling system experiment ([PR #3](https://github.com/bluetape4k/bluetape4k-experimental/pull/3)).
-- Graph repository sync/suspend dual API experiment before graph extraction ([PR #5](https://github.com/bluetape4k/bluetape4k-experimental/pull/5)).
-- Exposed CockroachDB JDBC support module and CockroachDB v26.1+ `WINDOW FRAME GROUPS` support ([PR #7](https://github.com/bluetape4k/bluetape4k-experimental/pull/7), [PR #8](https://github.com/bluetape4k/bluetape4k-experimental/pull/8)).
-- CI and nightly workflows ([PR #12](https://github.com/bluetape4k/bluetape4k-experimental/pull/12)).
+- Root README hero image, 한국어 README, 프로젝트 목적·기능·아키텍처 문서를 추가했습니다.
+- 현재 할당된 open Issue가 없음을 보여 주는 `WIP.md` 스냅샷을 추가했습니다.
+- Lettuce 기반 read-through, write-through, write-behind cache 전략 실험을
+  추가했습니다 ([PR #1](https://github.com/bluetape4k/bluetape4k-experimental/pull/1)).
+- 병원 appointment scheduling system 실험을 추가했습니다
+  ([PR #3](https://github.com/bluetape4k/bluetape4k-experimental/pull/3)).
+- Graph extraction 전에 graph repository sync/suspend 이중 API 실험을
+  추가했습니다 ([PR #5](https://github.com/bluetape4k/bluetape4k-experimental/pull/5)).
+- Exposed CockroachDB JDBC support 모듈과 CockroachDB v26.1+ `WINDOW FRAME
+  GROUPS` 지원을 추가했습니다 ([PR #7](https://github.com/bluetape4k/bluetape4k-experimental/pull/7),
+  [PR #8](https://github.com/bluetape4k/bluetape4k-experimental/pull/8)).
+- CI와 Nightly workflow를 추가했습니다
+  ([PR #12](https://github.com/bluetape4k/bluetape4k-experimental/pull/12)).
 
-### Changed
+### 변경
 
-- Aligned the shared `bluetape4k-dependencies` catalog line with the published
-  `1.2.0` BOM.
-- Root README language policy aligned: English in `README.md`, Korean in `README.ko.md`.
-- Dependency governance, compatibility guard, Kover policy, and Dependabot maintenance landed through PR #18 through PR #27.
-- Migrated `buildSrc` dependency declarations to `gradle/libs.versions.toml` and upgraded the Gradle wrapper to 9.5.0 ([PR #10](https://github.com/bluetape4k/bluetape4k-experimental/pull/10), [PR #11](https://github.com/bluetape4k/bluetape4k-experimental/pull/11)).
-- Migrated graph modules out to the standalone `bluetape4k-graph` project ([PR #6](https://github.com/bluetape4k/bluetape4k-experimental/pull/6)).
-- Switched Exposed dependencies to the `bluetape4k-exposed` group and integrated the `bluetape4k-dependencies` BOM ([PR #14](https://github.com/bluetape4k/bluetape4k-experimental/pull/14)).
-- Test code migrated from Kluent to `bluetape4k-assertions` via `bluetape4k-junit5` ([PR #16](https://github.com/bluetape4k/bluetape4k-experimental/pull/16)).
+- 공유 `bluetape4k-dependencies` catalog line을 공개된 `1.2.0` BOM에 맞췄습니다.
+- Root README 언어 정책을 `README.md` 영어, `README.ko.md` 한국어로 맞췄습니다.
+- Dependency governance, compatibility guard, Kover 정책, Dependabot 유지보수를
+  PR #18부터 PR #27까지 반영했습니다.
+- `buildSrc` dependency declaration을 `gradle/libs.versions.toml`로 옮기고
+  Gradle wrapper를 9.5.0으로 올렸습니다
+  ([PR #10](https://github.com/bluetape4k/bluetape4k-experimental/pull/10),
+  [PR #11](https://github.com/bluetape4k/bluetape4k-experimental/pull/11)).
+- Graph 모듈을 독립 `bluetape4k-graph` 프로젝트로 옮겼습니다
+  ([PR #6](https://github.com/bluetape4k/bluetape4k-experimental/pull/6)).
+- Exposed dependency group을 `bluetape4k-exposed`로 바꾸고
+  `bluetape4k-dependencies` BOM을 통합했습니다
+  ([PR #14](https://github.com/bluetape4k/bluetape4k-experimental/pull/14)).
+- Test code를 Kluent에서 `bluetape4k-junit5`를 통한
+  `bluetape4k-assertions`로 옮겼습니다
+  ([PR #16](https://github.com/bluetape4k/bluetape4k-experimental/pull/16)).
 
-### Fixed
+### 버그 수정
 
-- IDE diagnostics and code quality findings from early experimental modules ([PR #2](https://github.com/bluetape4k/bluetape4k-experimental/pull/2)).
-- Removed `mavenLocal()` from build configuration ([PR #15](https://github.com/bluetape4k/bluetape4k-experimental/pull/15)).
+- 초기 실험 모듈의 IDE diagnostics와 code quality 문제를 해결했습니다
+  ([PR #2](https://github.com/bluetape4k/bluetape4k-experimental/pull/2)).
+- Build configuration에서 `mavenLocal()`을 제거했습니다
+  ([PR #15](https://github.com/bluetape4k/bluetape4k-experimental/pull/15)).
