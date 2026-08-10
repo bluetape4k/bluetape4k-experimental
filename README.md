@@ -1,7 +1,7 @@
 # bluetape4k-experimental
 
 [![CI](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml/badge.svg)](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![JVM](https://img.shields.io/badge/JVM-25-ED8B00?logo=openjdk)](https://openjdk.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -14,7 +14,7 @@ move into stable library repositories.
 
 ## Project Purpose
 
-`bluetape4k-experimental` is the proving ground for Kotlin 2.3, Java 25, Spring
+`bluetape4k-experimental` is the proving ground for Kotlin 2.4, Java 25, Spring
 Boot 4, Exposed, cache, coroutine, data, I/O, and benchmark ideas. Modules here
 are not published as stable artifacts; they are used to validate contracts,
 build behavior, and migration paths before promotion.
@@ -61,7 +61,7 @@ build behavior, and migration paths before promotion.
 
 ## Requirements
 
-- Kotlin 2.3+
+- Kotlin 2.4+
 - Java 25
 - Spring Boot 4.x where applicable
 - Gradle 9.x

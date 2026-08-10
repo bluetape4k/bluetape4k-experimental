@@ -1,7 +1,7 @@
 # bluetape4k-experimental
 
 [![CI](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml/badge.svg)](https://github.com/bluetape4k/bluetape4k-experimental/actions/workflows/ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin)](https://kotlinlang.org)
 [![JVM](https://img.shields.io/badge/JVM-25-ED8B00?logo=openjdk)](https://openjdk.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -13,7 +13,7 @@
 
 ## 프로젝트 목적
 
-`bluetape4k-experimental`은 Kotlin 2.3, Java 25, Spring Boot 4, Exposed, cache,
+`bluetape4k-experimental`은 Kotlin 2.4, Java 25, Spring Boot 4, Exposed, cache,
 coroutine, data, I/O, benchmark 아이디어를 검증하는 공간입니다. 이 저장소의 모듈은 안정
 artifact로 배포하지 않으며, 계약·빌드 동작·마이그레이션 경로를 확인한 뒤 승격합니다.
 
@@ -54,7 +54,7 @@ artifact로 배포하지 않으며, 계약·빌드 동작·마이그레이션 �
 
 ## 요구사항
 
-- Kotlin 2.3+
+- Kotlin 2.4+
 - Java 25
 - 필요한 경우 Spring Boot 4.x
 - Gradle 9.x
