@@ -1,6 +1,6 @@
 # CLAUDE.md - bluetape4k-experimental
 
-Experimental bluetape4k modules for Kotlin 2.3, Java 25, and Spring Boot 4.
+Experimental bluetape4k modules for Kotlin 2.4, Java 25, and Spring Boot 4.
 These modules are not published as stable artifacts.
 
 - Use `bluetape4k-patterns` for Kotlin implementation and review work.

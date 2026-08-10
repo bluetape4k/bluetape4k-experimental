@@ -5,7 +5,7 @@ Read and follow the workspace root guide first. This file only adds
 repo-specific layout, commands, domain rules, and local exceptions.
 
 Experimental Kotlin library project for prototyping Spring Boot 4, Java 25,
-and Kotlin 2.3+ ideas before they are stabilized in the main bluetape4k line.
+and Kotlin 2.4+ ideas before they are stabilized in the main bluetape4k line.
 
 ## Repository Constraints
 
