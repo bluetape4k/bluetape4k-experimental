@@ -93,8 +93,6 @@ subprojects {
                 "-jvm-default=enable",
                 // "-Xinline-classes",   // Kotlin 2.+ 에서는 불필요
                 "-Xstring-concat=indy",
-                "-Xcontext-parameters",
-                "-Xannotation-default-target=param-property",
             )
             val experimentalAnnotations = listOf(
                 "kotlin.RequiresOptIn",
