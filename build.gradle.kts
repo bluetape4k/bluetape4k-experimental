@@ -1,5 +1,5 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.report.ReportMergeTask
 import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
@@ -17,7 +17,7 @@ plugins {
     alias(bt4k.plugins.kotlinx.atomicfu)
     alias(bt4k.plugins.kover)
 
-    alias(bt4k.plugins.detekt.legacy)
+    alias(bt4k.plugins.detekt.dev)
 
     alias(bt4k.plugins.dependency.management)
     alias(bt4k.plugins.spring.boot4) apply false
@@ -154,9 +154,10 @@ subprojects {
             output.set(file)
         }
         withType<Detekt>().configureEach detekt@{
+            reports.checkstyle.required.set(true)
             finalizedBy(reportMerge)
             reportMerge.configure {
-                input.from(this@detekt.xmlReportFile)
+                input.from(this@detekt.reports.checkstyle.outputLocation)
             }
         }
 
