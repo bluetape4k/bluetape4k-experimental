@@ -348,8 +348,10 @@ subprojects {
 
 
 dependencies {
+    val benchmarkProjects = setOf(":benchmarks", ":exposed-jpa-benchmark")
+
     subprojects
-        .filter { it.plugins.hasPlugin("org.jetbrains.kotlin.jvm") }
+        .filter { it.plugins.hasPlugin("org.jetbrains.kotlin.jvm") && it.path !in benchmarkProjects }
         .forEach { sub ->
             kover(dependencies.project(mapOf("path" to sub.path)))
         }
