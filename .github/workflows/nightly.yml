@@ -61,7 +61,7 @@ jobs:
         run: ./gradlew test --continue --max-workers=1
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew koverXmlReport --continue --max-workers=1
+        run: ./gradlew koverXmlReport -x test --continue --max-workers=1
         continue-on-error: true
       - name: Upload coverage report
         if: always()
