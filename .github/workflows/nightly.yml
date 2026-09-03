@@ -34,7 +34,11 @@ jobs:
         with:
           gradle-version: wrapper
       - name: Build (compile only)
-        run: ./gradlew build -x test --parallel --continue
+        run: >-
+          ./gradlew build -x test
+          -x :benchmarks:build
+          -x :exposed-jpa-benchmark:build
+          --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -58,10 +62,20 @@ jobs:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
-        run: ./gradlew test --continue --max-workers=1
+        run: >-
+          ./gradlew test
+          -x :benchmarks:test
+          -x :exposed-jpa-benchmark:test
+          --continue --max-workers=1
       - name: Generate Kover XML report
         if: always()
-        run: ./gradlew koverXmlReport --continue --max-workers=1
+        run: >-
+          ./gradlew koverXmlReport -x test
+          -x :benchmarks:koverXmlReport
+          -x :benchmarks:koverGenerateArtifact
+          -x :exposed-jpa-benchmark:koverXmlReport
+          -x :exposed-jpa-benchmark:koverGenerateArtifact
+          --continue --max-workers=1
         continue-on-error: true
       - name: Upload coverage report
         if: always()
