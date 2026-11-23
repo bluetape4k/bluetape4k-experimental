@@ -14,7 +14,7 @@ val baseProjectName = "bluetape4k"
 
 val bluetape4kDependenciesCatalogRef = providers.gradleProperty("bluetape4kDependenciesCatalogRef")
     .orElse(providers.environmentVariable("BLUETAPE4K_DEPENDENCIES_CATALOG_REF"))
-    .orElse("c3605117f0d5f7c7ac8b15147a978c145847577b")
+    .orElse("7a5995fd46031ce1faf16337fa08d954436f8f9a")
     .get()
 require(bluetape4kDependenciesCatalogRef.matches(Regex("[0-9a-f]{40}|[0-9a-f]{64}"))) {
     "bluetape4k-dependencies catalog ref must be an immutable Git commit SHA: " +
